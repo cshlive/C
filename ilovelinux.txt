@@ -1,2 +1,6 @@
 today is the first day i begin to learn how to use git
 i can use git
+love me
+hello
+
+
