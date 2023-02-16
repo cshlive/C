@@ -4,3 +4,6 @@ love me
 hello
 
 
+git@github.com:cshlive/C.git
+//rm -rf ~/.ssh/*
+工作电脑的公钥：ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDGB8xDMbZLqaW9O/hckB63sdEfohg12tTgWwgj6tS9TI8IhwLPDWC5KUUl+jgCWcadE8DGRl6BjnpmIMxdQGYqXU2jrmtIeGy3j8dnD/tKQuUNUomzhjZdVjCEQCBQ9zSPmFVbf4+PL8uIldmIFb4AagoP+UN5dqcbazGHp9xFOGH0R84YmPuotY4gTKbnVlOhheeclZi8F3HwP2xQIWgFxajEdDS6e8FvsKL0XkrcT2x3zTYWSGCdVr6G4l2j0lHhbJI7Yh3y33lz/4X/XIpOjJWD8gY0GRPsGCZZOL3fiybaZp43reyYTQJrfeYttb59Cfzel25FARf+xl1S7LiJ chensh@maxmade.com
