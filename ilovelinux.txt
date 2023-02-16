@@ -29,10 +29,17 @@ git rebase --abort 退出rebase 操作
 git reset：回退版本，可指定某一次提交的版本。git reset [--soft | --mixed | --hard] commitId。
 git revert：撤销某个提交，做反向操作，生成新的commitId，原有提交记录保留。git revert commitId。
 回退分两种情况：
-    已 commit，未push到远程仓库。
-    已 commit，并且push到了远程仓库。
-已 commit，未push到远程仓库
-git reset --soft（撤销commit）
+   已 commit，未push到远程仓库。
+
+    git reset --soft（撤销commit）。
+
+    git reset --mixed（撤销 commit 和 add 两个动作）。
+
+已 commit，并且push到了远程仓库。
+
+    git reset --hard（撤销并舍弃版本号之后的提交记录）。
+
+    git revert（撤销，但是保留了提交记录）。
 
 
 git@github.com:cshlive/C.git
