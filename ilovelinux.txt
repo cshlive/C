@@ -25,7 +25,7 @@ git restore --staged file  回退暂存区文件 不会更改文件内容
 git rebase --continue   rebase后继续操作
 git rebase --abort 退出rebase 操作
 
-<<<<<<< HEAD
+
 git reset：回退版本，可指定某一次提交的版本。git reset [--soft | --mixed | --hard] commitId。
 git revert：撤销某个提交，做反向操作，生成新的commitId，原有提交记录保留。git revert commitId。
 回退分两种情况：
@@ -34,8 +34,7 @@ git revert：撤销某个提交，做反向操作，生成新的commitId，原�
 已 commit，未push到远程仓库
 git reset --soft（撤销commit）
 
-=======
->>>>>>> ee5e99af607e99dae365fd9edd4fc2a5443ece31
+
 git@github.com:cshlive/C.git
 //rm -rf ~/.ssh/*
 工作电脑的公钥：ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDGB8xDMbZLqaW9O/hckB63sdEfohg12tTgWwgj6tS9TI8IhwLPDWC5KUUl+jgCWcadE8DGRl6BjnpmIMxdQGYqXU2jrmtIeGy3j8dnD/tKQuUNUomzhjZdVjCEQCBQ9zSPmFVbf4+PL8uIldmIFb4AagoP+UN5dqcbazGHp9xFOGH0R84YmPuotY4gTKbnVlOhheeclZi8F3HwP2xQIWgFxajEdDS6e8FvsKL0XkrcT2x3zTYWSGCdVr6G4l2j0lHhbJI7Yh3y33lz/4X/XIpOjJWD8gY0GRPsGCZZOL3fiybaZp43reyYTQJrfeYttb59Cfzel25FARf+xl1S7LiJ chensh@maxmade.com
