@@ -7,3 +7,10 @@ hello
 git@github.com:cshlive/C.git
 //rm -rf ~/.ssh/*
 工作电脑的公钥：ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDGB8xDMbZLqaW9O/hckB63sdEfohg12tTgWwgj6tS9TI8IhwLPDWC5KUUl+jgCWcadE8DGRl6BjnpmIMxdQGYqXU2jrmtIeGy3j8dnD/tKQuUNUomzhjZdVjCEQCBQ9zSPmFVbf4+PL8uIldmIFb4AagoP+UN5dqcbazGHp9xFOGH0R84YmPuotY4gTKbnVlOhheeclZi8F3HwP2xQIWgFxajEdDS6e8FvsKL0XkrcT2x3zTYWSGCdVr6G4l2j0lHhbJI7Yh3y33lz/4X/XIpOjJWD8gY0GRPsGCZZOL3fiybaZp43reyYTQJrfeYttb59Cfzel25FARf+xl1S7LiJ chensh@maxmade.com
+
+git add 文件添加到暂存区
+git commit 上传到本地仓库
+git status 查看工作状态
+git brach 查看工作分支
+git log --oneline
+git push origin（远程仓库） master（远程仓库的分支）
