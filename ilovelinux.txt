@@ -11,6 +11,7 @@ git@github.com:cshlive/C.git
 git add 文件添加到暂存区
 git commit 上传到本地仓库
 git status 查看工作状态
-git brach 查看工作分支
+git branch 查看工作分支
 git log --oneline
 git push origin（远程仓库） master（远程仓库的分支）
+git checkout +分支名 进行分支的切换
