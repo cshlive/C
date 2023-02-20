@@ -218,4 +218,35 @@ git commit -m '冲突解决'
 6、git push将解决冲突后的文件推送到远程。
 
 只要所有开发者都遵守这个规则，那么解决冲突是一件非常容易的事情。
-cp out/ISPBOOOT.BIN /media/chenshihao/6564-3661 && umount /media/chenshihao/6564-3661 （复制文件夹内的文件到另外一个位置且卸载U盘ps：用pwd获取路径）
+
+快捷方法：cp out/ISPBOOOT.BIN /media/chenshihao/6564-3661 && umount /media/chenshihao/6564-3661 （复制文件夹内的文件到另外一个位置且卸载U盘ps：用pwd获取路径）
+
+
+1.全部编译项目命令：./mk8388cxx.sh 1  &&  ./mk8388cxx.sh all 
+只是修改了代码编译项目命令：./mk8388cxx.sh app && ./mk8388cxx.sh app
+
+2.项目头文件位置：Direct8388GitServer/appliction/include/
+项目配置文件位置：Direct8388GitServer/appliction/config/maxmade/
+这两个地方都是对应项目存放配置文件的地方
+其中主要有XX-XXXX-XX.h和app_config文件放了很多关于功能的宏，这些宏都可以在代码里面搜索到，可以看一下具体做了什么，是什么功能，删除或者添加可以修改项目的功能。
+
+3.git 相关命令
+注意：输入git commit命令之前要git pull一下，更新到最新代码之后再提交自己的修改。不然如果别人先提交了同样的文件修改，就会跟你的提交产生冲突，你就提交不了了。需要整合冲突才能提交。方法就是先把冲突的文件从暂存区移出来，然后复制到另一个地方，然后使用git checkout命令删除当前文件的修改，更新最新代码，然后再重新把你的修改加进去（推荐使用Meld软件），重新add进去，然后commit，最后push。
+
+git pull                    更新最新的代码状态
+git status|less             查看当前修改代码状态
+git checkout 文件名          删除当前文件的修改
+git diff 文件名              查看当前文件的修改内容
+git add 文件名               将当前文件修改提交到暂存区
+git commit -m "修改内容"      提交暂存区内容到本地仓库
+git push                    将本地仓库的修改提交到服务器
+
+git log                     显示提交了的log
+git show  log的ID           显示ID对应的log修改的内容
+
+git reset HEAD 文件名        将文件从暂存区中移出，就是撤销add操作（还没有执行commit）
+git reset --soft HEAD^      撤销执行commit（还没有执行push）
+git reset --hard HEAD^      撤销执行commit，连add也撤销（还没有执行push）
+
+git config user.name 'name'           修改git author用户名字
+git config user.email email-address   修改git author邮件地址
