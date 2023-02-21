@@ -1,5 +1,5 @@
 # 关于系统调用和库函数
-系统调用通常用于底层文件访问（low-level file access），例如在驱动程序中对设备文件的直接访问。
+1. 系统调用通常用于底层文件访问（low-level file access），例如在驱动程序中对设备文件的直接访问。
 
 **系统调用是操作系统相关的，因此一般没有跨操作系统的可移植性 **
 
@@ -21,37 +21,16 @@
     以w或w+方式fopen一个文件时，如果文件已存在就截断为0字节，而open一个文件时必须明确指定O_TRUNC才会截断文件，否则直接在原来的数据上改写。
     
 ******
-* 装搜狗输入法：(装依赖)
-```
-sudo dpkg -i sogoupinyin_2.2.0.0108_amd64.deb
-sudo apt install -f
-sudo dpkg -i sogoupinyin_2.2.0.0108_amd64.deb
-```
-*****
-* 构造方法用来初始化类的对象，与父类的其它成员不同，它不能被子类继承（子类可以继承父类所有的成员变量和成员方法，但不继承父类的构造方法）。因此，在创建子类对象时，为了初始化从父类继承来的数据成员，系统需要调用其父类的构造方法。子类构造函数必须要调用父类的构造函数（无论显式还是隐式），本质原因在于继承的性质决定了必须先有父再有子！
+规定一些特殊语法表示字符类、数量限定符和位置关系，然后用这些特殊语法和普通字符一起表示一个模式，这就是正则表达式
+2. fork函数的特点概括起来就是“调用一次，返回两次”，在父进程中调用一次，在父进程和子进程中各返回一次。
+3. 父进程通过fork可以将打开文件的描述符传递给子进程
 
-* 信号：特定情况触发的被发射的时间，如点击信号
-* 槽：对信号响应的函数，当信号发射时，关联的槽函数被自动执行，信号和槽关联通过QObject::connect()函数实现的
-* QDialog dialog 这样是定义了一个对象，QDialog  * dialog 是定义了一个指向QDialog类对象的指针变量
-* 回调函数的应用非常的广泛。通常，我们需要一个统一得接口来实现不同内容的时候，用回调函数来实现就非常合适；可以实现对象之间的通信
+子进程结束时，父进程调用wait可以得到子进程的终止信息
 
-```
-QOject::connect(sender,SIGNAL(signal()),recevier,SOLT(slot()));
-```
-* 继承：
-```
-class  QWDlgManual : public QDialog
-```
+几个进程可以在文件系统中读写某个共享文件，也可以通过给文件加锁来实现进程间同步
 
+进程之间互发信号，一般使用SIGUSR1和SIGUSR2实现用户自定义功能
 
-dpkg锁解决案例：
-```
-sudo rm /var/lib/dpkg/lock-frontend
-    （sudo apt-get  install libgstreamer0.10-dev）
-    sudo rm /var/cache/apt/archives/lock
-    sudo rm /var/lib/dpkg/lock
-```
-*****
 
 
  # 日常任务
@@ -101,18 +80,6 @@ export LD_LIBRARY_PATH=$QTDIR/gcc_64/lib
 
 8. 图形视图动画和状态机框架
 
-# 新
-1. 规定一些特殊语法表示字符类、数量限定符和位置关系，然后用这些特殊语法和普通字符一起表示一个模式，这就是正则表达式
-2.
-fork函数的特点概括起来就是“调用一次，返回两次”，在父进程中调用一次，在父进程和子进程中各返回一次。
-3. 父进程通过fork可以将打开文件的描述符传递给子进程
-
-子进程结束时，父进程调用wait可以得到子进程的终止信息
-
-几个进程可以在文件系统中读写某个共享文件，也可以通过给文件加锁来实现进程间同步
-
-进程之间互发信号，一般使用SIGUSR1和SIGUSR2实现用户自定义功能
-
 gdb调试参数：
 -可执行文件 开始调试
 进入gdb调试后：
@@ -123,7 +90,41 @@ info loacals（变量数值）
 p（打印，后面语法一样）
 q（退出）
 
-4. DAB的数据流： 进入某个模块，先创建一个根窗口，初始化与硬件进行通讯，获取DAB版本号。获取电台数量
+
+* 装搜狗输入法：(装依赖)
+```
+sudo dpkg -i sogoupinyin_2.2.0.0108_amd64.deb
+sudo apt install -f
+sudo dpkg -i sogoupinyin_2.2.0.0108_amd64.deb
+```
+*****
+* 构造方法用来初始化类的对象，与父类的其它成员不同，它不能被子类继承（子类可以继承父类所有的成员变量和成员方法，但不继承父类的构造方法）。因此，在创建子类对象时，为了初始化从父类继承来的数据成员，系统需要调用其父类的构造方法。子类构造函数必须要调用父类的构造函数（无论显式还是隐式），本质原因在于继承的性质决定了必须先有父再有子！
+
+* 信号：特定情况触发的被发射的时间，如点击信号
+* 槽：对信号响应的函数，当信号发射时，关联的槽函数被自动执行，信号和槽关联通过QObject::connect()函数实现的
+* QDialog dialog 这样是定义了一个对象，QDialog  * dialog 是定义了一个指向QDialog类对象的指针变量
+* 回调函数的应用非常的广泛。通常，我们需要一个统一得接口来实现不同内容的时候，用回调函数来实现就非常合适；可以实现对象之间的通信
+
+```
+QOject::connect(sender,SIGNAL(signal()),recevier,SOLT(slot()));
+```
+* 继承：
+```
+class  QWDlgManual : public QDialog
+```
+
+
+dpkg锁解决案例：
+```
+sudo rm /var/lib/dpkg/lock-frontend
+    （sudo apt-get  install libgstreamer0.10-dev）
+    sudo rm /var/cache/apt/archives/lock
+    sudo rm /var/lib/dpkg/lock
+```
+*****
+
+
+9. DAB的数据流： 进入某个模块，先创建一个根窗口，初始化与硬件进行通讯，获取DAB版本号。获取电台数量
 创建公钥1：ssh-keygen -t rsa -C "chensh@maxmade.com"
 2：ssh-keygen -t rsa -C "chensh@maxmade.com" -f ~/.ssh/second_rsa
  cd ~/.ssh
@@ -174,14 +175,14 @@ git checkout .(清空工作区，恢复到刚pull下来的状态)
 2.解决冲突：
 根据上面的学习过程，我总结了一个解决冲突的常规流程：
 
-    前提条件：不能在 master 分支上修改任何文件。master 分支的变更只能通过 git pull 和 git merge 获得。在 master 分支下面，不能手动修改任何文件。
-    我们自己有一个分支用来修改代码，例如我的分支叫做dev分支。我把代码修改完成了，现在不知道有没有冲突。
-    在 dev 分支里面，执行命令git merge origin/master，把远程的master分支合并到当前dev分支中。如果没有任何报错，那么直接转到第5步。
-    如果有冲突，根据提示，把冲突解决，保存文件。然后执行命令git add xxx把你修改的文件添加到缓存区。然后执行命令git commit -m "xxx"添加 commit 信息。
-    执行如下命令，切换到 master 分支：git checkout master。
-    执行命令git pull确保当前 master 分支是最新代码。
-    把dev分支的代码合并回 master 分支：git merge dev。
-    提交代码：git push。
+    1. 前提条件：不能在 master 分支上修改任何文件。master 分支的变更只能通过 git pull 和 git merge 获得。在 master 分支下面，不能手动修改任何文件。
+    2. 我们自己有一个分支用来修改代码，例如我的分支叫做dev分支。我把代码修改完成了，现在不知道有没有冲突。
+    3. 在 dev 分支里面，执行命令git merge origin/master，把远程的master分支合并到当前dev分支中。如果没有任何报错，那么直接转到第5步。
+    4. 如果有冲突，根据提示，把冲突解决，保存文件。然后执行命令git add xxx把你修改的文件添加到缓存区。然后执行命令git commit -m "xxx"添加 commit 信息。
+    5. 执行如下命令，切换到 master 分支：git checkout master。
+    6. 执行命令git pull确保当前 master 分支是最新代码。
+    7. 把dev分支的代码合并回 master 分支：git merge dev。
+    8. 提交代码：git push。
 
 原因：本地修改的文件和目标远程库对同一个文件都有修改。这时无论是统一分支的pull，push，还是不同分支的merge时都会产生冲突。
 
@@ -250,3 +251,8 @@ git reset --hard HEAD^      撤销执行commit，连add也撤销（还没有执�
 
 git config user.name 'name'           修改git author用户名字
 git config user.email email-address   修改git author邮件地址
+
+# 经验
+1. 先在系统.pro配置文件加上对应的ts：TRANSLATIONS = \ 
+改变翻译的.ts文件（1：在项目application/ui2/splaucher目录下；2：在application/config/maxmade/项目文件/language下面），利用qt语言家（打开目录在qt安装目录的bin文件底下）
+用qt的languist先制作好ts文件（更新翻译），再生成qm文件（发布翻译），再在qt程序里面加载qm文件即可实现国际化
