@@ -123,7 +123,7 @@ info loacals（变量数值）
 p（打印，后面语法一样）
 q（退出）
 
-4. DAB： 进入某个模块，先创建一个根窗口，初始化与硬件进行通讯，获取DAB版本号。获取电台数量
+4. DAB的数据流： 进入某个模块，先创建一个根窗口，初始化与硬件进行通讯，获取DAB版本号。获取电台数量
 创建公钥1：ssh-keygen -t rsa -C "chensh@maxmade.com"
 2：ssh-keygen -t rsa -C "chensh@maxmade.com" -f ~/.ssh/second_rsa
  cd ~/.ssh
