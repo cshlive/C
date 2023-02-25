@@ -224,7 +224,7 @@ git commit -m '冲突解决'
 
 
 1.全部编译项目命令：./mk8388cxx.sh 1  &&  ./mk8388cxx.sh all 
-只是修改了代码编译项目命令：./mk8388cxx.sh app && ./mk8388cxx.sh app
+只是修改了代码编译项目命令：./mk8388cxx.sh app && ./mk8388cxx.sh rom
 
 2.项目头文件位置：Direct8388GitServer/appliction/include/
 项目配置文件位置：Direct8388GitServer/appliction/config/maxmade/
@@ -251,10 +251,85 @@ git reset --hard HEAD^      撤销执行commit，连add也撤销（还没有执�
 
 git config user.name 'name'           修改git author用户名字
 git config user.email email-address   修改git author邮件地址
+git diff  --name-only  . |grep "cfg"    查看修改的文件里面包含cfg名字的
+
 
 # 经验
 1. 增改翻译：先在系统.pro配置文件加上对应的ts：TRANSLATIONS = \ 
 改变翻译的.ts文件（1：在项目application/ui2/splaucher目录下；2：在application/config/maxmade/项目文件/language下面），利用qt语言家（打开目录在qt安装目录的bin文件底下）
 用qt的languist先制作好ts文件（更新翻译），再生成qm文件（发布翻译），再在qt程序里面加载qm文件即可实现国际化
-2. 更换开机logo： 找到项目底下目录的build/Tools/binary_gen，在此用终端打开，把焦点换到文件。把同名文件脚本拖到终端，再把bmp文件拖进去生成一个.bin文件，把这个文件拷贝到application/config/maxmade/项目名字，放到logo文件夹下并且rename文件为logo.bin
-3.合并代码：每次修改代码后，准备提交到远程，先git add 放到暂存区，再git pull，如果冲突，先把本地冲突文件，git reset HEAD 文件名，复制到另外一个地方，再git checkout  . 放弃修改，再打开meld，把冲突代码，将自己的代码加进去，再git add 文件名，git commit ，git push
+
+2. 更换开机logo
+(1). 更换开机logo： 
+找到项目底下目录的build/Tools/binary_gen，在此用终端打开，把焦点换到文件。把同名文件脚本拖到终端，再把bmp文件拖进去生成一个.bin文件，把这个文件拷贝到application/config/maxmade/项目名字，放到logo文件夹下并且rename文件为logo.bin
+图片格式要求为24位bmp(不能为大写的BMP,否则会无法显示),颜色为256色的图片 (如何获取24位256色的图片,可将24位大于256色的图片让美工先转为256色8位的图片,再转回24位,这样将可将logo图片的颜色降为256色);
+(2). 生成可更换开机logo的方法：
+1.进入code的build/tools/binary_gen路径下 将图片也一并放入此目录下  图片格式要求为24位bmp图片
+2.使用命令./isp_bin_gen_palette  图片1 图片2 。。。生成每张图片对应的.bin文件以及将图片打包在一起的isp_part.bin文件  生成每张图片对应的.bin文件(需注意有没有各个图片对应的bin,没有就是错的)以及将图片打包在一起的isp_part.bin文件（每个图片命名格式为应为logo1.bmp，logo2.bin..........）
+3.将isp_part.bin文件更名为logo.bin  并将其复制到对应的配置路径下(对应项目config下的logo_1024_600文件夹内)
+code中需要更改：
+4.Boot_logo.c中将图片对应的bin名加入logo_list中
+```
+static logo_list nor_logo_list[] =
+ {
+- {"logo.bin",},
++ {"logo1.bin",},{"logo2.bin",},{"logo3.bin",},
+ };
+注意：logo1为图片打包时对应的名字！，有多少张图片则添加多少个bin名
+```
+5.通过更改Cmd_bootsp.c中show_normal_logo的下标参数来对logo进行更改
+```
+-	show_normal_logo(0);
++	show_normal_logo(1);
+
+```
+6.要使用多logo还需在头文件内定义宏#define SUPPORT_LOGO_SWITCH 4   //支持可选开机logo和设置数量，并在setup.ini文件内添加该选项
+7.同时还需要在项目的配置文件defconfig中将
+```
+# LOGO Setting
+#
+# CONFIG_GLB_GMNCFG_LOGO_FMT_LUT8 is not set
+CONFIG_GLB_GMNCFG_LOGO_FMT_ARGB8888=y
+CONFIG_GLB_GMNCFG_UBOOT_LOGO_ON_DEFAULT=y
+# CONFIG_GLB_GMNCFG_UBOOT_LOGO_ON_2ND_FB1 is not set
+# CONFIG_GLB_GMNCFG_UBOOT_LOGO_ON_SUP is not set
+改为
+# LOGO Setting
+#
+CONFIG_GLB_GMNCFG_LOGO_FMT_LUT8=Y
+#CONFIG_GLB_GMNCFG_LOGO_FMT_ARGB8888 is not set
+#CONFIG_GLB_GMNCFG_UBOOT_LOGO_ON_DEFAULT is not set
+# CONFIG_GLB_GMNCFG_UBOOT_LOGO_ON_2ND_FB1 is not set
+CONFIG_GLB_GMNCFG_UBOOT_LOGO_ON_SUP=y
+```
+
+ps:注意:如果编译后出现Error: Assgined partition size is less than the image size: logo, 3145728 < 3693568这样的错误
+则需要修改
+8368-U-Project2-TD/8368-U-20200422/build/platform_cfg/4RlsCode_8368_U_sunplus_cfg/isp.sh内        logo         0x300000  \ logo 分区的大小,一般加20000的倍数,如加到0x340000或0x1000000
+样例：
+准备两张大小为1024×600的24位.bmp图片  logo1.bmp logo2.bmp
+1.使用./isp_bin_gen_palette logo1.bmp logo2.bmp  
+2.生成logo1.bin logo2.bin isp_part.bin
+3.将isp_part.bin文件更名为logo.bin 
+4.用它替换掉application/config/sunplus/sunplus_demo/logo_1024_600/路径下的logo.bin
+5.将logo_list中的内容改为{"logo1.bin",},{"logo2.bin",},
+6.根据需要将图片下标填入show_normal_logo的参数中，达到更改图标的目的
+(3). 动态logo 制作方法：
+1.从美工处获得.mkv的视频文件,修改视频名为logo.mkv
+2.使用库内build/tools/binary_gen/isp_bin_gen_palette脚本文件添加.mkv文件生成isp_part.bin文件
+3.将isp_part.bin文件改名为animation_logo.bin
+4.将文件添加到对应的动态logo存放处
+5.TD的话需要在config对应项目的logo_1024_600文件夹下将静态logo改为黑屏的静态logo,即文件夹内的这个,防止没有静态logo动态logo闪白屏现象
+
+3. 合并代码：每次修改代码后，准备提交到远程，先git add 放到暂存区，再git pull，如果冲突，先把本地冲突文件，git reset HEAD 文件名，复制到另外一个地方，再git checkout  . 放弃修改，再打开meld，把冲突代码，将自己的代码加进去，再git add 文件名，git commit ，git push
+4. 对Linux机器进行截屏：
+1.将可执行文件screenshot拷贝至U盘
+2.将U盘插到linux平台机器上
+3.通过超级终端命令行进入挂载的U盘目录下，执行./screenshot,会生成一个命名为screenshot+时间戳的jpg截图文件（使用U盘前，我们先要为外挂点新建一个子目录，一般外挂点的子目录都是建立在/mnt里面的，我们也建在那里，当然也可以建在/目录下，名字可以自己定，我们就取名为usb，终端下的命令如下：  mkdir /mnt/usb    然后我们就可以接上我的U盘了，然后在终端下输入命令并击Enter键即可：  mount /dev/sda1 /mnt/usb    在Windows下当我们用完U盘后，在我们取下U盘前我们先要删除，同样在Linux下我们也要删除挂起点，方法是：   umount /dev/sda1 /mnt/usb 或 umount /dev/sda1   如果不把U盘给umount掉，那样很容易造成数据的丢失 ）
+```
+mount /mnt/sda1
+```
+ps：注意：
+一张图片最好多截几次，防止截图失败生成无法查看的图片。
+5. 使用打印工具minicom ：
+https://worthsen.blog.csdn.net/article/details/77662637?spm=1001.2101.3001.6650.4&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7EOPENSEARCH%7ERate-4-77662637-blog-120830919.pc_relevant_3mothn_strategy_and_data_recovery&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7EOPENSEARCH%7ERate-4-77662637-blog-120830919.pc_relevant_3mothn_strategy_and_data_recovery&utm_relevant_index=9
