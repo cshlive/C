@@ -1,4 +1,5 @@
 # 关于系统调用和库函数
+*******
 1. 系统调用通常用于底层文件访问（low-level file access），例如在驱动程序中对设备文件的直接访问。
 
 **系统调用是操作系统相关的，因此一般没有跨操作系统的可移植性 **
@@ -32,8 +33,37 @@
 进程之间互发信号，一般使用SIGUSR1和SIGUSR2实现用户自定义功能
 
 
-
+********
  # 日常任务
+
+*****
+
+ * 装搜狗输入法：(装依赖)
+```
+sudo dpkg -i sogoupinyin_2.2.0.0108_amd64.deb
+sudo apt install -f
+sudo dpkg -i sogoupinyin_2.2.0.0108_amd64.deb
+```
+*****
+
+* dpkg锁解决案例：
+```
+sudo rm /var/lib/dpkg/lock-frontend
+    （sudo apt-get  install libgstreamer0.10-dev）
+    sudo rm /var/cache/apt/archives/lock
+    sudo rm /var/lib/dpkg/lock
+```
+*****
+* 配置公钥：ssh-keygen -t rsa -C "chensh@maxmade.com" -f ~/.ssh/second_rsa
+ cd ~/.ssh
+得到公钥2：ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0zc7POAnjyypRmX78lgTTm+AmWGT/jycIAG4flZTD42yPuMjdGCwrGJaq06JzNOxWYFKiaTpLakjanbGfV6/jc9VeVgoAvzZXg8Xa7ylSe1t+33v9O6y8FUOZVHeXZxwQ7iqTEEhuK7sQtPJ0OoAehp2/GTaIF+FiVTLhSRAcSBK6IH/INM502kLNdwpu/z9r1GpbXqFkn61usmEN90cJuLza9uIaXOCxO1sa3yig3Mgyiu4N5ma3egpKeh+g/A04b043E5MaIxS3g6FnigKr41BYsVSTal/8lmFtWCNpAq1VXVtx0VYPsFYZymK5InITgoTpDL7fBJ77O7FIcP/9 chensh@maxmade.com
+（后面有公钥后怎么进入连接服务器，将自己的公钥添加进配置文件“.什么的文件”）
+gedit id_rsa.pub 
+cd
+ ssh git@192.168.30.5
+
+
+
 1.  关于QT学习的布局管理器
 * 水平（ctrl+H），垂直（ctrl+L），分裂器（运行后可以自己拖拉伸缩），伙伴（&+英文快捷键，快速定位），tab顺序（运行后按TAB键会自动跳焦点），定位器（ctrl+K,输入前面一个字符+空格+定位内容）
 2. 主窗口
@@ -91,13 +121,7 @@ p（打印，后面语法一样）
 q（退出）
 
 
-* 装搜狗输入法：(装依赖)
-```
-sudo dpkg -i sogoupinyin_2.2.0.0108_amd64.deb
-sudo apt install -f
-sudo dpkg -i sogoupinyin_2.2.0.0108_amd64.deb
-```
-*****
+
 * 构造方法用来初始化类的对象，与父类的其它成员不同，它不能被子类继承（子类可以继承父类所有的成员变量和成员方法，但不继承父类的构造方法）。因此，在创建子类对象时，为了初始化从父类继承来的数据成员，系统需要调用其父类的构造方法。子类构造函数必须要调用父类的构造函数（无论显式还是隐式），本质原因在于继承的性质决定了必须先有父再有子！
 
 * 信号：特定情况触发的被发射的时间，如点击信号
@@ -114,21 +138,10 @@ class  QWDlgManual : public QDialog
 ```
 
 
-dpkg锁解决案例：
-```
-sudo rm /var/lib/dpkg/lock-frontend
-    （sudo apt-get  install libgstreamer0.10-dev）
-    sudo rm /var/cache/apt/archives/lock
-    sudo rm /var/lib/dpkg/lock
-```
-*****
 
 
 9. DAB的数据流： 进入某个模块，先创建一个根窗口，初始化与硬件进行通讯，获取DAB版本号。获取电台数量
 创建公钥1：ssh-keygen -t rsa -C "chensh@maxmade.com"
-2：ssh-keygen -t rsa -C "chensh@maxmade.com" -f ~/.ssh/second_rsa
- cd ~/.ssh
-得到公钥2：ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0zc7POAnjyypRmX78lgTTm+AmWGT/jycIAG4flZTD42yPuMjdGCwrGJaq06JzNOxWYFKiaTpLakjanbGfV6/jc9VeVgoAvzZXg8Xa7ylSe1t+33v9O6y8FUOZVHeXZxwQ7iqTEEhuK7sQtPJ0OoAehp2/GTaIF+FiVTLhSRAcSBK6IH/INM502kLNdwpu/z9r1GpbXqFkn61usmEN90cJuLza9uIaXOCxO1sa3yig3Mgyiu4N5ma3egpKeh+g/A04b043E5MaIxS3g6FnigKr41BYsVSTal/8lmFtWCNpAq1VXVtx0VYPsFYZymK5InITgoTpDL7fBJ77O7FIcP/9 chensh@maxmade.com
 
 # git命令的使用
 1. 常用
@@ -233,7 +246,7 @@ git commit -m '冲突解决'
 
 3.git 相关命令
 注意：输入git commit命令之前要git pull一下，更新到最新代码之后再提交自己的修改。不然如果别人先提交了同样的文件修改，就会跟你的提交产生冲突，你就提交不了了。需要整合冲突才能提交。方法就是先把冲突的文件从暂存区移出来，然后复制到另一个地方，然后使用git checkout命令删除当前文件的修改，更新最新代码，然后再重新把你的修改加进去（推荐使用Meld软件），重新add进去，然后commit，最后push。
-
+日常git status，在git  pull ，开始修改，修改完之后先git diff查看一下自己修改的地方，git add 再git pull 一下（如果冲突），先把冲突文件改名mv 文件名（冲突文件）其他命名，打开meld文件看一下两个文件哪里不一样，把其他命名那个文件的自己修改的添加到冲突文件里面，保存再git add，commit上传。平常如果编译了的话git clean -xdf 再git checkout . git status一下最后git  reset HEAD 文件（如果已经git add的话）
 git pull                    更新最新的代码状态
 git status|less             查看当前修改代码状态
 git checkout 文件名          删除当前文件的修改
