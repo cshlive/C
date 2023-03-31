@@ -62,6 +62,138 @@ gedit id_rsa.pub
 cd
  ssh git@192.168.30.5
 
+* 打包和压缩文件：
+tar 文件打包 c创建包文件  f 指定目标文件  v显示文件名称  t显示包中内容 x释放包中内容  z使得tar可以直接进行压缩和解压的功能    
+
+压缩文件实现过程：要将文件先进行打包，然后压缩，再解压
+
+使用方法：tar cvf  +文件 打包文件 
+
+直接压缩和解压：tar zcvf +文件       tar zxf +文件 
+
+gzip 压缩和解压文件 
+
+* 文件查找：
+文件查找：find  +路径  -name +文件名  搜索文件   find / -name  文件名  全盘搜索
+
+find . -name *   模糊cha'zhao'da
+
+数据查找：grep 要过滤的数据   文件名  查看该文件中指定的数据
+
+ls | grep +文件名 <=>find +路径  -name +文件名
+grep + 所寻找的东西 +文件 （搜寻的内容）
+
+* linux 进程：
+进程就是运行中的程序
+
+PCB ：进程描述符（进程控制块），一个PCB对应一个进程，PCB就是一个双向循环链表
+
+PID是操作系统对进程的标识符ID，也叫进程号，对应一个进程
+
+创建进程时，先建立一个PCB，再加载进程，撤销时，先撤销进程，再撤销PCB
+
+僵死进程：进程释放，PCB没释放
+
+命令：
+
+ps 显示当前终端正在进行的程序 -e/-A显示详细进程信息 -ef展示更多的信息 -f显示更多属性（全格式） -L显示进程的线程ID
+
+pstree 把进程以树状图形式显示
+
+kill +id 结束一个进程 -9 强制结束进程 -STOP 挂起一个进程 [1]:任务号 + 已停止 任务名
+
+ctrl c结束一个进程 ctrl z 挂起一个进程
+
+pkill +任务名称 结束相同任务名称的所有进程
+
+jobs 显示当前终端任务或后台执行、挂起的任务
+
+fg %+任务号 将进程任务放到前台
+
+bg %+任务号 将挂起的任务进程放到后台
+
+top 显示系统资源的使用情况，类似于任务管理器 
+
+sleep 睡眠进程
+
+* linux文件：
+“-” ：普通文件 “d”：目录文件 “p”：管道文件 “l”：链接文件 “b”：块设备文件 “c”字符设备文件 “s”：套接字文件
+
+“r”：可读，等于4   “w”：可写，等于2   “x”：可执行，等于1   rwx =421
+
+rw-：u：user 文件归属人权限
+
+rw-：g：group 表文件同组用户权限
+
+r--：o：other 外人访问权限
+
+修改权限：chmod u/g/o +:增加全选 -:减少权限 r/w/x  或者 chmod 774 文件名
+
+vim 文件操作 
+
+进入后分三种模式：命令模式、末行模式、编辑模式
+
+命令模式：
+
+1.u 恢复、撤销
+
+2.n d删除光标下n行
+
+3.n y拷贝光标下n行
+
+4.p 粘贴
+
+5.GG到文本最后一行
+
+6.gg到文本第一行
+
+7.ctrl r撤销上一步
+
+8.r替换光标所在地方的字符
+
+9.n G 跳转到第n行
+
+末行命令：
+
+1.q 退出
+
+2.w 保存 ，加文件名可以另存为
+
+3.q！ 强退
+
+4./ 从光标向下搜索
+
+5.set nonu 去掉行号
+
+6.set nu 加行号
+
+7.？从光标向上搜索
+
+8.n,m s/旧字符/新字符/g 把从n到m行所有的旧字符换成新字符
+
+编辑模式
+
+1.i进入编辑
+
+2.a跳到光标后方
+
+3.A跳到光标前方
+
+4.o换行到光标的下一行
+
+5.O换行到光标的上一行
+
+* 符号：
+在C++中，通常，
+1.A.B则A为对象或结构体
+2.A->B则A为指针，->为成员提取，A->B是提取A中成员B，A只能是指向类、结构、联合的指针
+3.::是作用域运算符，A::B表示作用域A中的名称B,A可以是名字空间、类、结构
+4.:一般表示用来继承
+
+
+
+
+
 
 
 1.  关于QT学习的布局管理器
@@ -166,6 +298,10 @@ git restore * 丢弃所有工作区修改
 git restore --staged file  回退暂存区文件 不会更改文件内容
 git rebase --continue   rebase后继续操作
 git rebase --abort 退出rebase 操作
+git stash（当当前分支工作区有代码还没完成，但你想要切换分支，就可以使用它，就可以实现现场的保护，把没完成的工作区的代码暂存起来）
+git stash list （列出所有的现场信息，也就是你切换之前保存的信息）
+git stash pop （现场恢复）
+
 
 
 git reset：回退版本，可指定某一次提交的版本。git reset [--soft | --mixed | --hard] commitId。
@@ -342,7 +478,145 @@ ps:注意:如果编译后出现Error: Assgined partition size is less than the i
 ```
 mount /mnt/sda1
 ```
-ps：注意：
+ps：注意：./screenshot
+cd /mnt/sda1/scr(tab)
 一张图片最好多截几次，防止截图失败生成无法查看的图片。
 5. 使用打印工具minicom ：
 https://worthsen.blog.csdn.net/article/details/77662637?spm=1001.2101.3001.6650.4&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7EOPENSEARCH%7ERate-4-77662637-blog-120830919.pc_relevant_3mothn_strategy_and_data_recovery&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7EOPENSEARCH%7ERate-4-77662637-blog-120830919.pc_relevant_3mothn_strategy_and_data_recovery&utm_relevant_index=9
+6. 静态库与动态库创建：
+lib**.a 静态库 => 链接阶段 =>  复制一份到 可执行程序内部
+
+lib**.so  共享库  => 链接阶段 =>   标记库的位置然后使用的时候调用 
+
+静态库是多个.o文件打包
+
+ar命令 将所有的.o文件打包成静态库
+
+c是创建库     v是详细过程
+
+静态库创建：
+先写好函数文件，用gcc -c 加函数文件 编译成.o文件 然后用ar crv libfoo.a +文件名.o+文件名.o命令将所有的.o 文件打包到libfoo.a 中，将所有的函数声明写进一个头文件中，将头文件和打包好的lib**.a 文件放进同一个文件夹里，写进一个main函数，然后编译链接 gcc -o main main.c -L.（接当前文件夹) -l(链接哪个**库文件) foo
+创建共享库：
+生成.o以后，gcc -shared -fPIC -o libfoo.so min.o max.o 
+
+需要把生成的libfoo.so共享库移动到 /usr/lib 位置  sudo mv libfoo.so  /usr/lib
+
+然后再gcc -o main main.c -lfoo  直接使用   
+7. 开sdk层打印：
+修改defconfig文件（在application/config/对应的项目/platform/）修改等级为v
+qt的clog.h开打印
+连接minicom，上电后敲 logset ALOG_LEVEL v
+/media/flash/nvm/goc/路径下的btsnoop_hci.clog文件
+
+
+
+
+
+
+
+# 代码样例
+1. 信号与槽的实现：
+// 信号槽的使用
+// connect(sender,signal,receiver,slot)
+// sender 信号发送者 signal 要发送的信号 receiver 信号接收者 slot 槽函数
+```
+class Teacher{
+	// 自定义信号
+	signal:
+		// 注意 信号 只声明 不实现
+		void hungry();
+};
+class Student{
+	slots:
+		// 槽函数
+		void treat();
+};
+// 槽函数实现
+void Student::treat(){
+	qDebug() << "该吃饭了！";
+}
+// 触发信号方法
+void MyWidget::classIsOver(){
+	// 发送信号
+	emit teacher ->hungry();
+}
+teacher = new Teacher(this); // this 添加children 表 方便回收
+student = new Student(this); 
+// 信号槽连接
+connect(teacher,&Teacher::hungry,student,&Student::treat);
+/*
+	注意:
+		1.对于有重载的信号和槽 使用函数指针处理
+			void(Teacher::*teacherSignal)(QString)=&Teacher::hungry; // 这里假设hungry信号 被重载过
+			void(Student::*studentSlot)(QSting)=&Student::treat; // 这里treat 槽函数被重载过
+			connect(teacher,teacherSignal,student,studentSlot);// 重载后的连接
+		2.信号和槽函数的返回值是void
+		3.槽函数是普通成员函数 会受到public private protected的影响
+		4.使用emit 关键字触发信号
+		5.任何成员函数、static 函数、全局函数 lambda表达式都可以作为槽函数
+		6.信号 和 槽必须保持 参数一致 即类型一致，槽函数的参数可以比信号少
+		7.一个信号可以和多个槽连接
+		8.多个信号可以连接到一个槽
+		9.一个信号可以连接到另外的一个信号
+		10.信号槽可以取消连接 
+*/
+```
+
+
+
+
+
+
+
+# 日常改动
+2023 ：
+0321：
+1. 依据改动  AV_1297LW_53HW和AV_1307T_53HW
+2. 6197W-65HW,蓝牙假连接问题，抓打印
+开sdk层打印
+修改defconfig文件（在application/config/对应的项目/platform/）修改等级为v
+qt的clog.h开打印
+连接minicom，上电后敲 logset ALOG_LEVEL v
+/media/flash/nvm/goc/路径下的btsnoop_hci.clog文件
+0322：
+借dqa电源线，两种可以升级外置usb线（一个是插打印线那种，一个是卡扣的）
+
+0324：
+can模拟器改对应参数（开始位，size大小，报文长度（根据发送的表数总共多少个），周期），对应连接can线在主电源上（不行则接到尾线，H或L有可能接反）
+
+0325：
+了解qml与C++关系，改动ui要用上层的set，read
+修改先看对象ID，看id的对象实现，找不到就看对象名字，搜寻一下
+
+0327：
+追踪点击language刷新返回键的翻译问题
+q： 9寸10寸机子的logo应该放到config下哪个文件夹，更改Cmd_bootsp.c中show_normal_logo的下标参数具体哪个位置，），说明书咋制作
+a: 修改点:
+grep 'ENABLE_GUIDE' -r ./
+
+ENABLE_GUIDE=1
+
+guideImage
+
+#define SUPPORT_LOGO_SWITCH    2    ////支持可选开机logo和设置数量
+#define SETUP_SUPPORT_LOGO_LIST "Nissan"<<"Subaru"<<"Mitsubishi"
+
+0328：
+更改对应项目的homepage.ui（一页为1024，新增一页改宽度和坐标），外层qrc和图标，config里面的app_config(使能ENABLE_GUIDE=1 )，外层的guideImage文件夹(文件不能太大),还有头文件（打开宏）
+copy： git log /home/chenshihao/8368-U-QT/application/reference_ui2/spLauncher/plugins/activity/guideactivity/guideview/guideview.cpp
+ 1784  git log 70659c872c5c7ee167beab0adb959ad1feba2715
+ 1785  nautilus ./
+ 1786  git log '/home/chenshihao/8368-U-QT/application/include/AV-1327-65DS-HW.h' 
+ 1787  git show 6180578460ba4efcee9c986bc3cad29026a1bada
+ 1788  git log '/home/chenshihao/8368-U-QT/application/include/AV-1327-65DS-HW.h' 
+ 1789  git show 2f4378c45fdb66d8f981200fbb7b1c6d0a2c3c96
+ 1790  git show --name-only  bf5bd5bcc062feee426e595de8f4b490984fce42
+ 1791  gedit application/reference_ui2/Makefile
+ 1792  gedit application/reference_ui2/build_qtap.sh
+ 1793  git show   bf5bd5bcc062feee426e595de8f4b490984fce42
+
+0329：
+用脚本更换开机logo，确保图片格式位24位256色的，不是该格式的话会黑屏显示
+
+0330：
+AVIN，Reverse，Camera
