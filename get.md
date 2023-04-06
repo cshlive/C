@@ -562,8 +562,49 @@ connect(teacher,&Teacher::hungry,student,&Student::treat);
 */
 ```
 
+2. 按钮：
+```
+#include <QPushButton>
+QPushButton *btn = new QPushButton;
+// 设置父窗口
+btn ->setParent(this);
+// 设置文字
+btn ->setText("文件");
+// 移动位置
+btn ->move(100,100)
+/*第二种创建方式*/
+QPushButton *btn2 = new QPushButton("哈比布",this);
+// 重新指定窗口大小
+this ->resize(600,400);
+// 设置窗口标题
+this ->setWindowTitle("第一个窗口");
+// 限制窗口大小
+this ->setFixedSize(600,400);
 
+```
 
+3. lambda:
+/* c++11 中的Lambda 表达式用于定义并创建匿名的函数对象 */
+```
+/*
+[函数对象参数](操作符重载函数参数)mutable ->返回值{函数体}
+*/
+
+```
+[] 函数对象参数 标识一个lambda 的开始 必须存在，函数对象参数是传递给编译器自动生成的函数对象类的构造函数的。
+
+    空 没有使用任何函数对象参数
+    = 函数体可以使用Lambda 所在作用范围内所有可见的局部变量，包括Lambda所在类的this,并且是值传递方式 相当于告诉编译器自动按值传递所有局部变量
+    & 告诉编译器按引用传递了局部变量
+    a 将a按值传递，按值传递时候，函数体内不能修改传递进来的a的拷贝，因为默认情况下函数是const的， 要修改a的拷贝 可以添加 mutable 修饰符
+    &a 将a 按引用传递
+    a,&b 将a 安值进行传递，b按引用传递
+    =,&a,&b 除了a和b 按引用传递外，其他参数都按值传递
+    &,a,b 除a和b 按值传递外，其他参数都按引用传递
+
+mutable 可修改标识符：按值传递参数时，加上mutable 修饰符 可以按值传递进来的宝贝
+函数返回值: -> 返回值类型 标识函数返回值的类型 当返回为void，或者只有一处 return的地方
+{} 是函数体 这部分不能省略 但函数体可以为空
 
 
 
@@ -620,3 +661,8 @@ copy： git log /home/chenshihao/8368-U-QT/application/reference_ui2/spLauncher/
 
 0330：
 AVIN，Reverse，Camera
+
+0402：
+主界面信息源的判断，在收音/usb界面，操作AA和CP，手机BT，主界面显示的源应该变化
+0406：
+针对开机升级黑屏，从显示屏开始追踪到APP升级到一半中断导致需要重新烧MCU（APP升级挂掉，原本要把里面的擦除重写，但此过程中断，烧完MCU后要强制升级APP，将尾线的方控Key1置地，但暂时没效果，需要检查一下烧录孔是否错误）
