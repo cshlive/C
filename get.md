@@ -1,4 +1,62 @@
-# 关于系统调用和库函数
+# 以前笔记
+C++对c的增强：
+（1）全局变量检测int a；int a = 10；（C语言可以通过，但C++不可以）
+（2）函数检测，参数类型个数等
+（3）类型转换检测，必须强制类型转换
+（4）struct增强，里面可以放函数
+（5）bool数据，（c里没有）
+（6）三目运算符增强，c中返回值，C++返回变量
+（7）const增强，c中可以通过指针修改值，伪常量，但C++相当于一个Key：value符号表，没分配内存，自然也没办法修改，可以真正替换初始初始化数组int a[value]
+引用：就是起别名，一个指针常量，还有指针引用，常量引用（参数里面加const）
+重载：
+（1）重载条件：必须在同一作用域，不同参数类型，数量，默认参数不能产生二义性
+（2）返回值不可以作重载条件
+内联函数：
+（1）类内部成员，默认加inline
+（2）类似于宏，但是是优化版，宏定义缺陷不知类型，比如a++，它不会灵活用
+引用重载：
+必须有合法的内存空间
+const也可作为重载的条件 int tmp = 10； const int &a = tmp；
+封装：
+C语言封装：行为和属性分开，类型检测不强；
+C++封装，严格类型转换检测，让属性和行为绑在一起，作为一个整体来表示生活整体事物。另外还有控制权限，public，protecteed，private；
+尽量用私有方法设置成员属性，自己提供公共的对外接口进行set和get方法来访问变量。
+引用传递花销会少一点，值传递会额外增加一个中间值传递。
+利用全局函数（要两个不同的参数）和成员函数（另外一个参数跟自己本身内部变量对比，只需另外一个参数）进行判断，参数有所不一样。
+构造函数:(放在public里)
+构造函数（对象初始化），与类名相同，没有返回值，不用写void，可以发生重载（可以带参数），编译器会自动调用，但只有一次。
+析构函数没有参数
+分类有两种方式：1.参数{无参构造函数（默认），有参构造函数}；2.类型{普通构造函数，拷贝构造函数(Person(const Person&p）),放另外一个对象)}
+Person(10)是匿名对象，执行完当前行就会释放这个对象
+拷贝构造函数Person(const Person& p），Person p2 (p1)；或者Person p2 = Person(p1);不能用拷贝构造函数初始化匿名对象
+默认拷贝构造函数是值传递，只可以传递属性值
+？？？什么适合调用拷贝构造函数（不是很理解），用已经创建好的对象创建新对象
+浅拷贝：是系统默认提供的拷贝函数，只是很肤浅的值拷贝属性的地址和名称，一旦放在堆上的变量释放掉，后面也想跟着删掉，但是没得删，报错（解决问题需要自己创建拷贝构造函数）。而深拷贝则会另外开辟一块内存用来用来存放
+对象初始化列表，构造函数后面加：属性值（参数）
+当类对象作为类的成员，构造顺序先构造类对象，然后构造自己，析构则与之相反。
+explicit关键字是防止构造函数中的隐式类型转换
+所有new出来的对象都会返回该类型的指针，malloc则返回void*，并且还要强转，也不会调用构造函数。new是一个运算符，malloc则是系统提供的函数。
+new运算符，new出来数组，如何释放？delete [] 数组名；中括号非常重要，不然只会释放一个。同时new出来数组，肯定会调用默认构造函数，如果有参了，记得也要有默认无参构造函数。
+staic静态成员变量，类内声明，类外实现定义。编译的时候分配内存，可以实现多个对象共享同一数据（通过对象访问属性；通过类名：：访问属性），可以权限控制
+静态成员函数，不可以访问 普通成员变量，因为共享数据，无法识别将哪个对象的修改，但是可以访问静态成员变量，因为不需要区分
+单例模式：一个类只有一个全局对象
+常函数 void func（）const，常函数修饰this指针 const Type（Person） * const this；常函数不能修改this指针指向的值；
+常对象 不可以调用普通的成员函数	常对象 可以调用常函数
+
+
+
+
+## C++
+```
+
+
+```
+
+
+
+
+
+## 关于系统调用和库函数
 *******
 1. 系统调用通常用于底层文件访问（low-level file access），例如在驱动程序中对设备文件的直接访问。
 
@@ -34,7 +92,7 @@
 
 
 ********
- # 日常任务
+ ## Linux基础命令
 
 *****
 
@@ -606,6 +664,177 @@ mutable 可修改标识符：按值传递参数时，加上mutable 修饰符 可
 函数返回值: -> 返回值类型 标识函数返回值的类型 当返回为void，或者只有一处 return的地方
 {} 是函数体 这部分不能省略 但函数体可以为空
 
+4. 消息机制和事件:
+```
+/*
+	1. Qt程序 需要在main() 函数创建一个 QApplication对象 然后调用exec() 函数，执行exec() 函数之后，程序进入事件循环监听
+	2. Qt中所有的事件类 继承自QEvent, 这个事件传递给QObject的event() 函数，event()函数不直接处理事件，是按照事件对象类型分派特定的事件处理函数(event handler)
+*/
+/*
+	QWidget 事件处理回调函数
+		keyPressEvent()
+		keyReleaseEvent()
+		mouseDoubleClickEvent()
+		mouseMoveEvent()
+		mousePressEvent()
+		mouseReleaseEvent()
+*/
+class EventLabel : public QLabel{
+	protected:
+		void mouseMoveEvent(QMouseEvent *event);
+		void mousePressEvent(QMouseEvent *event);
+		void mouseReleseEvent(QMouseEvent *event);
+};
+void EventLabel::mouseMoveEvent(QMouseEvent *event){
+	this ->setText(QString("<center><h1>Press:(%1,%2)</h1></center>").arg(QString::number(event ->x()),QString::number(event ->y())));
+}
+void EventLabel::mousePressEvent(QMouseEvent *event){
+	this ->setText(QString("<center><h1>Press:(%1，%2)</h1></center>").arg(QString::number(event ->x()),QString::number(event ->y())));
+}
+void EventLabel::mouseReleaseEvent(QMouseEvent *event){
+	QString msg;
+	msg.sprintf("<center><h1>Relese:(%d,%d)</h1></center>",event ->x(),event ->y());
+	this ->setText(msg);
+}
+int main(int argc,char *argv[]){
+	QApplication *label = new EventLabel;
+
+	EventLabel *label = new EventLabel;
+	label ->setWindowTitle("MouseEvent~~~");
+	label ->resize(300,300);
+	label ->show();
+	return 0;
+}
+
+```
+5. event:
+```
+/*
+	1.事件创建完毕后，Qt将这个事件对象传递给 QObject的 event() 函数，event() 函数负责分发给不同的事件处理器
+	2.如果希望在事件分发之前 做一些操作 重写event() 函数
+*/
+bool CustomWidget::event(QEvnet *e){
+	if(e ->type() == QEvent::KeyPress){
+		QKeyEvent *keyEvent = static_case<QKeyEvent *>(e);
+		if(keyEvent() ->key() == Qt::Key_Tab){
+			qDebug() << "You press tab";
+			return true;
+		}
+	}
+	return QWidget::event(e);
+}
+
+```
+6. 事件过滤器：
+```
+class MainWindow : public QMainWindow{
+	public:
+		MainWinow();
+	protected:
+		bool eventFilter(QObject *obj,QEvent *event);
+	private:
+		QTextEdit *textEdit;	
+}
+MainWindow::MainWindow(){
+	textEdit = new QTextEdit;
+	setCenterWidget(textEdit);
+	textEdit ->installEvent(this);
+}
+bool MainWindow::eventFilter(QObject *obj,QEvent *event){
+	if(obj == textEdit){
+		if(event ->type() == QEvent::KeyPress){
+			QKeyEvent * keyEvent = static_case<QKeyEvent *>(event);
+			qDebug() << keyEvent ->key();
+			return true;
+		}else{
+			return false;
+		}
+	}else{
+		return QMainWindow::eventFilter(obj,event);
+	}
+}
+/*
+	MainWindow 是我们定义一个类，重写eventFilter()函数，过滤特定组件上的事件，首先需要判断这个对象是不是我们感兴趣的组件
+		是返回true 也就是过滤了这个事件， false 不关注的事件  其他组件则调用父类的函数处理
+	eventFilter() 相当于创建了过滤器,可以通过removeEventFilter() 函数移除 过滤器
+	installEventFilter() 如果一个对象存在多个事件过滤器 最后一个安装的会第一个执行，先进先执行的顺序
+
+
+```
+7. 文件系统：
+```
+/*
+	QIODevice: 所有I/O 设备的父类
+	QFileDevice: 提供文件操作的通用实现
+	QFile: 访问本地文件或者嵌入资源
+	QTemporaryFile: 创建和访问本地文件系统的临时文件
+	QBuffer: 读写QbyteArray，内存文件
+	QProcess： 运行外部程序，处理进程间通讯
+	QAbstractSocket: 所有套接字类的父类
+	QTcpSocket: Tcp 协议网络数据传输
+	QUdpSocket: 传输UDP 报文
+	QSslSocket: 使用SSL/TLS 传输数据
+*/
+int main(int argc,char *argv[]){
+	QApplication app(argc,argv);
+	QFile file("in.txt");
+	if(!file.open(QIODevice::ReadOnly | QIODevice::Text)){
+		qDebug() << "Open file failed";
+		return -1;
+	}else{
+		while(!file.atEnd()){
+			qDebug() << file.readLine();
+		}
+	}
+	QFileInfo info(file);
+	qDebug() << info.isDir();
+	qDebug() << info.isExacutable();
+	qDebug() << info.baseName();
+	qDebug() << info.completeBaseName();
+	qDebug() << info.suffix();
+	qDebug() << info.completeSuffix();
+	return app.exec();
+}
+
+```
+8. 信号槽的重载：
+```
+面对信号函数重载，可以通过函数指针明确需要调用的具体信号函数
+
+函数指针： 指向函数的指针
+void (QSpinBox:: *spinBoxp)(int) = &QSpinBox::valueChanged;
+ 
+connect(ui->spinBox, spinBoxp, [=](){
+    
+});
+ 
+connect(ui->spinBox, spinBoxp, this, &QWidget::print);;
+
+
+QSpinBox:: *spinBoxp 为函数的指针
+
+函数指针需要在前面加上返回值，在后面加上参数类型
+
+&QSpinBox::valueChanged 指名函数的名称
+
+复习下函数指针：
+
+程序中定义的函数，在编译系统中需要为他分配一段程序的存储空间，这段存储空间被成为函数的地址，而函数的名称指向的就是这个地址。
+
+既然是地址，就可以用指针变量来存储，指向函数地址的指针就是函数指针。
+
+函数指针有自己的特殊定义方式，不同于变量指针
+void (*p)(int,int)
+
+函数返回值类型 (* 指针变量名) (函数参数列表);
+这就是函数指针的定义，一般还需要在函数指针变量名称前面加上作用域。
+int Func(int x);   /*声明一个函数*/
+int (*p) (int x);  /*定义一个函数指针*/
+p = Func;          /*将Func函数的首地址赋给指针变量p*
+ 
+调用函数时 可以通过*p(3,5); 实现对函数Func的调用
+
+```
 
 
 
