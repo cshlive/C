@@ -112,6 +112,38 @@ sudo rm /var/lib/dpkg/lock-frontend
     sudo rm /var/lib/dpkg/lock
 ```
 *****
+* 安装Ubuntu的wine微信：
+```
+https://blog.csdn.net/Q1013331Q/article/details/125513765
+
+
+Ubuntu安装微信，三步到位
+
+
+不废话废话，直接来！
+
+第一步浏览器打开下载：
+
+http://archive.ubuntukylin.com/software/pool/partner/ukylin-wine_70.6.3.25_amd64.deb
+
+第二步浏览器打开下载：
+
+http://archive.ubuntukylin.com/software/pool/partner/ukylin-wechat_3.0.0_amd64.deb
+
+第三步输入指令：
+
+sudo apt-get install -f -y ./ukylin-wine_70.6.3.25_amd64.deb
+sudo apt-get install -f -y ./ukylin-wechat_3.0.0_amd64.deb
+
+    1
+    2
+
+如图
+这时便可以上微信啦！
+
+```
+
+
 * 配置公钥：ssh-keygen -t rsa -C "chensh@maxmade.com" -f ~/.ssh/second_rsa
  cd ~/.ssh
 得到公钥2：ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0zc7POAnjyypRmX78lgTTm+AmWGT/jycIAG4flZTD42yPuMjdGCwrGJaq06JzNOxWYFKiaTpLakjanbGfV6/jc9VeVgoAvzZXg8Xa7ylSe1t+33v9O6y8FUOZVHeXZxwQ7iqTEEhuK7sQtPJ0OoAehp2/GTaIF+FiVTLhSRAcSBK6IH/INM502kLNdwpu/z9r1GpbXqFkn61usmEN90cJuLza9uIaXOCxO1sa3yig3Mgyiu4N5ma3egpKeh+g/A04b043E5MaIxS3g6FnigKr41BYsVSTal/8lmFtWCNpAq1VXVtx0VYPsFYZymK5InITgoTpDL7fBJ77O7FIcP/9 chensh@maxmade.com
@@ -360,6 +392,27 @@ git stash（当当前分支工作区有代码还没完成，但你想要切换�
 git stash list （列出所有的现场信息，也就是你切换之前保存的信息）
 git stash pop （现场恢复）
 
+git pull                    更新最新的代码状态
+git status|less             查看当前修改代码状态
+git checkout 文件名          删除当前文件的修改
+git diff 文件名              查看当前文件的修改内容（工作区与暂存区）
+git diff --cached 文件名 暂存区与版本库的差异
+git diff HEAD 文件名 工作区与版本库
+git add 文件名               将当前文件修改提交到暂存区
+git commit -m "修改内容"      提交暂存区内容到本地仓库
+git push                    将本地仓库的修改提交到服务器
+
+git log                     显示提交了的log
+git show  loapplication/reference_ui2/spLauncher/sysset/src/lang/lang_ar.qm
+g的ID           显示ID对应的log修改的内容
+
+git reset HEAD 文件名        将文件从暂存区中移出，就是撤销add操作（还没有执行commit）
+git reset --soft HEAD^      撤销执行commit（还没有执行push）
+git reset --hard HEAD^      撤销执行commit，连add也撤销（还没有执行push）
+
+git config user.name 'name'           修改git author用户名字
+git config user.email email-address   修改git author邮件地址
+git diff  --name-only  . |grep "cfg"    查看修改的文件里面包含cfg名字的
 
 
 git reset：回退版本，可指定某一次提交的版本。git reset [--soft | --mixed | --hard] commitId。
@@ -441,24 +494,6 @@ git commit -m '冲突解决'
 3.git 相关命令
 注意：输入git commit命令之前要git pull一下，更新到最新代码之后再提交自己的修改。不然如果别人先提交了同样的文件修改，就会跟你的提交产生冲突，你就提交不了了。需要整合冲突才能提交。方法就是先把冲突的文件从暂存区移出来，然后复制到另一个地方，然后使用git checkout命令删除当前文件的修改，更新最新代码，然后再重新把你的修改加进去（推荐使用Meld软件），重新add进去，然后commit，最后push。
 日常git status，在git  pull ，开始修改，修改完之后先git diff查看一下自己修改的地方，git add 再git pull 一下（如果冲突），先把冲突文件改名mv 文件名（冲突文件）其他命名，打开meld文件看一下两个文件哪里不一样，把其他命名那个文件的自己修改的添加到冲突文件里面，保存再git add，commit上传。平常如果编译了的话git clean -xdf 再git checkout . git status一下最后git  reset HEAD 文件（如果已经git add的话）
-git pull                    更新最新的代码状态
-git status|less             查看当前修改代码状态
-git checkout 文件名          删除当前文件的修改
-git diff 文件名              查看当前文件的修改内容
-git add 文件名               将当前文件修改提交到暂存区
-git commit -m "修改内容"      提交暂存区内容到本地仓库
-git push                    将本地仓库的修改提交到服务器
-
-git log                     显示提交了的log
-git show  log的ID           显示ID对应的log修改的内容
-
-git reset HEAD 文件名        将文件从暂存区中移出，就是撤销add操作（还没有执行commit）
-git reset --soft HEAD^      撤销执行commit（还没有执行push）
-git reset --hard HEAD^      撤销执行commit，连add也撤销（还没有执行push）
-
-git config user.name 'name'           修改git author用户名字
-git config user.email email-address   修改git author邮件地址
-git diff  --name-only  . |grep "cfg"    查看修改的文件里面包含cfg名字的
 
 
 # 经验
@@ -890,8 +925,70 @@ copy： git log /home/chenshihao/8368-U-QT/application/reference_ui2/spLauncher/
 
 0330：
 AVIN，Reverse，Camera
+ls -F > cat1.txt   //输出文件名字到另一个文件夹
+  gedit cat1.txt 
 
 0402：
 主界面信息源的判断，在收音/usb界面，操作AA和CP，手机BT，主界面显示的源应该变化
 0406：
 针对开机升级黑屏，从显示屏开始追踪到APP升级到一半中断导致需要重新烧MCU（APP升级挂掉，原本要把里面的擦除重写，但此过程中断，烧完MCU后要强制升级APP，将尾线的方控Key1置地，但暂时没效果，需要检查一下烧录孔是否错误）
+
+0407:
+更换flash后正常
+
+0410:
+subwoofer Gain /add /user/return/点进去的各个源翻译不生效，没找到reverse mute和time alignment，device connect，eq的，classical，khz没换，多个翻译：av in/bt audio，把15kz去掉翻译
+修改了user，还需classis，和fast guide，data &time，fader，time   alignment，解决文字超出框的问题
+0411：
+看Linux基础知识，更改以下文件，对策DQA翻译和部分设置问题
+
+	    修改：     application/config/maxmade/AV_1297WT_53HW/etc/carplay/carplay_config_version_2.xml
+        修改：     application/config/maxmade/AV_1297WT_53HW/etc/carplay/carplay_config_version_3.xml
+        修改：     application/config/maxmade/AV_1297WT_53HW/guideImage/9.jpg
+        修改：     application/config/maxmade/AV_1297WT_53HW/guideImage/A.jpg
+        修改：     application/config/maxmade/AV_1297WT_53HW/language/lang_ar.qm
+        新文件：   application/config/maxmade/AV_1297WT_53HW/language/lang_ar.ts
+        修改：     application/config/maxmade/AV_1307WT_53HW/etc/carplay/carplay_config_version_2.xml
+        修改：     application/config/maxmade/AV_1307WT_53HW/etc/carplay/carplay_config_version_3.xml
+        修改：     application/config/maxmade/AV_1307WT_53HW/guideImage/9.jpg
+        修改：     application/config/maxmade/AV_1307WT_53HW/guideImage/A.jpg
+        修改：     application/config/maxmade/AV_1307WT_53HW/language/lang_ar.qm
+        新文件：   application/config/maxmade/AV_1307WT_53HW/language/lang_ar.ts
+        修改：     application/include/AV-1297WT-53HW.h
+        修改：     application/include/AV-1307WT-53HW.h
+        修改：     application/reference_ui2/spLauncher/commons/setupviews/src/UI_FIAT_BLUE_1024_600/froms/setupeq.ui
+        修改：     application/reference_ui2/spLauncher/plugins/activity/homelauncher/homeview/homeview.cpp
+
+0412：
+修改光标溢出（调整字体大小和宽度）
+	修改：     application/reference_ui2/spLauncher/commons/fileviews/src/UI_FIAT_BLUE_1024_600/froms/default/audioplaying.ui
+	修改：     application/reference_ui2/spLauncher/plugins/activity/homelauncher/homeview/UI_FIAT_BLUE_1024_600/AV_1297WT_53HW/homepage.ui
+	修改：     application/reference_ui2/spLauncher/plugins/activity/homelauncher/homeview/UI_FIAT_BLUE_1024_600/AV_1307WT_53HW/homepage.ui
+
+0413：
+对策右驾设置没用，默认左驾（改宏），蓝牙有字符显示不完整，将源的信息与主页保持一致，将进入aa将settitle置空
+	修改：     application/include/AV-1297WT-53HW.h
+	修改：     application/include/AV-1307WT-53HW.h
+	修改：     application/reference_ui2/spLauncher/commons/fileviews/src/UI_FIAT_BLUE_1024_600/froms/default/audioplaying.ui
+	修改：     application/reference_ui2/spLauncher/plugins/activity/btaudioactivity/btaudioview/btaudioview.cpp
+	修改：     application/reference_ui2/spLauncher/plugins/activity/homelauncher/homeview/infopage.cpp
+
+0414:
+#define NO_VIDEO_SCREEN_AFTER_REVERSE  1//对策由于倒车界面的透明窗口，导致倒车结束后会瞬闪某些视频流   经测试8368u没效果
+
+0417：
+
+1.对策Right Hand Drive 开关无作用2.AA默认左驾3.对策蓝牙音乐有字符显示不完整4.源信息与主页保持一致
+	修改：     application/config/maxmade/AV_1307WT_53HW/language/lang_ar.qm
+	修改：     application/config/maxmade/AV_1307WT_53HW/language/lang_ar.ts
+	修改：     application/include/AV-1297WT-53HW.h
+	修改：     application/include/AV-1307WT-53HW.h
+	修改：     application/reference_ui2/spLauncher/commons/fileviews/src/UI_FIAT_BLUE_1024_600/froms/default/audioplaying.ui
+	修改：     application/reference_ui2/spLauncher/commons/setupviews/src/UI_FIAT_BLUE_1024_600/froms/setupdatetime.ui
+	修改：     application/reference_ui2/spLauncher/commons/setupviews/src/UI_HYUNDAI_1024_600/froms/setupeq.ui
+	修改：     application/reference_ui2/spLauncher/commons/setupviews/src/setupitems/commonitem.cpp
+	修改：     application/reference_ui2/spLauncher/plugins/activity/btaudioactivity/btaudioview/btaudioview.cpp
+	修改：     application/reference_ui2/spLauncher/plugins/activity/homelauncher/homeview/UI_FIAT_BLUE_1024_600/homepage.ui
+	修改：     application/reference_ui2/spLauncher/plugins/activity/homelauncher/homeview/infopage.cpp
+	修改：     application/reference_ui2/spLauncher/plugins/activity/radioactivity/radioview/UI_FIAT_BLUE_1024_600/RadioKeypad.ui
+	修改：     application/reference_ui2/spLauncher/plugins/activity/radioactivity/radioview/UI_FIAT_BLUE_1024_600/default/RadioKeypad.ui
