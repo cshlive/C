@@ -163,6 +163,75 @@ tar 文件打包 c创建包文件  f 指定目标文件  v显示文件名称  t�
 
 gzip 压缩和解压文件 
 
+把常用的tar解压命令总结下，当作备忘：
+
+tar
+
+-c: 建立压缩档案
+-x：解压
+-t：查看内容
+-r：向压缩归档文件末尾追加文件
+-u：更新原压缩包中的文件
+
+这五个是独立的命令，压缩解压都要用到其中一个，可以和别的命令连用但只能用其中一个。下面的参数是根据需要在压缩或解压档案时可选的。
+
+-z：有gzip属性的
+-j：有bz2属性的
+-Z：有compress属性的
+-v：显示所有过程
+-O：将文件解开到标准输出
+
+下面的参数-f是必须的
+
+-f: 使用档案名字，切记，这个参数是最后一个参数，后面只能接档案名。
+
+#tar -cf all.tar *.jpg
+这条命令是将所有.jpg的文件打成一个名为all.tar的包。-c是表示产生新的包，-f指定包的文件名。
+
+#tar -rf all.tar *.gif
+这条命令是将所有.gif的文件增加到all.tar的包里面去。-r是表示增加文件的意思。
+
+#tar -uf all.tar logo.gif
+这条命令是更新原来tar包all.tar中logo.gif文件，-u是表示更新文件的意思。
+
+#tar -tf all.tar
+这条命令是列出all.tar包中所有文件，-t是列出文件的意思
+
+#tar -xf all.tar
+这条命令是解出all.tar包中所有文件，-x是解开的意思
+
+
+压缩
+
+    tar –cvf jpg.tar *.jpg  将目录里所有jpg文件打包成tar.jpg
+    tar –czf jpg.tar.gz *.jpg   将目录里所有jpg文件打包成jpg.tar后，并且将其用gzip压缩，生成一个gzip压缩过的包，命名为jpg.tar.gz
+    tar –cjf jpg.tar.bz2 *.jpg 将目录里所有jpg文件打包成jpg.tar后，并且将其用bzip2压缩，生成一个bzip2压缩过的包，命名为jpg.tar.bz2
+    tar –cZf jpg.tar.Z *.jpg   将目录里所有jpg文件打包成jpg.tar后，并且将其用compress压缩，生成一个umcompress压缩过的包，命名为jpg.tar.Z
+    rar a jpg.rar *.jpg rar格式的压缩，需要先下载rar for linux
+    zip jpg.zip *.jpg   zip格式的压缩，需要先下载zip for linux
+
+解压
+
+    tar –xvf file.tar  解压 tar包
+    tar -xzvf file.tar.gz 解压tar.gz
+    tar -xjvf file.tar.bz2   解压 tar.bz2
+    tar –xZvf file.tar.Z   解压tar.Z
+    unrar e file.rar 解压rar
+    unzip file.zip 解压zip
+
+
+总结
+
+    *.tar 用 tar –xvf 解压
+    *.gz 用 gzip -d或者gunzip 解压
+    *.tar.gz和*.tgz 用 tar –xzf 解压
+    *.bz2 用 bzip2 -d或者用bunzip2 解压
+    *.tar.bz2用tar –xjf 解压
+    *.Z 用 uncompress 解压
+    *.tar.Z 用tar –xZf 解压
+    *.rar 用 unrar e解压
+    *.zip 用 unzip 解压
+
 * 文件查找：
 文件查找：find  +路径  -name +文件名  搜索文件   find / -name  文件名  全盘搜索
 
@@ -172,6 +241,42 @@ find . -name *   模糊cha'zhao'da
 
 ls | grep +文件名 <=>find +路径  -name +文件名
 grep + 所寻找的东西 +文件 （搜寻的内容）
+
+find 文件目录 -type f |xargs grep "查询内容"
+
+二、查找关键词所在的文件名及关键词所在行的内容
+  方式1：
+
+grep -r "关键词" 文件目录 
+
+  示例：
+
+    # grep -r "extension=php_pdo*" /usr/local/php71/
+    /usr/local/php71/etc/php.ini:;extension=php_pdo_firebird.dll
+    /usr/local/php71/etc/php.ini:;extension=php_pdo_mysql.dll
+    /usr/local/php71/etc/php.ini:;extension=php_pdo_oci.dll
+
+  方式2：
+
+find 文件目录 -type f |xargs grep "查询内容"
+
+  示例：
+
+    # find /usr/local/php71/ -type f |xargs grep "extension=php_pdo*"
+    /usr/local/php71/etc/php.ini:;extension=php_pdo_firebird.dll
+    /usr/local/php71/etc/php.ini:;extension=php_pdo_mysql.dll
+    /usr/local/php71/etc/php.ini:;extension=php_pdo_oci.dll
+
+      注：如需限制文件名，可添加[-name]参数，例：find 文件目录  -type f -name "文件名" |xargs grep "查询内容"
+
+三、仅查找关键词所在的文件名
+
+grep -r -l "关键词" 文件目录
+
+  示例：
+
+    # grep -r -l "extension=php_pdo*" /usr/local/php71/
+    /usr/local/php71/etc/php.ini
 
 * linux 进程：
 进程就是运行中的程序
@@ -280,7 +385,9 @@ vim 文件操作
 3.::是作用域运算符，A::B表示作用域A中的名称B,A可以是名字空间、类、结构
 4.:一般表示用来继承
 
-
+* 输出文件名字到一个文件里面
+ls -F > cat1.txt   //输出文件名字到另一个文件夹
+ls -R 表示递归输出子目录的文件和目录名称
 
 
 
@@ -573,7 +680,7 @@ mount /mnt/sda1
 ```
 ps：注意：./screenshot
 cd /mnt/sda1/scr(tab)
-一张图片最好多截几次，防止截图失败生成无法查看的图片。
+一张图片最好多截图和截屏多几次，防止截图失败生成无法查看的图片。
 5. 使用打印工具minicom ：
 https://worthsen.blog.csdn.net/article/details/77662637?spm=1001.2101.3001.6650.4&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7EOPENSEARCH%7ERate-4-77662637-blog-120830919.pc_relevant_3mothn_strategy_and_data_recovery&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7EOPENSEARCH%7ERate-4-77662637-blog-120830919.pc_relevant_3mothn_strategy_and_data_recovery&utm_relevant_index=9
 6. 静态库与动态库创建：
@@ -601,11 +708,47 @@ qt的clog.h开打印
 连接minicom，上电后敲 logset ALOG_LEVEL v
 /media/flash/nvm/goc/路径下的btsnoop_hci.clog文件
 
+8. 8368-U平台系统升级失败后无法继续升级解决办法
+build/tools/isp/isp.c PROGRAM_HEADER_LAST注释掉。使系统升级失败后能关机开机继续升级。这种方法适用于升级过程中断电。升级过程中拔掉U盘，则无法再次升级。
 
 
+9. 8368-U平台，如何空中抓包。
+"Harven 20211020: 
+请用如下方式抓空中包，车机端通过tcpdump抓协议栈包；tcpdump可执行档参考附件，命令说明如下：
+       /media/sda1/tcpdump -i wlan0 -G 1200 -w /media/sda1/CarPlay_test.pcap &
+ 其中，tcpdump放置于U盘，
+-i wlan0 ：指定网卡接口， 
+-G 1200：循环抓取，仅保存最近20分钟数据；
+       -w /media/sda1/CarPlay_test.pcap：抓包结果存放于U盘的CarPlay_test.pcap文件；
+       后台执行；
+       当复现到问题后，直接 kill掉tcpdump进程即可；最后执行sync，再从车机拔出U盘；"
 
 
+10. 代码移植过程
+"1.命令行输入ssh git@192.168.30.5登录在git server的git账号 上, 执行 git init --bare 8368-XUCarSDK
+2.再创建个命令行输入ssh soft1@192.168.30.5登录在客户端的账号，创建8368-XUCarSDK目录，进入8368-XUCarSDK目录执行git init
+3.在该目录输入以下命令
+git remote add sunplus gitolite3@121.15.134.182:8368-UCarSDKMAXMADE
+git pull sunplus 远程分支名(如:8368-XU-20220901)
+4.git checkout 远程分支名
+5.git checkout -b 新分支名
+6.git remote add origin git@192.168.30.5:~/8368-XUCarSDK
+7.git push origin 新分支名
+这上面就完成了对应的远程库的创建,其他的用户就可以对其进行拉取和上传了
+ git clone -b 8368-XU-20220901 git@192.168.30.5:~/8368-XUCarSDK
+8.从其它项目拷贝mk8388cxx.sh过来
+9.执行./mk68xu.sh 2(因为xu的配置为第二套方案，从新配置刷新配置需要./mk68xu.sh 2，如果./mk68xu.sh 1则编译出的升级文件将无法升级) , 如果提示编译工具错误，检查一下mk8388cxx.sh里面PATH的设置,8368XU的需要修改路径为
+export PATH=$CBIN:$PWD/build/tools/arm-9.2_eabihf/bin/:$PWD/build/tools/arm-2014.05/bin:$PATH:$PWD/boot/uboot/tools/
+10.如果提示 err: .libcxx_cfg not found !!!!! , 执行一下 make 2 ,再重新执行 ./mk68xu.sh 2
+11.((/bin/sh: 1: cmake: not found) 8368-P 需要安装cmake;   sudo apt-get install cmake
+12.8368-P: bison: not found ; sudo apt-get install bison
+13.8368-P : flex: not found ; sudo apt-get install flex
+14.8368-P : ../scripts/extract-cert.c:21:10: fatal error: openssl/bio.h: 没有那个文件或目录  , 解决办法: sudo apt-get install libssl-dev
+15.如果出现卡死等问题，可以把代码恢复成跟服务器一样再试试，或者恢复到以前的版本尝试。"
 
+11. 新建项目
+1.在对应的地方以终端打开，拖进脚本
+2.修改panel ，在config文件夹下修改deconfig和app_config 的.ko
 
 # 代码样例
 1. 信号与槽的实现：
@@ -926,6 +1069,7 @@ copy： git log /home/chenshihao/8368-U-QT/application/reference_ui2/spLauncher/
 0330：
 AVIN，Reverse，Camera
 ls -F > cat1.txt   //输出文件名字到另一个文件夹
+ls -R 表示递归输出子目录的文件和目录名称
   gedit cat1.txt 
 
 0402：
@@ -992,3 +1136,137 @@ subwoofer Gain /add /user/return/点进去的各个源翻译不生效，没找�
 	修改：     application/reference_ui2/spLauncher/plugins/activity/homelauncher/homeview/infopage.cpp
 	修改：     application/reference_ui2/spLauncher/plugins/activity/radioactivity/radioview/UI_FIAT_BLUE_1024_600/RadioKeypad.ui
 	修改：     application/reference_ui2/spLauncher/plugins/activity/radioactivity/radioview/UI_FIAT_BLUE_1024_600/default/RadioKeypad.ui
+
+
+0419:
+在手机点击music ,车机没有捕捉到这个信号，会不会是没在回调中存储到变量信息，
+infocpp和homeview.cpp和homewight.cpp
+会不会在module/androidautomodule/androidautomoduleimpl/androidautomoduleimpl.cpp和module/carplaymodule/carplaymodule.cpp
+ //bool AndroidAutoModuleImpl::internalMainAudioRequest(int statetype,int action, b
+                                        setAudioRes();// need set audio source before AA use
+
+ ```
++#if defined (UI_NEW_TUCSON_1024_600)
++                    emit mediaInfoChangedSig(AUDIO_SOURCE_AA);
++#endif
+
+```
+//int CarplayModuleImpl::cpAudioSetup(int type)
+```
++#if defined (UI_NEW_TUCSON_1024_600)
++        emit mediaInfoChangedSig(AUDIO_SOURCE_CP_MEDIA);
++#endif
+```
+
+0420：
+flash镜像文件制作：
+
+在连上打印线之后要先设置波特率115200
+1B			//十六进制Esc,进入uboot模式，串口工具使用Hex格式发送
+Esc			//进入uboot模式,可在minicom使用	
+（如果是8368C还要重启一下，再按ESC进入Uboot）在开机起来的过程中按Esc进去uboot模式,15s后MCU会自动重启，重启时再次进入uboot就不会再重启了，此时插入USB
+ispsp mtdparts_adj		//制作前必要步骤之调整flash块
+（第一次无法识别，再输入一次）
+snand_ghost usb 0 -sb -su	//8368U 从flash写出烧录文件到usb 0
+ghost2snand usb 0 -sb		//8368U 从usb 0写入烧录文件到flash(软件验证)
+
+
+snand_ghost_sb usb 0		//8368C 从flash写出烧录文件到usb 0
+
+
+
+0421：
+```
+   <message>
+        <source>AV In</source>
+        <translation>ايه في انتل</translation>
+    </message>
+```
+    <message>
+        <source>USB</source>
+        <translation>منفذ USB</translation>
+    </message>
+
+	    <message>
+        <source>BT Audio</source>
+        <translation>صوت بلوتوث</translation>
+    </message>
+
+	    <message>
+        <source>Bluetooth</source>
+        <translation>البلوتوث</translation>
+    </message>
+	在Bluetooth 增加无作用
+	#define D_TRY_FIX_HANG_WHEN_CONNECT_CP_PHONE   1  //AV IN 播放界面,蓝牙通话中连接carplay，在蓝牙界面卡死  //没有项目用到这个宏
+
+	0423：
+	改对应页面的翻译，找到对应UI，根据周围定位所需
+	找到控件的对象名字，搜索，看一下CPP文件，找到控件上面的函数或者槽，再搜一下哪个文件调用了这个函数
+	
+
+	0424：
+	shell脚本中使用空格会起到分割参数的作用，有时候可能会造成混淆，请务必多加检查。
+Bash中的字符串通过' 和 "分隔符来定义，但是它们的含义并不相同。以'定义的字符串为原义字符串，其中的变量不会被转义，而 "定义的字符串会将变量值进行替换。
+```
+foo=bar
+echo "$foo"
+打印 bar
+echo '$foo'
+打印 $foo
+```
+
+    $0 - 脚本名
+    $1 到 $9 - 脚本的参数。 $1 是第一个参数，依此类推。
+    $@ - 所有参数
+    $# - 参数个数
+    $? - 前一个命令的返回值
+    $$ - 当前脚本的进程识别码
+    !! - 完整的上一条命令，包括参数。常见应用：当你因为权限不足执行命令失败时，可以使用 sudo !!再尝试一次。
+    $_ - 上一条命令的最后一个参数。如果你正在使用的是交互式 shell，你可以通过按下 Esc 之后键入 . 来获取这个值。
+
+
+0425：
+changePageSlot
+
+ if (str == "prev")
+    {
+        qDebug()<<"kobe2";
+        emit uiccToBasecontrol(UICC_PREV_TS, UICC_SHORT_PRESS);
+    }
+    else if (str == "next")
+    {
+        qDebug()<<"kobe3";
+        emit uiccToBasecontrol(UICC_NEXT_TS, UICC_SHORT_PRESS);
+    }
+
+
+ #if defined (UI_NEW_TUCSON_1024_600)
+    connect(ui->nextbtn, SIGNAL(btnClicked(QString)), this, SLOT(btnClickedSlot(QString)));
+    connect(ui->prevbtn, SIGNAL(btnClicked(QString)), this, SLOT(btnClickedSlot(QString)));
+#else
+    connect(ui->prevbtn, SIGNAL(btnClicked(QString)), this, SLOT(changePageSlot(QString)));
+    connect(ui->nextbtn, SIGNAL(btnClicked(QString)), this, SLOT(changePageSlot(QString)));
+#endif
+
+0426：
+
+1297wt-53
+1.对策开机反应卡顿问题 (加宏，设置GNSS初始波特率为9600)
+2.对策ACC起来CP点击退出图标卡死问题(把字体只留下英语和阿拉伯语的缩小字体库，编译完后少了2.1M空间)
+0428：
+usb ：Volume was not properly unmounted. Some data may be corrupt. Please run fsck
+Linux usb解除写保护：
+tail -f /var/log/syslog
+插入u盘
+看自己是sdc1还是sdb别的
+umount /media/chenshihao/HOUSE  (弹出u盘)
+sudo dosfsck -v -a /dev/sdc1 
+
+0505：
+1.编译8388代码：
+进入/Direct8388GitServer/linux/kernel/drivers/framebuffer 的makefile文件
+修改SUPPORT_CHECK_CODING_STYLE=1 将1改为0
+进行./mk      1
+./mk      all
+2.划词翻译pdf 网址：https://pdf.hakso.net/web/viewer.html
+用火狐打开，并把要翻译的拖进去
