@@ -151,6 +151,10 @@ sudo apt-get install -f -y ./ukylin-wechat_3.0.0_amd64.deb
 gedit id_rsa.pub 
 cd
  ssh git@192.168.30.5
+ 公匙免密码操作：
+ssh-keygen -t rsa
+ssh-copy-id -i ~/.ssh/id_rsa.pub  git@192.168.30.5 -p 22
+git pull
 
 * 打包和压缩文件：
 tar 文件打包 c创建包文件  f 指定目标文件  v显示文件名称  t显示包中内容 x释放包中内容  z使得tar可以直接进行压缩和解压的功能    
@@ -583,7 +587,7 @@ git commit -m '冲突解决'
 
 5、git add test.txt && git commit -m '冲突解决结束'  再次将本地的test.txt文件提交。
 
-6、git push将解决冲突后的文件推送到远程。
+6、git push将解决冲突后的文件推送到远程
 
 只要所有开发者都遵守这个规则，那么解决冲突是一件非常容易的事情。
 
@@ -674,12 +678,12 @@ ps:注意:如果编译后出现Error: Assgined partition size is less than the i
 4. 对Linux机器进行截屏：
 1.将可执行文件screenshot拷贝至U盘
 2.将U盘插到linux平台机器上
-3.通过超级终端命令行进入挂载的U盘目录下，执行./screenshot,会生成一个命名为screenshot+时间戳的jpg截图文件（使用U盘前，我们先要为外挂点新建一个子目录，一般外挂点的子目录都是建立在/mnt里面的，我们也建在那里，当然也可以建在/目录下，名字可以自己定，我们就取名为usb，终端下的命令如下：  mkdir /mnt/usb    然后我们就可以接上我的U盘了，然后在终端下输入命令并击Enter键即可：  mount /dev/sda1 /mnt/usb    在Windows下当我们用完U盘后，在我们取下U盘前我们先要删除，同样在Linux下我们也要删除挂起点，方法是：   umount /dev/sda1 /mnt/usb 或 umount /dev/sda1   如果不把U盘给umount掉，那样很容易造成数据的丢失 ）
+//3.通过超级终端命令行进入挂载的U盘目录下，执行./screenshot,会生成一个命名为screenshot+时间戳的jpg截图文件（使用U盘前，我们先要为外挂点新建一个子目录，一般外挂点的子目录都是建立在/mnt里面的，我们也建在那里，当然也可以建在/目录下，名字可以自己定，我们就取名为usb，终端下的命令如下：  mkdir /mnt/usb    然后我们就可以接上我的U盘了，然后在终端下输入命令并击Enter键即可：  mount /dev/sda1 /mnt/usb    在Windows下当我们用完U盘后，在我们取下U盘前我们先要删除，同样在Linux下我们也要删除挂起点，方法是：   umount /dev/sda1 /mnt/usb 或 umount /dev/sda1   如果不把U盘给umount掉，那样很容易造成数据的丢失 ）
 ```
 mount /mnt/sda1
 ```
 ps：注意：./screenshot
-cd /mnt/sda1/scr(tab)
+cd /mnt/sda1/scr(tab)   (有时候不一定是sda1，设备号不唯一)
 一张图片最好多截图和截屏多几次，防止截图失败生成无法查看的图片。
 5. 使用打印工具minicom ：
 https://worthsen.blog.csdn.net/article/details/77662637?spm=1001.2101.3001.6650.4&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7EOPENSEARCH%7ERate-4-77662637-blog-120830919.pc_relevant_3mothn_strategy_and_data_recovery&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7EOPENSEARCH%7ERate-4-77662637-blog-120830919.pc_relevant_3mothn_strategy_and_data_recovery&utm_relevant_index=9
@@ -747,8 +751,470 @@ export PATH=$CBIN:$PWD/build/tools/arm-9.2_eabihf/bin/:$PWD/build/tools/arm-2014
 15.如果出现卡死等问题，可以把代码恢复成跟服务器一样再试试，或者恢复到以前的版本尝试。"
 
 11. 新建项目
-1.在对应的地方以终端打开，拖进脚本
-2.修改panel ，在config文件夹下修改deconfig和app_config 的.ko
+1.在对应的地方以终端打开，拖进脚本 输入参考项目，输入生成项目
+2.修改panel ，在config文件夹下修改deconfig和app_config 的.ko，修改对应面板
+
+12. GDB调试
+前期准备:
+1.更新 CP 服务或其它需要 GDB 调试的 lib 支持 GDB 调试(找 Sunplus)
+2.修改 linux/sdk 下的 Makefile
+在 packimg:下的
+-$(FIND) ./out/system/bin -type f | xargs -I '{}' $(TARGET_TOOLS_PREF
+IX)strip '{}' 2> /dev/null
+在路径后加入不需要压缩的 bin 或 lib:
+-$(FIND) ./out/system/bin
+carplay_plugin.so"
+!-name "apple_carplay_server" ! -name "lib
+-type f | xargs -I ..................
+
+GDBDebug-MakefileGDB 调试 CP 步骤:
+1.ps -e 看下 cp server 的进程 pid
+2.把 GDB 拷到 U 盘,插到机器上
+3.连接无线 cp
+4.连上后,进 USB 目录,执行./GDB
+5.输入 attach pid 号
+支持 GDB)
+(这个时候 cp 会卡住)
+(表示当前监视 cp server 所在现成,需要 cp server支持GDB)
+6.再输入 c
+(即:continue, 解除卡住)
+7.开始测试,期间不要在打印行随便输入任何东西(GDB 调试不稳定容易造成崩
+溃影响正常测试)
+(即使是 Enter 换行也不要,GDB 模式下直接敲 Enter 默认输入上一次指令)
+8.复测到卡死问题时
+先按一下 ctrl+c,避免输入缓冲区有数据
+敲 info threads 查看线程信息
+此时*会直接指向出问题的线程9. 再敲 bt(第一下可能不会出来,要敲两下),查看该线程出错位置
+10.有时可能 bt 信息不够
+需要额外敲:f 1 和 p limiter
+注意事项:
+因为 GDB 工具不稳定,有时候系统卡死可能是 GDB 工具造成的,如何确认?
+(1). 敲了该敲的指令后,先敲一下 c,看是否恢复。如果能恢复即为卡 GDB;
+(2). 敲了 c 后无反应,直接敲 q,提示退出 GDB,输入 y 退出,如果能恢复即为卡
+GDB;
+(3). 退出 ps -e 查看 Launcher 和 apple_carplay_server 是否还在,不在的那就
+必定是死机了。
+
+13. Linux usb/U盘解除写保护：
+tail -f /var/log/syslog
+插入u盘
+看自己是sdc1还是sdb别的
+umount /media/chenshihao/HOUSE  (弹出u盘)
+sudo dosfsck -v -a /dev/sdc1 
+
+14. 输出文件名字到一个文件里面
+ls -F > cat1.txt   //输出文件名字到另一个文件夹
+ls -R 表示递归输出子目录的文件和目录名称
+  gedit cat1.txt   打开查看
+
+15. 快速打开Linux的svn
+在对应文件夹用终端打开
+输入rabbitvcs browser
+
+16. svn回退版本
+在windows下在对应文件夹下，右键保存版本到某一个地方（名字尽量不变）
+再把该版本上传到对应地方
+
+* 编译代码问题
+1.编译8388代码：
+进入/Direct8388GitServer/linux/kernel/drivers/framebuffer 的makefile文件
+修改SUPPORT_CHECK_CODING_STYLE=1 将1改为0
+进行./mk      1
+./mk      all
+* 划词翻译pdf 网址：https://pdf.hakso.net/web/viewer.html
+用火狐打开，并把要翻译的拖进去
+
+* 测试Carplay 带宽
+目前只有红色的iPhone13有最新的carplay test
+
+1.车机连接打印线，电脑打开log串口工具
+
+2.车机连接手机无线cp
+
+3.手机打开carplay test应用，找到Performance，选择wireless Test
+
+4.只需要选择不同的case来进行测试，其余不用修改
+
+5.不同的case要输入的命令行不同，需要打开后将其复制下来，然后通过复制快速打入命令行，因为测试要求10s内输入，每行命令后面添加一个&
+
+如：
+
+    TCP Iperf server: iperf -p 6001 -s -i 1 -w 176k &
+    UDP Iperf server: iperf -p 5001 -s -i 1 -w 512k -u &
+
+这样是保证iperf服务在后台运行，可以使终端可以继续输入命令
+
+6.不同case需要输入的命令手机都会有提示
+
+7.可以输入
+
+ps -e
+
+    查看各个已开启的服务，在测试前需要关闭所有的iperf服务，可以输入
+
+kill -s 9 对应服务id号
+
+    强制关闭已开启的iperf服务
+
+然后再进行命令行的输入，如果失败则可以关闭服务重新输入命令
+
+8.成功后手机会提示是否通过该case，手机可将结果导出为.txt发送到微信或者邮件 
+
+
+* flash镜像文件(烧录软件)制作：
+
+在连上打印线之后要先设置波特率115200
+1B			//十六进制Esc,进入uboot模式，串口工具使用Hex格式发送
+Esc			//进入uboot模式,可在minicom使用	
+（如果是8368C还要重启一下，再按ESC进入Uboot）在开机起来的过程中按Esc进去uboot模式,15s后MCU会自动重启，重启时再次进入uboot就不会再重启了，此时插入USB
+ispsp mtdparts_adj		//制作前必要步骤之调整flash块
+（第一次无法识别，再输入一次）
+snand_ghost usb 0 -sb -su	//8368U 从flash写出烧录文件到usb 0
+ghost2snand usb 0 -sb		//8368U 从usb 0写入烧录文件到flash(软件验证)
+
+
+snand_ghost_sb usb 0		//8368C 从flash写出烧录文件到usb 0
+
+* linux 环境配置：
+1.安装Ubuntu 18.04 操作系统
+2.安装完操作系统后，安装开发环境。
+2.1git 代码管理工具安装
+先执行sudo apt-get update
+再执行sudo apt-get install git
+2.2编译环境安装
+sudo apt-get install build-essential cmake gawk lib32z1  bison flex libssl-dev
+
+2.3安装rabbitvcs svn， SVN文档管理工具
+sudo apt-get install rabbitvcs-cli rabbitvcs-core rabbitvcs-gedit rabbitvcs-nautilus
+
+
+2.4Qt集成开发工具安装
+在svn://192.168.10.9/市场&研发事业部/软件部/资料/开发工具 路径下下载
+qt-opensource-linux-x64-5.3.2.run
+
+然后进入下载目录，使用chmod命令添加执行权限
+然后执行 ./qt-opensource-linux-x64-5.3.2.run 进行安装，接下来的图形安装步骤，点击下一步直到完成即可。
+
+
+2.5安装openssh , 如果需要不输入密码就访问git 服务器则需要执行此步骤
+2.5.1  sudo apt-get install openssh-client openssh-server
+2.5.2  执行ssh-keygen 命令，就会在 ~/.ssh/ 目录下生成 id_rsa       id_rsa.pub   known_hosts 这三个文件。将id_rsa.pub文件发给各自的师傅，放到git服务器上。
+
+2.6搜狗输入法和wps安装，drawio画图工具
+
+在svn://192.168.10.9/市场&研发事业部/软件部/资料/开发工具 路径下下载
+sogoupinyin_2.2.0.0108_amd64.deb
+wps-office_11.1.0.10702_amd64.deb
+drawio-amd64-20.3.0.deb
+这些也可以从网上下载最新的。
+
+然后执行 sudo dpkg -i xxx.deb  安装相应的软件包。如果提示有依赖的软件包需要安装，则需要另外执行 sudo apt-get -f install
+
+2.7uart 打印工具安装
+命令行工具可以使用minicom , sudo apt-get install minicom
+图形化工具可以使用cutecom, sudo apt-get install cutecom
+
+2.8文件比较工具
+sudo apt-get install meld
+
+2.9邮箱使用ubuntu自带的thunderbird 工具进行配置即可
+
+2.10我们的代码中自定义了一些控件，QtDesinger如果要正常显示这些控件。则需要安装以下步骤添加控件插件。
+在svn://192.168.10.9/市场&研发事业部/软件部/资料/开发工具 路径下下载
+designer_plugin_lib.zip
+解压压缩包后，将里面的 .so 文件都复制到以下路径
+~/Qt5.3.2/5.3/gcc_64/plugins/designer
+~/Qt5.3.2/Tools/QtCreator/bin/plugins/designer
+
+* 总结一下8368XU 死机问题的查找步骤：
+1.出现“Accessory Application PID[716] die”类似这样的die，需要先使用top指令查看是哪一支Application 停掉了，先定位问题出在哪个模组，同时接上ecos debug一起提供log。
+2.找出是哪支application挂掉之后，需要考虑挂在这支application上的所有的code。 比如挂在Launcher这一支：
+716  1 root  S   152m 80.3   0  0.0 /application/bin/Launcher --dfb:no
+因为Application die, 有可能是Qt, dfb, 也有可能是客户App的code，只要活在Launcher进程上的代码都有嫌疑。
+3.此时需要进一步锁定具体是死在哪个位置哪个函数
+a.先加上init_sig.cpp的代码（代码看最后）
+b.尽量在Launcher启动的刚开始调用init() , 注册back trace的打印
+c.Backtrace_test.cpp为调用范例（对应的代码在文末）
+d.定位死机的点在哪边
+加了以上代码后出现死机时会打印出以下信息：
+
+
+
+
+
+signum= 11   SIGSEGV表示访问了非法内存，访问的非法地址是info.si_addr= 0x29d，这个/application/bin/Launcher() [0x264da]地址很可能就是问题发生的位置，此时需要使用反汇编将地址找到是哪个函数，看是否存在风险。
+这个地址发生在application内，查找反汇编地址需要按以下步骤运行：
+(a).在根目录下执行gmenv.sh不要退出；
+
+
+(b).进入application/out/system/bin下执行arm-none-linux-gnueabihf-objdump -D Launcher，然后根据死机地址查询对应的函数即可。
+
+
+4.有时也可上网查询报错信息是什么问题，比如下面这个报错：
+Alignment trap: not handling instruction e8503f00 at [<410a7b1a>]
+Unhandled fault: alignment exception (0x001) at 0xaf
+在网上查找就能找到可以查找问题的方向：
+https://www.cnblogs.com/pjl1119/p/13441457.html
+https://www.796t.com/content/1541760907.htm
+
+
+
+
+init_sig.cpp文件所有内容：
+
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <signal.h>
+#include <sys/prctl.h>
+#include <execinfo.h>
+
+
+#define BACKTRACE_DEPTH_SIZE	(32)
+
+typedef struct {
+	int num;
+	char name[8];
+} SymbolNameTable_t;
+
+const SymbolNameTable_t gSymbolNameTbl[] = {
+	{SIGSEGV, "SIGSEGV"},
+	{SIGTERM, "SIGTERM"},
+	{SIGINT,  "SIGINT"},
+	{SIGQUIT, "SIGQUIT"},
+	{SIGABRT, "SIGABRT"},
+	{SIGBUS,  "SIGBUS"},
+	{SIGILL,  "SIGILL"},
+	{SIGKILL, "SIGKILL"},
+	{SIGFPE,  "SIGFPE"},
+	{SIGTERM, "SIGTERM"},
+	{SIGSTOP, "SIGSTOP"},
+//	{SIGPIPE, "SIGPIPE"},
+};
+
+const int gSymTblSize = sizeof(gSymbolNameTbl) / sizeof(SymbolNameTable_t);
+
+static const char *getSymbolName(int signum)
+{
+	int i;
+
+	for(i = 0 ; i < gSymTblSize ; i++) {
+		if(gSymbolNameTbl[i].num == signum) {
+			return gSymbolNameTbl[i].name;
+		}
+	}
+
+	printf("Signal name not found! Please check your code!\n");
+	assert(0);
+}
+
+static void signal_segv(int signum, siginfo_t* info, void* ptr)
+{
+//	static const char *si_codes[3] = {"", "SEGV_MAPERR", "SEGV_ACCERR"};
+
+	(void)ptr;
+
+	char thread_name[1024+1] = {0};
+	void * arr[BACKTRACE_DEPTH_SIZE] = {0};
+	int thread_depth;
+	char ** symbol_str;
+	int i;
+
+	printf("=== %s ===\n", __FUNCTION__);
+	printf("signum = %d (%s)\n", signum, getSymbolName(signum));
+	printf("info.si_errno = %d\n", info->si_errno);
+	printf("info.si_code  = %d\n", info->si_code);
+	printf("info.si_addr  = %p\n", info->si_addr);
+
+	if (prctl(PR_GET_NAME, (unsigned long)thread_name, 0, 0, 0) != 0) {
+		strcpy(thread_name, "<name unknown>");
+	} else {
+		// short names are null terminated by prctl, but the manpage
+		// implies that 16 byte names are not.
+		thread_name[1024] = 0;
+	}
+
+	printf("=========\n");
+	printf("Thread Name: %s\n", thread_name);
+
+	thread_depth = backtrace(arr, BACKTRACE_DEPTH_SIZE);
+	symbol_str = backtrace_symbols(arr, thread_depth);
+
+	if(symbol_str != NULL) {
+
+		printf("Back trace: (depth=%d)\n", thread_depth);
+		for(i = 0 ; i < thread_depth ; i ++) {
+			printf("\t %s\n", symbol_str[i]);
+		}
+		printf("Back trace (END)\n");
+
+		free(symbol_str);
+	}
+
+	/* remove our net so we fault for real when we return */
+	signal(signum, SIG_DFL);
+
+	exit (-1);
+}
+
+int init() {
+	struct sigaction action;
+	memset(&action, 0, sizeof(action));
+	action.sa_sigaction = signal_segv;
+	action.sa_flags = SA_SIGINFO;
+
+	int i;
+
+	for(i = 0 ; i < gSymTblSize ; i++) {
+		if(0 > sigaction(gSymbolNameTbl[i].num, &action, NULL)) {
+			perror(gSymbolNameTbl[i].name);
+			return 0;
+		}
+	}
+
+	signal( SIGPIPE, SIG_IGN ); // Ignore SIGPIPE signals so we get EPIPE errors from APIs instead of a signal.
+	return 0;
+}
+
+
+Backtrace_test.cpp文件所有内容：
+
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#if 1
+#include <signal.h>
+#include <sys/prctl.h>
+#include <execinfo.h>
+#endif
+
+#define BACKTRACE_DEPTH_SIZE	(32)
+
+typedef struct {
+	int num;
+	char name[8];
+} SymbolNameTable_t;
+
+const SymbolNameTable_t gSymbolNameTbl[] = {
+	{SIGSEGV, "SIGSEGV"},
+	{SIGTERM, "SIGTERM"},
+	{SIGINT,  "SIGINT"},
+	{SIGQUIT, "SIGQUIT"},
+	{SIGABRT, "SIGABRT"},
+	{SIGBUS,  "SIGBUS"},
+	{SIGILL,  "SIGILL"},
+	{SIGKILL, "SIGKILL"},
+	{SIGFPE,  "SIGFPE"},
+	{SIGTERM, "SIGTERM"},
+	{SIGSTOP, "SIGSTOP"},
+//	{SIGPIPE, "SIGPIPE"},
+};
+
+const int gSymTblSize = sizeof(gSymbolNameTbl) / sizeof(SymbolNameTable_t);
+
+static const char *getSymbolName(int signum)
+{
+	int i;
+
+	for(i = 0 ; i < gSymTblSize ; i++) {
+		if(gSymbolNameTbl[i].num == signum) {
+			return gSymbolNameTbl[i].name;
+		}
+	}
+
+	printf("Signal name not found! Please check your code!\n");
+	assert(0);
+}
+
+static void signal_segv(int signum, siginfo_t* info, void* ptr)
+{
+//	static const char *si_codes[3] = {"", "SEGV_MAPERR", "SEGV_ACCERR"};
+
+	(void)ptr;
+
+	char thread_name[1024+1] = {0};
+	void * arr[BACKTRACE_DEPTH_SIZE] = {0};
+	int thread_depth;
+	char ** symbol_str;
+	int i;
+
+	printf("=== %s ===\n", __FUNCTION__);
+	printf("signum = %d (%s)\n", signum, getSymbolName(signum));
+	printf("info.si_errno = %d\n", info->si_errno);
+	printf("info.si_code  = %d\n", info->si_code);
+	printf("info.si_addr  = %p\n", info->si_addr);
+
+	if (prctl(PR_GET_NAME, (unsigned long)thread_name, 0, 0, 0) != 0) {
+		strcpy(thread_name, "<name unknown>");
+	} else {
+		// short names are null terminated by prctl, but the manpage
+		// implies that 16 byte names are not.
+		thread_name[1024] = 0;
+	}
+
+	printf("=========\n");
+	printf("Thread Name: %s\n", thread_name);
+
+	thread_depth = backtrace(arr, BACKTRACE_DEPTH_SIZE);
+	symbol_str = backtrace_symbols(arr, thread_depth);
+
+	if(symbol_str != NULL) {
+
+		printf("Back trace: (depth=%d)\n", thread_depth);
+		for(i = 0 ; i < thread_depth ; i ++) {
+			printf("\t %s\n", symbol_str[i]);
+		}
+		printf("Back trace (END)\n");
+
+		free(symbol_str);
+	}
+
+	/* remove our net so we fault for real when we return */
+	signal(signum, SIG_DFL);
+
+	exit (-1);
+}
+
+int init() {
+	struct sigaction action;
+	memset(&action, 0, sizeof(action));
+	action.sa_sigaction = signal_segv;
+	action.sa_flags = SA_SIGINFO;
+
+	int i;
+
+	for(i = 0 ; i < gSymTblSize ; i++) {
+		if(0 > sigaction(gSymbolNameTbl[i].num, &action, NULL)) {
+			perror(gSymbolNameTbl[i].name);
+			return 0;
+		}
+	}
+
+	signal( SIGPIPE, SIG_IGN ); // Ignore SIGPIPE signals so we get EPIPE errors from APIs instead of a signal.
+	return 0;
+}
+
+int main(void)
+{
+	char *ptr = NULL;
+
+	init();
+
+	printf("%s:%d\n", __FUNCTION__, __LINE__);
+
+	printf("ptr[3] = %c\n", ptr[3]);
+
+
+	return 0;
+}
+
+
+
+
 
 # 代码样例
 1. 信号与槽的实现：
@@ -1255,7 +1721,7 @@ changePageSlot
 2.对策ACC起来CP点击退出图标卡死问题(把字体只留下英语和阿拉伯语的缩小字体库，编译完后少了2.1M空间)
 0428：
 usb ：Volume was not properly unmounted. Some data may be corrupt. Please run fsck
-Linux usb解除写保护：
+Linux usb/U盘解除写保护：
 tail -f /var/log/syslog
 插入u盘
 看自己是sdc1还是sdb别的
@@ -1270,3 +1736,198 @@ sudo dosfsck -v -a /dev/sdc1
 ./mk      all
 2.划词翻译pdf 网址：https://pdf.hakso.net/web/viewer.html
 用火狐打开，并把要翻译的拖进去
+
+0506:
+关于回调函数的讲解：
+https://blog.csdn.net/u011754972/article/details/116536698
+https://blog.csdn.net/weixin_43056298/article/details/100520926
+https://zhuanlan.zhihu.com/p/326902537
+由于make_youtiao(10000)这个函数10分钟才能返回，你不想一直死盯着屏幕10分钟等待结果，那么一种更好的方法是让make_youtiao()这个函数知道制作完油条后该干什么，即，更好的调用make_youtiao的方式是这样的：“制作10000个油条，炸好后卖出去”，因此调用make_youtiao就变出这样了：
+
+make_youtiao(10000, sell);
+
+看到了吧，现在make_youtiao这个函数多了一个参数，除了指定制作油条的数量外还可以指定制作好后该干什么，第二个被make_youtiao这个函数调用的函数就叫回调，callback。
+
+现在你应该看出来了吧，虽然sell函数是你定义的，但是这个函数却是被其它模块调用执行的
+
+新的编程思维模式
+
+让我们再来仔细的看一下这个过程。
+
+程序员最熟悉的思维模式是这样的：
+
+    调用某个函数，获取结果处理获取到的结果
+
+res = request();
+handle(res);
+
+这就是函数的同步调用，只有request()函数返回拿到结果后，才能调用handle函数进行处理，request函数返回前我们必须等待，这就是同步调用
+但是如果我们想更加高效的话，那么就需要异步调用了，我们不去直接调用handle函数，而是作为参数传递给request：
+
+request(handle);
+
+我们根本就不关心request什么时候真正的获取的结果，这是request该关心的事情，我们只需要把获取到结果后该怎么处理告诉request就可以了，因此request函数可以立刻返回，真的获取结果的处理可能是在另一个线程、进程、甚至另一台机器上完成。
+
+这就是异步调用
+从编程思维上看，异步调用和同步有很大的差别，如果我们把处理流程当做一个任务来的话，那么同步下整个任务都是我们来实现的，但是异步情况下任务的处理流程被分为了两部分：
+
+    第一部分是我们来处理的，也就是调用request之前的部分第二部分不是我们处理的，而是在其它线程、进程、甚至另一个机器上处理的。
+
+我们可以看到由于任务被分成了两部分，第二部分的调用不在我们的掌控范围内，同时只有调用方才知道该做什么，因此在这种情况下回调函数就是一种必要的机制了。
+
+也就是说回调函数的本质就是“只有我们才知道做些什么，但是我们并不清楚什么时候去做这些，只有其它模块才知道，因此我们必须把我们知道的封装成回调函数告诉其它模块”。
+对于一般的函数来说，我们自己编写的函数会在自己的程序内部调用，也就是说函数的编写方是我们自己，调用方也是我们自己。
+
+但回调函数不是这样的，虽然函数编写方是我们自己，但是函数调用方不是我们，而是我们引用的其它模块，也就是第三方库，我们调用第三方库中的函数，并把回调函数传递给第三方库，第三方库中的函数调用我们编写的回调函数
+
+而之所以需要给第三方库指定回调函数，是因为第三方库的编写者并不清楚在某些特定节点，比如我们举的例子油条制作完成、接收到网络数据、文件读取完成等之后该做什么，这些只有库的使用方才知道，因此第三方库的编写者无法针对具体的实现来写代码，而只能对外提供一个回调函数，库的使用方来实现该函数，第三方库在特定的节点调用该回调函数就可以了。
+
+另一点值得注意的是，从图中我们可以看出回调函数和我们的主程序位于同一层中，我们只负责编写该回调函数，但并不是我们来调用的。
+
+最后值得注意的一点就是回调函数被调用的时间节点，回调函数只在某些特定的节点被调用，就像上面说的油条制作完成、接收到网络数据、文件读取完成等，这些都是事件，也就是event，本质上我们编写的回调函数就是用来处理event的，因此从这个角度看回调函数不过就是event handler，因此回调函数天然适用于事件驱动编程event-driven，我们将会在后续文章中再次回到这一主题。
+回调的类型
+
+我们已经知道有两种类型的回调，这两种类型的回调区别在于回调函数被调用的时机。
+
+注意，接下来会用到同步和异步的概念，对这两个概念不熟悉的同学可以参考上一盘文章《从小白到高手，你需要理解同步和异步》。
+
+同步回调
+
+这种回调就是通常所说的同步回调synchronous callbacks、也有的将其称为阻塞式回调blocking callbacks，或者什么修饰都没有，就是回调，callback，这是我们最为熟悉的回调方式。
+
+当我们调用某个函数A并以参数的形式传入回调函数后，在A返回之前回调函数会被执行，也就是说我们的主程序会等待回调函数执行完成，这就是所谓的同步回调。
+有同步回调就有异步回调。
+回调对应的编程思维模式
+
+让我们用简单的几句话来总结一下回调下与常规编程思维模式的不同。
+
+假设我们想处理某项任务，这项任务需要依赖某项服务S，我们可以将任务的处理分为两部分，调用服务S前的部分PA，和调用服务S后的部分PB。
+
+在常规模式下，PA和PB都是服务调用方来执行的，也就是我们自己来执行PA部分，等待服务S返回后再执行PB部分。
+
+但在回调这种方式下就不一样了。
+
+在这种情况下，我们自己来执行PA部分，然后告诉服务S：“等你完成服务后执行PB部分”。
+
+因此我们可以看到，现在一项任务是由不同的模块来协作完成的。
+
+即：
+
+    常规模式：调用完S服务后后我去执行X任务，
+    回调模式：调用完S服务后你接着再去执行X任务，
+
+其中X是服务调用方制定的，区别在于谁来执行。
+为什么异步回调这种思维模式正变得的越来越重要
+
+在同步模式下，服务调用方会因服务执行而被阻塞暂停执行，这会导致整个线程被阻塞，因此这种编程方式天然不适用于高并发动辄几万几十万的并发连接场景，
+
+针对高并发这一场景，异步其实是更加高效的，原因很简单，你不需要在原地等待，因此从而更好的利用机器资源，而回调函数又是异步下不可或缺的一种机制。
+回调地狱，callback hell
+
+有的同学可能认为有了异步回调这种机制应付起一切高并发场景就可以高枕无忧了。
+
+实际上在计算机科学中还没有任何一种可以横扫一切包治百病的技术，现在没有，在可预见的将来也不会有，一切都是妥协的结果。
+
+那么异步回调这种机制有什么问题呢？
+
+实际上我们已经看到了，异步回调这种机制和程序员最熟悉的同步模式不一样，在可理解性上比不过同步，而如果业务逻辑相对复杂，比如我们处理某项任务时不止需要调用一项服务，而是几项甚至十几项，如果这些服务调用都采用异步回调的方式来处理的话，那么很有可能我们就陷入回调地狱中。
+
+举个例子，假设处理某项任务我们需要调用四个服务，每一个服务都需要依赖上一个服务的结果，如果用同步方式来实现的话可能是这样的：
+
+a = GetServiceA();
+b = GetServiceB(a);
+c = GetServiceC(b);
+d = GetServiceD(c);
+
+代码很清晰，很容易理解有没有。
+
+我们知道异步回调的方式会更加高效，那么使用异步回调的方式来写将会是什么样的呢？
+
+GetServiceA(function(a){
+    GetServiceB(a, function(b){
+        GetServiceC(b, function(c){
+            GetServiceD(c, function(d) {
+                ....
+            });
+        });
+    });
+});
+
+我想不需要再强调什么了吧，你觉得这两种写法哪个更容易理解，代码更容易维护呢？
+
+博主有幸曾经维护过这种类型的代码，不得不说每次增加新功能的时候恨不得自己化为两个分身，一个不得不去重读一边代码；另一个在一旁骂自己为什么当初选择维护这个项目。
+
+异步回调代码稍不留意就会跌到回调陷阱中，那么有没有一种更好的办法既能结合异步回调的高效又能结合同步编码的简单易读呢？
+
+幸运的是，答案是肯定的，我们会在后续文章中详细讲解这一技术。
+总结
+
+在这篇文章中，我们从一个实际的例子出发详细讲解了回调函数这种机制的来龙去脉，这是应对高并发、高性能场景的一种极其重要的编码机制，异步加回调可以充分利用机器资源，实际上异步回调最本质上就是事件驱动编程，这是我们接下来要重点讲解的内容。
+
+我个人的理解是回调函数就是通过函数指针来调用的函数，为什么不直接调用函数是因为可以实现用普遍适用的函数来调用不同的回调函数。例如：系统层的程序猿会编写好接口供应用层的程序猿用，操作系统会调度这个接口，但应用程序猿只知道这是个函数指针，指针指向的函数是由他自己编写的，这一步叫做登记回调函数。这是回调函数/函数指针最重要的作用
+同步和异步整体阅读下来感觉和线程有关，回调函数本身并不能实现异步，但异步的实现离不开回调函数。比如pthread_create(...)创建线程，其中一个参数便是函数指针
+
+
+ git log
+ 1998  git pull
+ 1999  git log 
+ 2000  git branch -a
+ 2001  git checkout remotes/origin/8368XU_MaxmadeDevelop
+ 2002  git log 
+ 2003  git pull
+ 2004  git pull origin 8368XU_MaxmadeDevelop
+ 2005  git log
+ 2006  git log 
+ 2007  git branch -a
+ 2008  git pull
+ 2009  git pull origin 8368XU_MaxmadeRelease
+ 2010  git pull
+ 2011  git branch -a
+ 2012  git checkout 8368-XU-20220901
+ 2013  git log 
+ 2014  git branch -a
+ 2015  git pull
+ 2016  git checkout 8368XU_MaxmadeDevelop
+ 2017  git branch -a
+ 2018  git log
+ 2019  git pull
+ 2020  vim ui.cfg 
+ 2021  gedit ui.cfg 
+ 2022  history 
+
+
+编译8368xu的平台代码命令：
+./mk     2
+./mk	 all
+编译8368C平台代码命令：
+首先/home/chenshihao/Direct8388GitServer/linux/kernel/drivers/framebuffer打开makefile，将1改为0（SUPPORT_CHECK_CODING_STYLE=0）
+./mk   1
+./mk    all
+0508：
+video][ VideoUiRender.cpp writeFrame 185] ERR: write frame failed, ret= 1
+[2023-05-08 10:48:13] PE_ES_Feed fai
+
+
+0511：
+默认值不可以是局部变量，因为默认参数的函数调用是在编译时确定的，而局部变量的位置与值在编译时均无法确定。
+0512:
+快速打开Linux的svn命令：rabbitvcs browser
+
+0515：
+widget是包名，包含了继承自View的各个控件和相关的Adapter类什么的
+View是类，显示在界面上的一切都和他有关
+0516：
+ui2->sp->搜索setupeq.cpp  352line
+ if (isAutoHide)
+    {
+        autoHideTimerId = startTimer(AUTOHIDE_TIMER);
+    }
+    installEventFilter(this);
+    //setGeometry(geometry);
+	将setGeometry弄掉注释
+
+0518：
+在wps表格里面如果能选择的选项过少，需要增添 数据->有效性->允许的序列和信息来源：有多个表（=信息定义!$j$4:$j$13）意思是在分表格信息定义的第J列的第4行到第13行
+
+0527:
+刚开机快速打开svn： rabbitvcs browser
