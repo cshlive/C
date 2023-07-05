@@ -527,6 +527,7 @@ git diff  --name-only  . |grep "cfg"    查看修改的文件里面包含cfg名�
 
 
 git reset：回退版本，可指定某一次提交的版本。git reset [--soft | --mixed | --hard] commitId。
+git  reset --hard  id  回退
 git revert：撤销某个提交，做反向操作，生成新的commitId，原有提交记录保留。git revert commitId。
 回退分两种情况：
    已 commit，未push到远程仓库。
@@ -542,6 +543,47 @@ git revert：撤销某个提交，做反向操作，生成新的commitId，原�
     git revert（撤销，但是保留了提交记录）。
 
 git checkout .(清空工作区，恢复到刚pull下来的状态)
+git revert基础用法
+基础语法
+
+git revert -n commit-id
+
+    只会反做commit-id对应的内容，然后重新commit一个信息，不会影响其他的commit内容
+
+反做多个commit-id
+
+git revert -n commit-idA..commit-idB
+
+    反做commit-idA到commit-idB之间的所有commit注意：使用-n是应为revert后，需要重新提交一个commit信息，然后在推送。如果不使用-n，指令后会弹出编辑器用于编辑提交信息
+
+冲突的相关操作
+
+    在git操作过程中，最不想看到的一种情况就是冲突，但是，冲突就是一个狗皮膏药，永远避免不了，revert也跑不了这个魔咒，那么我们改怎么处理这个情况
+
+合并冲突后退出
+
+git revert --abort
+
+    当前的操作会回到指令执行之前的样子，相当于啥也没有干，回到原始的状态
+
+合并后退出，但是保留变化
+
+git revert --quit
+
+    该指令会保留指令执行后的车祸现场
+
+合并后解决冲突，继续操作
+
+    如果遇到冲突可以修改冲突，然后重新提交相关信息
+
+git add .
+git commit -m "提交的信息"
+
+总结
+Git reset和git revert的区别
+
+    git reset 是回滚到对应的commit-id，相当于是删除了commit-id以后的所有的提交，并且不会产生新的commit-id记录，如果要推送到远程服务器的话，需要强制推送-fgit revert 是反做撤销其中的commit-id，然后重新生成一个commit-id。本身不会对其他的提交commit-id产生影响，如果要推送到远程服务器的话，就是普通的操作git push就好了
+
 
 2.解决冲突：
 根据上面的学习过程，我总结了一个解决冲突的常规流程：
@@ -614,7 +656,7 @@ git commit -m '冲突解决'
 
 2. 更换开机logo
 (1). 更换开机logo： 
-找到项目底下目录的build/Tools/binary_gen，在此用终端打开，把焦点换到文件。把同名文件脚本拖到终端，再把bmp文件拖进去生成一个.bin文件，把这个文件拷贝到application/config/maxmade/项目名字，放到logo文件夹下并且rename文件为logo.bin
+找到项目底下目录的build/Tools/binary_gen，在此用终端打开，把焦点换到文件。把同名文件脚本拖到终端，再把bmp文件拖进去生成一个.bin文件（两个bin文件，可以将isp开头的的bin文件改为logo.bin），把这个文件拷贝到application/config/maxmade/项目名字，放到logo文件夹下并且rename文件为logo.bin
 图片格式要求为24位bmp(不能为大写的BMP,否则会无法显示),颜色为256色的图片 (如何获取24位256色的图片,可将24位大于256色的图片让美工先转为256色8位的图片,再转回24位,这样将可将logo图片的颜色降为256色);
 (2). 生成可更换开机logo的方法：
 1.进入code的build/tools/binary_gen路径下 将图片也一并放入此目录下  图片格式要求为24位bmp图片
@@ -1212,7 +1254,159 @@ int main(void)
 	return 0;
 }
 
+* linux 终端命令：
+ linux下自定义命令的几种实现方法
+说明
 
+在使用linux时，我们有很多时候可以把自己经常用到的一些脚本做成自己的指令，这样使得我们在用户全局都可以使用自定义的指令，那么实现自定指令的方法有哪些呢，今天在这里根据自己的经验稍微总结一下。
+方法一:环境变量法
+
+熟悉linux的都知道，大部分发行版都会判断用户目录下是否有bin目录，如果有就会将这个目录加入环境变量，也就是说，我们可以将一些脚本写好放到这个目录下，也就是$HOME/bin目录下，这样我们就可以在终端直接调用脚本了，上述判断bin目录是否存在的部分一般会放在$HOME/.profile,我的系统下这部分内容如下：
+复制代码
+```
+# ~/.profile: executed by the command interpreter for login shells.
+# This file is not read by bash(1), if ~/.bash_profile or ~/.bash_login
+# exists.
+# see /usr/share/doc/bash/examples/startup-files for examples.
+# the files are located in the bash-doc package.
+
+# the default umask is set in /etc/profile; for setting the umask
+# for ssh logins, install and configure the libpam-umask package.
+#umask 022
+
+# if running bash
+if [ -n "$BASH_VERSION" ]; then
+    # include .bashrc if it exists
+    if [ -f "$HOME/.bashrc" ]; then
+    . "$HOME/.bashrc"
+    fi
+fi
+
+# set PATH so it includes user's private bin if it exists
+if [ -d "$HOME/bin" ]; then
+    PATH="$HOME/bin:$PATH"
+fi
+
+复制代码
+
+ ```
+
+ 
+
+当然，如果之前目录中没有bin目录，我们自己手动在$HOME目录下建立bin,这个时候需要我们注销后再登录才可以，或者执行source $HOME/.profile。
+方法二:alias方法
+
+bash下我们可以使用alias来为一些简单的命令定义别名，一般这个命令都放在$HOME/.bashrc文件下，如下所示：
+复制代码
+
+ 1 # some more ls aliases
+ 2 #alias ll='ls -l'
+ 3 #alias la='ls -A'
+ 4 #alias l='ls -CF'
+ 5 #mywine
+ 6 alias mwine='WINEPREFIX=/home/yhp/.mywine/deepin_mywine deepin-wine'
+ 7 #个人华为云服务器
+ 8 alias mhw_server='ssh yhp@139.159.243.162'
+ 9 #挂载个人华为云服务器的 /home/yhp 文件夹到本地 /home/yhp/hw_work_space
+10 alias mhw_mount='sshfs yhp@139.159.243.162:/home/yhp /home/yhp/hw_work_space'
+11 alias mhw_umount='fusermount -u /home/yhp/hw_workspace'
+12 #添加更人密码到个人密码管理库
+13 alias mpasswd='sudo bash ~/.hp_passwd/hp_passwd.sh'
+
+复制代码
+
+ 
+方法三:建立fish shell一样的函数机制
+
+上面两种方式不太好管理，而fish shell中自定义指令是使用函数的方式来实现的，一条自定义指令可以对应一个函数，于是我们可以借助fish shell的这种思路来在bash上实现。实现方法如下：
+
+建立放置函数的文件夹
+我的方法是在$HOME下建立.bash_func文件夹，可使用命令 mkdir -p $HOME/.bash_func实现。
+
+在$HOME/.bashrc下添加加载函数的代码
+在$HOME/.bashrc后面添加以下部分，
+复制代码
+
+1 if [ -d "$HOME/.bash_func" ]
+2 then
+3     if [[ $(ls $HOME/.bash_func | wc -c ) -gt 0 ]];then
+4         for flist in $(ls $HOME/.bash_func) 
+5         do
+6             . $HOME/.bash_func/$flist
+7         done
+8     fi
+9 fi
+
+复制代码
+
+ 
+
+这样以来，我们在~/.bash_func/下建立文件写函数，启动终端后，就能自动加载函数，之后就可以做为自定义的指令使用。
+
+比如，我们建立t_func文件，文件内容如下：
+
+1 function t_func(){
+2     echo "hello,this is a demo!"
+3 }
+
+ 
+
+然后我们新打开一个终端，注意要新打开，或者你可以先把shell切换到sh，再切换到bash，使得.vimrc文件被加载，然后我们终端输入t_func可以看到效果！
+
+需要注意的是，要写成函数的形式，虽然一个文件中可以写多个函数，但是建立一个文件写一个函数，一个函数就是一条自定义指令，这样方便管理！
+总结比较
+方法	优点	缺点
+环境变量法 	管理方便，实现简单 	fork了子模块，注定有些你想要实现的实现起来可能比较复杂
+alias法 	简单，明了 	如果要实现复杂的，将要写脚本，在赋别名，不好管理
+函数法 	管理方便，实现简单，函数在终端启动时就加载完毕 	过多的函数可能造成启动终端较慢，单应该没有明显的迟钝
+
+ 
+
+https://www.kancloud.cn/dlover/note2020/1796109
+
+
+* linux平台调触摸屏的操作步骤
+1.获取触屏坐标 
+严格来说，我们只需使用GuitarTestPlatform.exe（防御量产测试工具文件夹中），检测触摸屏有无问题，若有问题（如某块地方无报点，原始值过低，触摸屏某通道损坏，等等），需通报给质量部和供应商，由供应商调好。当供应商给回触摸屏软件参数时，只需将参数刷进屏中即可。
+刷参数步骤如下：
+（1）参数名通常为xxx.cfg，打开调屏工具，选好调屏工具的配置（如GT911），点击 “选择文件”，选择所需参数文件，点击“开始测试”，等待参数全部刷入完成。
+
+测试结束之后，若出现红色字体的内容，说明参数刷入成功，若出现了其他内容，说明参数刷入失败。可通过多次刷入参数来确认触摸屏是否出问题。（注意：每次在调触摸屏之前，将屏内原有参数保存，防止调试出错之后可再刷入原有参数。）
+（2）点击原始值按钮，查看触摸屏的指标是否有变化，如原始值，刷新频率，工作频率等等，确认刷入成功，触摸屏各项指标正常，使用正常。（确认触摸屏触摸没问题的方法：画线不中断，每次点击都要报点，单点只报一个点，点击时点击区域内的最大差值要在100以上。）
+
+调触摸屏时，我们只需关心三点：原点位置，可视区域分辨率，按键坐标范围。
+使用调屏工具获取坐标，记录触摸屏按键坐标范围，确认可视区域分辨率为所需（通常是1024*600或800*480，需根据项目来）。
+2.将按键坐标写入触摸屏驱动文件
+（1）相关平台路径为：（以8388平台为例）
+主路径 ：Direct8388GitServer/application/drivers/touch/
+分路径1） /c-mmcommon，打开后修改gt9xx-common.h，gt9xx-common.c 文件的有关参数。
+分路径2） /c-mmcommonLR02，单独作出该文件夹，是因为有的触摸屏将按键坐标和可视区域的坐标连成一块了（通常可视区域部分x坐标的范围时0～1024，按键的范围是其他）。以x轴为例，0～50，为左侧按键坐标范围，50～1060为可视区域范围，1060～1110为右侧按键范围。若直接将可视区域的坐标传回，会造成车机软件在触摸屏中显示出的按钮存在按键偏移。故需减去这个偏移范围（例如50个像素点）。其他分路径1类似。
+3.编译生成xxx.ko文件
+（举例如下）在linux环境下，从命令行进入到c-mmcommon文件夹中， 执行 “make”指令，编译成功后，可生成一个yyy.ko（yyy为某个名字）文件，改成所需的xxx.ko（自定义的名字），并将该文件拷至touch/ 目录下。若执行make不成功提示找不到编译工具链arm-none-linux-gnueabi-gcc，则需要声明项目所用到的gcc工具链添加到环境变量里(以8368-U为例，工具链位于8368-U-20200422/build/tools/arm-2014.05/bin目录下)：
+1.家目录打开 gedit .bashrc
+2.文本末添加
+export PATH=xxx/8368-U-20200422/build/tools/arm-2014.05/bin:$PATH
+export PATH=xxx/8368-U-20200422/:$PATH
+umask 022
+xxx为工程项目的绝对路径
+(谭宏杰2021.07.06补充)
+4.更改APP中的配置文件
+更改对应项目（如Direct8388GitServer/application/config/maxmade/AN_2268_01/）的app_config文件，将APPCFG_TOUCH_DRIVER=xxx.ko（即改成自定义的名字），之后编译（执行 “make all”指令）时会自行载入。
+（前四项主要为莫勇兴编写，法春鹏进行补充）
+5.在TouchKey.cpp中增添对应触摸屏按键的功能
+找到HandleTouchKeyDown(int nKey)和HandleTouchKeyUp(int nKey)两个函数，添加对应触摸屏按键的功能。
+6.补充
+（1）若需要调触摸屏的刷新率可查阅基频速查表V3.0，选取合适的基频
+
+
+
+
+
+按F5，出现上图，更改划线位置的数值。若更改之后出现问题，可寻求供应商的帮助。
+
+（2）另外，若新打样的触摸屏需要确认，需将屏内的参数保存，将该参数与之前保存的对应的触摸屏参数做对照，保证两次的参数一致。若该触摸屏是第一次打样，在保证触摸屏没问题的情况下，保存该参数并传到SVN上。
+
+（3）提取按键坐标时，应尽量提取较大的按键范围，但前提是不干扰到其他按键或触摸区域。
 
 
 
@@ -1479,7 +1673,112 @@ p = Func;          /*将Func函数的首地址赋给指针变量p*
 调用函数时 可以通过*p(3,5); 实现对函数Func的调用
 
 ```
+9. 注册回调函数
+```
 
+二 注册回调函数的实例：
+
+//底层程序 C2
+
+    #include<iostream>
+     
+    using namespace std;
+     
+    class CCallback
+    {
+    public:
+    	virtual void onCallbackFunc(int value,int type) =0;	
+    };
+     
+    class ClassA
+    {
+    public: 
+    	ClassA(CCallback *pCallbackFunc)
+    	{
+    		m_pCallBack = pCallbackFunc;	
+    	}
+     
+    	void showValue()
+    	{
+    		m_pCallBack->onCallbackFunc(15,0);
+    		m_pCallBack->onCallbackFunc(17,1);
+    	}
+    private:
+    	CCallback *m_pCallBack;
+     
+    };
+
+
+//高层程序 C1
+
+    #include<iostream>
+    #include"ClassA.hpp"
+    using namespace std;
+     
+    class ClassB : public CCallback
+    {
+    public:
+    	ClassB()
+    	{
+    		m_ClassA = new ClassA(this);				
+    	}
+     
+    	void onCallbackFunc(int value,int type)
+    	{
+    		if(type == 0)
+    		{
+    			cout<<"Typ_ZERO =  "<< value<<endl;
+    		}
+    		else
+    		{
+    			cout<<"Typ_Other =  "<< value<<endl;
+    		}
+    	}
+     
+    	void TestShowData()
+    	{
+    		m_ClassA->showValue();
+    	}
+    public:
+    	ClassA * m_ClassA;
+    };
+
+
+//主程序 main 
+
+    #include "stdafx.h"
+    #include"ClassB.hpp"
+     
+     
+    int _tmain(int argc, _TCHAR* argv[])
+    {
+     
+    	ClassB *m_classB =new ClassB();
+    	
+    	m_classB->TestShowData();
+     
+    	system("pause:");
+    	return 0;
+    }
+
+
+测试结果：
+
+
+
+上面就是一个简单的注册回调的过程。
+
+
+三 ： 注册回调有何作用
+
+ 注册回调 可以让调用者与被调用者分开。调用者不关心谁是被调用者，所有它需知道的，只是存在一个具有某种特定原型、某些限制条件（如返回值为int）的被调用函数。
+ 
+
+
+
+
+
+```
 
 
 # 日常改动
@@ -1931,3 +2230,117 @@ ui2->sp->搜索setupeq.cpp  352line
 
 0527:
 刚开机快速打开svn： rabbitvcs browser
+0530：
+关于C++强制类型转换：https://blog.csdn.net/Bob__yuan/article/details/88044361
+
+0607：
+spcarplaymanager类：负责管理device的生命周期和carplay相关配置（配置路径，本机BT-address）
+spcarplay类：负责管理与iPhone连接过程中的各种交互处理
+0608：蓝牙自动化测试问题，看见是把定时器时间延长。DAB版本数据错乱，可能是发送命令太频繁或者是接受命令后的回复不够及时，后面经过黄朝望分析，是carplay模块占用太大，拖慢其他进程导致。XU的强制升级需要接尾线接方控(一根线接KEY1或者KEY2，另外一根接地)，按souce键长按5s，再松开1s，再长按5s
+
+0609：
+不过对于多设备通讯，无论上面是否有协议，其最终都是通过物理上的电缆，光纤或PCB布线上转换成电信号或光信号，甚至对于无线通讯来说转换成电磁波信号进行传输，这些数字->模拟->数字转换实现需要满足的连接引脚特性，电气特性，通讯时序和数据发送和接收的状态定义就是接口
+
+作者：听心跳的声音
+链接：https://zhuanlan.zhihu.com/p/344288542
+
+C语言允许程序变量在定义时就确定内存地址，通过作用域，以及关键字extern，static，实现了精细的处理机制，按照在硬件的区域不同，内存分配有三种方式(节选自C++高质量编程)：1). 从静态存储区域分配。内存在程序编译的时候就已经分配好，这块内存在程序的整个运行期间都存在。例如全局变量，static 变量。2). 在栈上创建。在执行函数时，函数内局部变量的存储单元都可以在栈上创建，函数执行结束时这些存储单元自动被释放。栈内存分配运算内置于处理器的指令集中 ，效率很高，但是分配的内存容量有限。3). 从堆上分配，亦称动态内存分配。程序在运行的时候用 malloc 或 new 申请任意多少的内存，程序员自己负责在何时用 free 或 delete 释放内存。动态内存的生存期由程序员决定，使用非常灵活，但同时遇到问题也最多。
+
+作者：听心跳的声音
+链接：https://zhuanlan.zhihu.com/p/81054282
+
+如果需要频繁申请内存块的场景，都会构建基于静态存储区和内存块分割的一套内存管理机制，一方面效率会更高(用固定大小的块提前分割，在使用时直接查找编号处理)，另一方面对于内存块的使用可控，可以有效避免内存碎片的问题，常见的如RTOS和网络LWIP都是采用这种机制，我个人习惯也采用这种方式，所以关于堆的细节不在描述，如果希望了解，可以参考<C Primer Plus>中关于存储相关的说明。
+
+作者：听心跳的声音
+链接：https://zhuanlan.zhihu.com/p/81054282
+
+
+
+0615：
+gedit .bashrc  配置快捷命令比如将升级文件拷到U盘并拔出
+
+logset   ALOG_LEVEL  v   开最高等级的打印
+
+0617：
+安装之前：
+sudo apt-get update
+sudo aptt update
+解决依赖问题
+    如果上述办法还是没有解决问题，依旧缺少很多依赖关系，可以循环使用下面两个命令进行安装
+
+    sudo apt-get -f install
+    sudo apt-get install 依赖关系名
+
+
+0619:
+chatgpt ：https://cat2.imiku.me/user
+密钥：cat-lDG1wqCQOll67G4nbtvIbTqyAwo4zGcJBaAo80M3G27BHYtt
+
+0626：
+一 何为注册回调 
+
+   注册回调简单解释就是一个高层调用底层，底层再回过头来调用高层，这个过程就叫注册回调， 连接高层和底层就叫注册回调函数。高层程序C1调用底层程序C2，而在底层程序C2 又调用了高层程序C2的callback函数，那么这个callback函数对于高层程序C1来说就是回调函数。 在设计模式中这个方式叫回调模式。
+
+
+关于android auto：
+
+这是一个关于Android Auto模块的程序流程，大致可以分为以下几个步骤：
+
+    AAManagerCallback类继承SPAndroidAutoManagerCallback类，并在其中定义了deviceAttachSignal信号和androidautoAttached槽函数。当设备连接时，AAManagerCallback会发出deviceAttachSignal信号，然后调用androidautoAttached槽函数。
+
+    在androidautoAttached槽函数中，新建AACallBack和AAAudioSessionCallback对象，并通过SPAndroidAutoManager类获取accessoryId，然后注册AACallBack回调函数。之后，检查蓝牙状态并告诉蓝牙AA状态，设置屏幕资源紧急优先级和增益。
+
+    当AACallBack回调函数runningStateChangeHandler检测到状态变化时，会执行相应的操作，例如开始、探测开始、探测成功等。当探测成功时，会启动定时器并显示第一次连接提示框，然后获取屏幕资源并设置视频源，触发规则并记录AA可视状态。
+
+    当AACallBack回调函数bluetoothPairingRequestHandler检测到需要蓝牙配对时，会请求蓝牙配对。
+
+    最后，在androidAutoShow函数中，Android Auto模块会展示相关内容。
+
+总体来说，这个程序流程涉及到了许多不同的类和对象，包括AAManagerCallback、AACallBack、AAAudioSessionCallback、SPAndroidAutoManager、ImplicitSource等。其中，AACallBack是最重要的一个对象，它负责处理Android Auto模块的各种状态变化和事件，并触发相应的操作。
+
+
+0627：
+TD平台更换logo后开机顺闪主界面，加#define WARNING_AND_NOWARING_INDEPENDENT_INI	1    //警告和无警告INI独立  
+搜该套UI，对应型号的homeview，改ini,增加warningini，和style的homerc
+
+0629：
+关于android auto S21手机连AA有异常，其他手机无异常的情况，对比S9和pixel4的正常情况的AA版本，发现S21原来测试时的android auto版本是9.4版本，正常手机是9.7版本，现在将S21手机升级AA的版本升级到最新（9.8），则可以解决出现地图显示不完整问题
+
+将位智地图更新app，则可以解决点击无响应的问题
+
+是更新了什么接口，导致会有这种不兼容问题，那为什么出问题的手机能在别的机型上正常，软件连接流程上是否有什么不一样？为什么在别的机型不更新也能兼容，但是只有该机型会有问题
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# 需求
+1. 学会makefile，编写新项目的快速脚本
+2. 烧录flash的快速脚本
+3. 读懂各种与can，dab模块通信的协议，如何处理mcu发过来的数据
+4. 物联网，处理语音（信号与解调）
+5. 与车载行业有关的can诊断通讯（uds），中控驱动屏幕，与电机有关的无刷电机（FOC算法）
