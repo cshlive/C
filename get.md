@@ -848,7 +848,7 @@ sudo dosfsck -v -a /dev/sdc1
 ls -F > cat1.txt   //输出文件名字到另一个文件夹
 ls -R 表示递归输出子目录的文件和目录名称
   gedit cat1.txt   打开查看
-
+gedit 打开一个文本编辑器
 15. 快速打开Linux的svn
 在对应文件夹用终端打开
 输入rabbitvcs browser
@@ -1937,7 +1937,7 @@ ghost2snand usb 0 -sb		//8368U 从usb 0写入烧录文件到flash(软件验证)
 
 
 snand_ghost_sb usb 0		//8368C 从flash写出烧录文件到usb 0
-
+如果是新的flash，可以先烧一个有对应flash型号文件或者同一平台其他flash，再用U盘升级，再来制作，避免强制升级
 
 
 0421：
@@ -2037,134 +2037,7 @@ sudo dosfsck -v -a /dev/sdc1
 用火狐打开，并把要翻译的拖进去
 
 0506:
-关于回调函数的讲解：
-https://blog.csdn.net/u011754972/article/details/116536698
-https://blog.csdn.net/weixin_43056298/article/details/100520926
-https://zhuanlan.zhihu.com/p/326902537
-由于make_youtiao(10000)这个函数10分钟才能返回，你不想一直死盯着屏幕10分钟等待结果，那么一种更好的方法是让make_youtiao()这个函数知道制作完油条后该干什么，即，更好的调用make_youtiao的方式是这样的：“制作10000个油条，炸好后卖出去”，因此调用make_youtiao就变出这样了：
 
-make_youtiao(10000, sell);
-
-看到了吧，现在make_youtiao这个函数多了一个参数，除了指定制作油条的数量外还可以指定制作好后该干什么，第二个被make_youtiao这个函数调用的函数就叫回调，callback。
-
-现在你应该看出来了吧，虽然sell函数是你定义的，但是这个函数却是被其它模块调用执行的
-
-新的编程思维模式
-
-让我们再来仔细的看一下这个过程。
-
-程序员最熟悉的思维模式是这样的：
-
-    调用某个函数，获取结果处理获取到的结果
-
-res = request();
-handle(res);
-
-这就是函数的同步调用，只有request()函数返回拿到结果后，才能调用handle函数进行处理，request函数返回前我们必须等待，这就是同步调用
-但是如果我们想更加高效的话，那么就需要异步调用了，我们不去直接调用handle函数，而是作为参数传递给request：
-
-request(handle);
-
-我们根本就不关心request什么时候真正的获取的结果，这是request该关心的事情，我们只需要把获取到结果后该怎么处理告诉request就可以了，因此request函数可以立刻返回，真的获取结果的处理可能是在另一个线程、进程、甚至另一台机器上完成。
-
-这就是异步调用
-从编程思维上看，异步调用和同步有很大的差别，如果我们把处理流程当做一个任务来的话，那么同步下整个任务都是我们来实现的，但是异步情况下任务的处理流程被分为了两部分：
-
-    第一部分是我们来处理的，也就是调用request之前的部分第二部分不是我们处理的，而是在其它线程、进程、甚至另一个机器上处理的。
-
-我们可以看到由于任务被分成了两部分，第二部分的调用不在我们的掌控范围内，同时只有调用方才知道该做什么，因此在这种情况下回调函数就是一种必要的机制了。
-
-也就是说回调函数的本质就是“只有我们才知道做些什么，但是我们并不清楚什么时候去做这些，只有其它模块才知道，因此我们必须把我们知道的封装成回调函数告诉其它模块”。
-对于一般的函数来说，我们自己编写的函数会在自己的程序内部调用，也就是说函数的编写方是我们自己，调用方也是我们自己。
-
-但回调函数不是这样的，虽然函数编写方是我们自己，但是函数调用方不是我们，而是我们引用的其它模块，也就是第三方库，我们调用第三方库中的函数，并把回调函数传递给第三方库，第三方库中的函数调用我们编写的回调函数
-
-而之所以需要给第三方库指定回调函数，是因为第三方库的编写者并不清楚在某些特定节点，比如我们举的例子油条制作完成、接收到网络数据、文件读取完成等之后该做什么，这些只有库的使用方才知道，因此第三方库的编写者无法针对具体的实现来写代码，而只能对外提供一个回调函数，库的使用方来实现该函数，第三方库在特定的节点调用该回调函数就可以了。
-
-另一点值得注意的是，从图中我们可以看出回调函数和我们的主程序位于同一层中，我们只负责编写该回调函数，但并不是我们来调用的。
-
-最后值得注意的一点就是回调函数被调用的时间节点，回调函数只在某些特定的节点被调用，就像上面说的油条制作完成、接收到网络数据、文件读取完成等，这些都是事件，也就是event，本质上我们编写的回调函数就是用来处理event的，因此从这个角度看回调函数不过就是event handler，因此回调函数天然适用于事件驱动编程event-driven，我们将会在后续文章中再次回到这一主题。
-回调的类型
-
-我们已经知道有两种类型的回调，这两种类型的回调区别在于回调函数被调用的时机。
-
-注意，接下来会用到同步和异步的概念，对这两个概念不熟悉的同学可以参考上一盘文章《从小白到高手，你需要理解同步和异步》。
-
-同步回调
-
-这种回调就是通常所说的同步回调synchronous callbacks、也有的将其称为阻塞式回调blocking callbacks，或者什么修饰都没有，就是回调，callback，这是我们最为熟悉的回调方式。
-
-当我们调用某个函数A并以参数的形式传入回调函数后，在A返回之前回调函数会被执行，也就是说我们的主程序会等待回调函数执行完成，这就是所谓的同步回调。
-有同步回调就有异步回调。
-回调对应的编程思维模式
-
-让我们用简单的几句话来总结一下回调下与常规编程思维模式的不同。
-
-假设我们想处理某项任务，这项任务需要依赖某项服务S，我们可以将任务的处理分为两部分，调用服务S前的部分PA，和调用服务S后的部分PB。
-
-在常规模式下，PA和PB都是服务调用方来执行的，也就是我们自己来执行PA部分，等待服务S返回后再执行PB部分。
-
-但在回调这种方式下就不一样了。
-
-在这种情况下，我们自己来执行PA部分，然后告诉服务S：“等你完成服务后执行PB部分”。
-
-因此我们可以看到，现在一项任务是由不同的模块来协作完成的。
-
-即：
-
-    常规模式：调用完S服务后后我去执行X任务，
-    回调模式：调用完S服务后你接着再去执行X任务，
-
-其中X是服务调用方制定的，区别在于谁来执行。
-为什么异步回调这种思维模式正变得的越来越重要
-
-在同步模式下，服务调用方会因服务执行而被阻塞暂停执行，这会导致整个线程被阻塞，因此这种编程方式天然不适用于高并发动辄几万几十万的并发连接场景，
-
-针对高并发这一场景，异步其实是更加高效的，原因很简单，你不需要在原地等待，因此从而更好的利用机器资源，而回调函数又是异步下不可或缺的一种机制。
-回调地狱，callback hell
-
-有的同学可能认为有了异步回调这种机制应付起一切高并发场景就可以高枕无忧了。
-
-实际上在计算机科学中还没有任何一种可以横扫一切包治百病的技术，现在没有，在可预见的将来也不会有，一切都是妥协的结果。
-
-那么异步回调这种机制有什么问题呢？
-
-实际上我们已经看到了，异步回调这种机制和程序员最熟悉的同步模式不一样，在可理解性上比不过同步，而如果业务逻辑相对复杂，比如我们处理某项任务时不止需要调用一项服务，而是几项甚至十几项，如果这些服务调用都采用异步回调的方式来处理的话，那么很有可能我们就陷入回调地狱中。
-
-举个例子，假设处理某项任务我们需要调用四个服务，每一个服务都需要依赖上一个服务的结果，如果用同步方式来实现的话可能是这样的：
-
-a = GetServiceA();
-b = GetServiceB(a);
-c = GetServiceC(b);
-d = GetServiceD(c);
-
-代码很清晰，很容易理解有没有。
-
-我们知道异步回调的方式会更加高效，那么使用异步回调的方式来写将会是什么样的呢？
-
-GetServiceA(function(a){
-    GetServiceB(a, function(b){
-        GetServiceC(b, function(c){
-            GetServiceD(c, function(d) {
-                ....
-            });
-        });
-    });
-});
-
-我想不需要再强调什么了吧，你觉得这两种写法哪个更容易理解，代码更容易维护呢？
-
-博主有幸曾经维护过这种类型的代码，不得不说每次增加新功能的时候恨不得自己化为两个分身，一个不得不去重读一边代码；另一个在一旁骂自己为什么当初选择维护这个项目。
-
-异步回调代码稍不留意就会跌到回调陷阱中，那么有没有一种更好的办法既能结合异步回调的高效又能结合同步编码的简单易读呢？
-
-幸运的是，答案是肯定的，我们会在后续文章中详细讲解这一技术。
-总结
-
-在这篇文章中，我们从一个实际的例子出发详细讲解了回调函数这种机制的来龙去脉，这是应对高并发、高性能场景的一种极其重要的编码机制，异步加回调可以充分利用机器资源，实际上异步回调最本质上就是事件驱动编程，这是我们接下来要重点讲解的内容。
-
-我个人的理解是回调函数就是通过函数指针来调用的函数，为什么不直接调用函数是因为可以实现用普遍适用的函数来调用不同的回调函数。例如：系统层的程序猿会编写好接口供应用层的程序猿用，操作系统会调度这个接口，但应用程序猿只知道这是个函数指针，指针指向的函数是由他自己编写的，这一步叫做登记回调函数。这是回调函数/函数指针最重要的作用
-同步和异步整体阅读下来感觉和线程有关，回调函数本身并不能实现异步，但异步的实现离不开回调函数。比如pthread_create(...)创建线程，其中一个参数便是函数指针
 
 
  git log
@@ -2312,6 +2185,440 @@ TD平台更换logo后开机顺闪主界面，加#define WARNING_AND_NOWARING_IND
 
 
 
+0705:
+cp卡死：
+basecontrol.cpp:
+ case UICC_BT_HUNGUPCALL:
+        {
+            BASEC_D(__FUNCTION__<<__LINE__<<"  @@@UICC_BT_HUNGUPCALL");
+            //zwh 20180915 for CarPlay reject call.
+            if(spInfo->getSysState(SYS_INFO_NAME_CPPHONE_CALL).toBool())
+            {
+                BASEC_D(__FUNCTION__<<__LINE__);
+                emit carplayKeyDispatch(KeyAngle, true);
+                emit carplayKeyDispatch(KeyAngle, false);
+                return;
+            }
+
+
+0706:
+关于acc起来大灯无识别作用
+1297-65HX可以  UI_HYUNDAI_1024_600
+现在从头文件排除，实在没有只能是UI_FIAT_1024_600有问题
+2267defconfig和appconfig,以及ui.cfg的pannal 修改无作用
+
+#define SETUP_SELECT_PHONE_PAGE    1  //显示选择手机页面	
+#define NO_START_WARNING_PAGE   1
+#define D_PARKING_FUNC_DEFAULT_ON  1 //默认打开手刹
+#define D_SETUP_REVERSE_ASSIST_HIDE_OFF    0    //倒车选择开关，为隐藏开关，0：开；1：关
+#define BT_AUDIO_START_LAST_SOURCE			1	//断Acc之前是蓝牙音乐，acc起来继续启动蓝牙音乐(我也不知到为什么别的项目不记忆蓝牙音乐？)
+#define FILTER_FREQUENT_KEY_RESPONSE_EVENT		1		//过滤频繁的按键响应事件
+#define ENABLE_SHOW_WARNING 1
+#define D_BT_DISCONNECT_AFTER_CONNECT_CP 1
+#define D_SUPPORT_REVERSE_CALL_FULL_VOLUME 1
+#define INFO_PICTURE_SUPORT_CHANGE_SOURCE 1
+#define  DIALOG_RESOURSE_INDEPENDENTLY 1
+#define WIRED_ASR_NO_DEVICE_TIPS 1
+#define D_SUPPORT_REVERSE_STATE  0   //支持倒车镜像隐藏
+#define D_DefaultTIMEZONE	-360//设置时区
+#define SPEED_UP_RADIO_DATA_DISPLAY  1 //重新进入收音，加快收音显示
+	
+#define D_SUPPORT_REVERSE_STATE  0
+#define SUPPORT_FIAT_FAST_GUIDE 1   //说明书
+#define D_REVERSE_VOLUME_DEFAULT_TYPE 	0	//默认的倒车音量类型
+#define D_DERCO_AREA_DEFAULT_TYPE	1	//歌斯达黎加
+#define SUPPORT_DERCO_AREA	1	//设置内的区域切换为主界面derco图标内容的不同
+#define SUPPORT_DERCO_AREA_SWITCH 2
+
+//#define WIFI_CONFIG_CHANEL_SELECT "149,153,157,161,165"
+#define PURE_COLOR_STYLE_MODULE_DIALOG 1
+#define D_GNSS_MODULE_BAUD_RATE		9600
+#define D_GNS_GET_FAIL_DATA_DELAY_NEW    1
+#define D_TRY_TO_FIX_APP_HANG 1	
+
+
+最后发现是#define FILTER_FREQUENT_KEY_RESPONSE_EVENT		1		//过滤频繁的按键响应事件
+这个宏有问题
+
+
+0710:
+1297W-65M 新更新MCU方控无作用并且部分有反应但键值错位
+恢复到最早送样的时候的MCU方控有作用但部分但键值移位
+硬件用万用表排除了方控本身的问题
+并且找了一台能使用该方控的机子，并不会有问题
+进而确定是MCU问题
+
+
+0711：
+
+* 策略模式（strategy）：
+动机：软件构建时某些对象里面使用的方法或者算法经常改变，软件运行时依据需要透明地更改对象使用算法，将对象和算法解耦分隔开来。
+定义一系列算法，把它们一个个封装起来，并且使它们可互相替换（变化）。该模式使得算法可独立于使用它的客户程序(稳定)而变化（扩展，子类化）。 ——《设计模式》 GoF
+
+要点总结
+
+    Strategy及其子类为组件提供了一系列可重用的算法，从而可以使得类型在运行时方便地根据需要在各个算法之间进行切换。
+    Strategy模式提供了用条件判断语句以外的另一种选择，消除条件判断语句，就是在解耦合。含有许多条件判断语句的代码通常都需要Strategy模式。
+    如果Strategy对象没有实例变量，那么各个上下文可以共享同一个Strategy对象，从而节省对象开销。
+
+* 装饰者模式（decorate）：
+动机：过度使用继承来扩展对象的功能，继承引入静态特质让扩展缺乏灵活性，避免子类过多和膨胀。
+动态（组合）地给一个对象增加一些额外的职责。就增加功能而言，Decorator模式比生成子类（继承）更为灵活（消除重复代码 & 减少子类个数）。 ——《设计模式》GoF
+
+定义一个装饰者的基类（中间者的角色），后续在这个类不断继承，不影响当初最开始的基类（底层）
+
+* 模板方法模式
+
+动机：
+    多个子类有公有的方法，并且逻辑基本相同时。
+    重要、复杂的算法，可以把核心算法设计为模板方法，周边的相关细节功能则由各个 子类实现。
+    重构时，模板方法模式是一个经常使用的模式，把相同的代码抽取到父类中，然后通过钩子方法约束其行为。
+
+
+
+
+* 观察者模式：
+
+定义对象间的一种一对多（变化）的依赖关系，以便当一个对象(Subject)的状态发生改变时，所有依赖于它的对象都得到通知并自动更新。 ——《 设计模式》 GoF
+要点总结
+
+    使用面向对象的抽象，Observer模式使得我们可以独立地改变目标与观察者，从而使二者之间的依赖关系达致松耦合。
+    目标发送通知时，无需指定观察者，通知（可以携带通知信息作为参数）会自动传播。
+    观察者自己决定是否需要订阅通知，目标对象对此一无所知。
+    Observer模式是基于事件的UI框架中非常常用的设计模式，也是MVC模式的一个重要组成部分。
+
+0712：
+
+关于QT线程的问题：
+Qt GUI 必须在主线程中运行。所有QWidget和几个相关的类，例如 QPixmap，在辅助线程中不起作用。辅助线程通常被称为“工作线程”。
+与进程不同，线程共享相同的地址空间。
+
+关于1297W-65M，点击语音弹出框问题，可以调整文字坐标  layout_textdialog
+/home/chenshihao/8368-U-20200422/application/reference_td2/tdLauncher/view/resources/resources1024/Default_UI/etc/common
+
+关于设置界面的麦克风选项：
+
+修改头文件
+//setup general 滚动区域高度
+#define D_SETUP_GENERAL_SCROLL_AREA_HEIGHT 700
+
+改setup.ini
+common_list_scoll_win={
+      type="window"
+      x=56
+      y=0
+      w=909
+      h=520
+      style="common_sub_gback_style"
+      flags={
+        hide_scrollbar
+        window_scroll_fix_bg
+        window_scroll
+        no_h_scroll
+        scroll_grab_mouse
+      }
+改layout_comdialog.ini
+ prompt_text={
+     type="textarea"
+-    x=258
++    x=288
+     y=206
+-    w=507
++    w=470
+     h=100
+     style="dialog_prompt_text"
+     flags={
+对策点击语音，字体显示不对称
+
+0714：
+对策出现蓝牙配对码后再点击语音键UI显示不完全
+在头文件加上宏
+#define SHOW_NOMAL_TIPS 1     //防止配对信息默认调整语音UI位置
+/home/chenshihao/8368-U-20200422/application/reference_td2/tdLauncher/view/commons/comviews/base的dialog.cpp
+
+void ComDialog::setDialogShowState(int nState)
+case ShowChoiceState:
+	{
+		#if defined(UI_JENSEN_1024_600) || defined(UI_SUZUKI_1024_600)
+		#if defined(SHOW_NOMAL_TIPS)
+    	TWidget *prompttext = (TWidget *)TObjectGetFromName("prompt_text");
+		TwMove(prompttext,288,206);
+		#endif		
+
+0718：
+关于QT开发的一些经验：
+https://github.com/feiyangqingyun/qtkaifajingyan
+
+
+0719：
+看发过来的CAN协议，首先要MCU把所需数据ID发给我们，开始字节数是（0-7）如果看到的stat bit超过8，说明已经转换好了，不用*8，
+根据定位好的起始位和信号长度，确定哪些数值代表什么
+
+0725：
+dqa测试时夹具上的大灯无作用，电源转接线有问题
+
+
+0729:
++#define        AA_CALLIDLE_TO_HOME_IN_TURER_OR_AUXIN   1       //如果在radio或auxin结束AA通话，则退出到主界面
++#define SUPPORT_FIAT_FAST_GUIDE 1                      //支持现代的说明书
+Reversing camera
+Reversing volume
+Reverse the  camera
+在setupview.cpp里面缺少项目宏导致(为什么缺少宏原因就是当时的宏前面有空格，导致替换时没搜到)
+void SetupWidget::_setupShowHideItemFunc(void *obj, T_ID event, TTable *in, void *arg, TExist *exist)
+
+7. AV-1297W-65RA-HX需要添加说明书
+2267W修复西班牙语没插入usb弹出框
+"    Actualmente ningún dispostivo está conectado "
+点击面板没提示：某个UI宏里面没放逻辑
+void BaseControl::handleMcuKey(int key, int val)
+                 else
+                 {
+ #if defined(UI_RGBLUE_1024_600) || defined(UI_RGBLUE_ORANGE_1024_600) || defined(UI_RGBLUE_BLACK_1024_600) || defined(UI_RGBLUE_SUZUKI_1024_600)  || \
+-        defined(AV_1297W_65RA)||defined(AV_1297W_65RA_HW)||defined(AV_1297W_65RA_HX)||defined(AV_1307W_65RA_HW) || defined(AV_2227W_92) || defined(AV_1307LW_65BQ_HW)||defined(AV_1307WSC_65BA_HX)||defined(AV_1297WSC_65X3_HW)
++        defined(AV_1297W_65RA)||defined(AV_1297W_65RA_HW)||defined(AV_1307W_65RA_HW) || defined(AV_2227W_92) || defined(AV_1307LW_65BQ_HW)||defined(AV_1307WSC_65BA_HX)||defined(AV_1297WSC_65X3_HW)
+         #if defined(AV_R117W_58)
+                 if(val == 0)
+                     showSearchDeviceDialog(TwTrans("tr_searchDeviceHint"), 15000);
+
+0803:
+TD的ini文件，   caption="0"是指文本翻译为“0”的属性
+equi的数字显示不全，且不居中
+  eq_bar_value_6={
+         type="button"
+-        x=533
+-        y=-9
++        x=534
++        y=-5
++        y=-5
+         w=50
+         h=50
+         caption="0"
+
+0804:
+TD平台的cp,aa未连接时提示语或者图标置灰
+在void HomeView::setEntryButtonStyle()
+这个函数里面加UI宏
+改2227W和2267W音量图标
+改2227W和2267W翻译
+"tr_NoDeviceConnected"="  Actualmente   ningún   dispostivo   está   conectado"
+
+VOLUME_HINT_SHOW_DIFFERENT_ICON
+关于修改频宽：
+QT：
+附件（networkmanager.7z）是频宽改成40M的bin档，请替换linux/sdk/out/appsdkfs/bin和linux/sdk/out/system/bin路径下对应文件；
+
+         同时请将 linux/sdk/wifi/drivers/script/rtl8821cs/card0/WiFiDriver.sh 和 linux/sdk/wifi/drivers/script/rtl8821cs/card1/WiFiDriver.sh 中的rtw_vht_enable=2注释；
+
+         softap.conf文件上也修改为ht_capab=[SHORT-GI-40][HT40+]
+
+ 
+
+         WifiControlPrivate::initWifiAPconfig修改cfg.channel = xxx；softap.conf文件上也同步修改为相同的值，车机上电后查看softap.conf文件，channel值改变则表示修改到了
+
+ 
+
+         “如果频宽改成40M的话信道是对应附件里frequency.png的40M+还是40M-的”
+
+         -->选择40M+
+TD：
+修改国家码：
+注:每个国家的国家码可从网上得到:
+https://www.chinassl.net/country_code/
+以哥斯达黎加为例,国家码为CR
+根据ASCII码表得到16进制为: 0x43 0x52
+0xFF,0XFF为默认的国家码,为中国
+修改步骤:
+1.获取需要修改的国家码;
+2.获取国家码对应的16进制数;
+3.找到linux/sdk/wifi/drivers/rtl8821cs/os_dep/linux/os_intfs.c文件内
+char rtw_country_unspecified[] = {0xFF, 0xFF, 0x00}; 
+行;
+4.将其修改为对应的国家码16进制数,如:
+char rtw_country_unspecified[] = {0x43, 0x52, 0x00}; 
+
+5.重编软件,升级后查看打印
+6.输入cat /proc/net/rtl8821cs/wlan0/country_code 命令可查看是否修改成功,修改成功返回:如:"CR", 0x34 ac,未修改过的返回为:unspecified.
+
+修改频宽：
+现已通过bash脚本检索项目头文件宏 来控制wifi频宽配置的相关文件，
+
+#define Z_WIFI_MHZ 40
+
+宏可以设置20/40  会设置20MHz和40MHz,宏设了其他值或者没有该宏会恢复成80MHz，
+
+本地自测可以正常设置20/40/80MHz，暂不清楚其他电脑上是否会有权限问题，
+
+具体实现可以看TD平台commit 098d1d51b9288a43a9c6a0e1654977e55045aaa3 或查看./ecos/auto_replace_wifi_MHz.sh
+
+
+需要设置频宽的项目可以在头文件添加该宏#define Z_WIFI_MHZ  20/40 编译完建议wifi助手检查一遍 欢迎优化和反馈。
+
+修改与查阅信道：
+通过宏控制
+这里有华为统计的世界各国支持的信道。
+svn://192.168.10.9/软件研发中心/资料库/模块资料/WiFi/Wi-Fi资料/WLAN Country Codes and Channels Compliance.xlsx
+通过wifi助手查阅
+
+1435
+xu
+ubootMCU
+屏蔽system reset和MT3360 reset引脚
+
+0807:
+
+来电时，加减音量，图标显示为媒体音频图标，不是通话音频图标(AA显示的是通话音频图标）
+异常：07_icon_volume.png
+正常：07_icon_phone.png
+在volumeview.cpp
+void ComVolumeWidget::updateVolIcon(string volId)
+bt来电:S+BtRingtone_APP
+AA来电:S+BtPhone_APP
+cp来电:AUDIO_SOURCE_CP_ALERT S+CarPlayAlert_APP
+
+0809:
+倒车无信号提示:TwShow(s_pReverseView->reverser_noSignal_win
+
+
+0815：
+shared_ptr使用的注意事项:
+1.不能使用一个原始地址初始化多个共享智能指针
+2.函数不能返回管理了this的共享智能指针对象
+3.共享智能指针不能循环引用
+
+0816：
+阻塞调用 当前窗口处理结束关闭之后 主窗口才能操作
+非阻塞调用 当前窗口的执行状态不影响主窗口的操作
+
+0817:
+
+updatePanelBrightnesslightDefault
+TwUpdateShow();
+
+
+0821：
+程序卡死可能有多种原因，其中访问非法内存地址只是其中之一。以下是一些常见的导致程序卡死的原因：
+
+    死循环：如果程序中存在无限循环或条件不满足时无法跳出的循环，程序可能会陷入死循环状态，导致卡死。
+
+    资源竞争：当多个线程或进程同时竞争同一个资源（如共享内存、锁等）时，可能会发生死锁或活锁现象，导致程序无法继续执行。
+
+    阻塞IO操作：如果程序在执行阻塞式的输入/输出操作（如读取文件、网络通信等）时，如果IO操作长时间未完成或出现异常，可能会导致程序卡死。
+
+    递归调用错误：如果程序中存在错误的递归调用，没有正确的终止条件或递归深度过大，可能会导致栈溢出或无限递归，使程序卡死。
+
+    内存泄漏：如果程序中存在内存泄漏问题，即分配的内存没有被正确释放，随着时间的推移，可用内存逐渐减少，最终导致程序无法继续执行。
+
+    硬件故障：在某些情况下，程序卡死可能是由于硬件故障引起的，如硬盘故障、内存错误等。
+
+    多线程同步问题：如果程序中存在多个线程，并且没有正确地进行同步和互斥操作，可能会导致竞态条件或数据一致性问题，进而导致程序卡死。
+当面临卡死问题时，以下是一些常见的操作步骤和方法，可以帮助您定位问题：
+
+    使用调试器：
+        在开发环境中打开调试器，并将程序加载到调试器中。
+        设置断点：在怀疑问题出现的代码位置设置断点，以便在程序执行到该位置时暂停。
+        逐步执行：使用调试器的单步执行功能，逐行或逐语句地执行代码，观察每一步的结果和状态变化。
+        观察变量值：查看和监控关键变量的值，以确定是否符合预期。
+        检查堆栈：检查函数调用堆栈，确认程序执行路径是否正确。
+
+    日志输出：
+        在代码中插入适当的日志语句，记录程序执行过程中的关键信息，如函数进入/退出、变量值等。
+        根据日志输出来分析程序执行流程，查找异常或不符合预期的情况。
+        可以使用不同级别的日志，以便在需要时进行详细的调试。
+
+    代码审查：
+        仔细检查相关代码，特别是与卡死问题相关的部分。
+        查找潜在的逻辑错误、资源泄漏、竞态条件等。
+        确保多线程代码正确地进行同步和互斥操作。
+
+    分析内存使用：
+        使用内存分析工具，检查内存分配和释放的情况。
+        查找潜在的内存泄漏或过多的内存消耗。
+
+    进行单元测试：
+        编写单元测试用例，覆盖可能存在问题的代码路径。
+        执行单元测试，并观察测试结果是否符合预期。
+        单元测试可以帮助发现一些隐藏的问题，提高代码质量。
+
+0822：
+   sed -i -e 's/UART_OUTPUT=.*/UART_OUTPUT=y/g' linux/sdk/out/system/etc/log_service/log_default.cfg	
+这是一个使用sed命令修改文件中某个文本模式的操作。
+
+具体解释如下：
+
+sed是一个流编辑器，用于对文本进行编辑和转换。
+-i选项表示直接修改文件，而不是输出到标准输出。
+-e选项表示后面接着的是一条编辑命令。
+'s/UART_OUTPUT=.*/UART_OUTPUT=y/g'是编辑命令的具体内容，用来将文件中以UART_OUTPUT=开头的行的值替换为UART_OUTPUT=y。
+s表示替换(substitute)，后面是匹配模式和替换模式。
+UART_OUTPUT=.*是匹配模式，表示以UART_OUTPUT=开头的行，后面可以是任意字符。
+UART_OUTPUT=y是替换模式，表示将匹配到的行替换为UART_OUTPUT=y。
+g是全局替换标志，表示对每一行中匹配到的内容都进行替换。
+
+最终，该命令会修改log_default.cfg文件中以UART_OUTPUT=开头的行的值为UART_OUTPUT=y。
+
+0826:
+TD平台不想要AUXIN功能可以暴力的把.ini文件删掉关于auxin的控件，同时要注意把后面控件的坐标改一下顶替上来（不要用hide,用方控还是会选出来），另外在homeview.cpp的connectViewEventHandler可以试试加宏NO_NEED_AUXIN
+
+0829：
+关于CAN协议功能：
+
+根据提供的协议，AM-688智能门锁协议是通过串口以16进制格式发送指令的。串口通信的默认设置如下：
+
+波特率（Baud Rate）：38400
+数据位（Data Bits）：8
+停止位（Stop Bits）：1
+校验位（Parity）：None
+
+发送消息的基本格式为：8位长度，前2位表示消息的开始，接下来的4位表示消息代码，最后2位表示消息的结束。
+
+回复消息的基本格式为：4位长度，第1位表示消息的开始，第2-3位表示接收到的命令，最后1位表示消息的结束。
+
+不是所有发送的指令都需要接收到响应。下面是系统设置的不同指令及其功能的详细说明：
+
+表示车辆锁定或解锁状态的指令，由AM-688模块发送的命令，该选项允许在车辆锁定时将收音机打开，并在车辆锁定时关闭。睡眠模式的默认时间应为7秒。
+
+解锁车辆：| 23 | 20 | 03 | ST | 01 | DB | AA | FF |
+ST：睡眠时间，表示ACC=OFF时收音机等待关闭的时间，睡眠模式的取值为3（7秒）、1E（30秒）和3C（60秒）。
+07：睡眠模式7秒。
+1E：睡眠模式30秒。
+3C：睡眠模式60秒。
+示例：表示30秒的睡眠模式时间：| 23 | 20 | 03 | 1E | 01 | DB | AA | FF |
+
+收音机回应：| AB | 1E | 00 | FF |
+
+锁定车辆：| 23 | 20 | 03 | 02 | 02 | DC | AA | FF |
+
+收音机回应：| AB | 02 | 00 | FF |
+
+该命令指示收音机应立即关闭。
+
+允许或禁止门关闭功能的访问，由AM-688模块发送的命令：
+
+允许访问该功能：| 23 | 20 | 03 | 04 | 04 | 01 | AA | FF |
+
+收音机回应：| AB | 04 | 00 | FF |
+
+在收音机上显示消息框：Para programar esta función, el vehículo debe estar apagado.（要设置此功能，车辆必须处于关闭状态。）
+
+| 23 | 20 | 03 | 03 | 03 | 00 | AA | FF |
+
+收音机回应：| AB | 03 | 00 | FF |
+
+以上是根据提供的协议对AM-688智能门锁协议进行的解读。
+
+
+0830:
+无线AA断连之后缺乏判断，导致方控还处于AA那种模式跳过bt-audio（有线和CP都可以）
+DeviceListview::signalSlotsDisconnect()
+代码差不多，应该不是这里
+caplaymoduleimpl.cpp里面：
+void DisconnectCurrentWirelessCPDevice(unsigned long long int macid);
+deleteCarePlayDevice
+androidautomoduleimpl.cpp里面：
+changeAADeviceConnectState
+后续结果是在homeview.cpp里面的checkBtDevice(int index)
+思路：先在homeview.cpp找到homeBtnList找到pushBackHomeBtn，focusCurrentSrc，switchActiveDevice，checkCurrentDeviceActive（找到关键词checkBtDevice），找到对应判断，修改判断状态
 
 
 
@@ -2332,6 +2639,199 @@ TD平台更换logo后开机顺闪主界面，加#define WARNING_AND_NOWARING_IND
 
 
 
+
+
+
+# 讲解
+指令修改文件中某个文本模式的操作。
+
+具体解释如下：
+
+    sed是一个流编辑器，用于对文本进行编辑和转换。
+    -i选项表示直接修改文件，而不是输出到标准
+1. 设计模式：
+
+    分解
+        人们面对复杂性有一个常见的做法：即分而治之，将大问题分解为多个小问题，将复杂问题分解为多个简单问题。
+    抽象
+        更高层次来讲，人们处理复杂性有一个通用的技术，即抽象。由于不能掌握全部的复杂对象，我们选择忽视它的非本质细节，而去处理泛化和理想化了的对象模型。
+
+面向对象设计原则
+
+    依赖倒置原则（DIP）
+
+    高层模块(稳定)不应该依赖于低层模块(变化)，二者都应该依赖于抽象(稳定) 。
+    抽象(稳定)不应该依赖于实现细节(变化) ，实现细节应该依赖于抽象(稳定)。
+
+    开放封闭原则（OCP）
+
+    对扩展开放，对更改封闭。
+    类模块应该是可扩展的，但是不可修改。
+
+    单一职责原则（SRP）
+
+    一个类应该仅有一个引起它变化的原因。
+    变化的方向隐含着类的责任。
+
+    Liskov 替换原则（LSP）
+
+    子类必须能够替换它们的基类(IS-A)。
+    继承表达类型抽象。
+
+    接口隔离原则（ISP）
+
+    不应该强迫客户程序依赖它们不用的方法。
+    接口应该小而完备。
+
+    优先使用对象组合，而不是类继承
+
+    类继承通常为“白箱复用”，对象组合通常为“黑箱复用” 。
+    继承在某种程度上破坏了封装性，子类父类耦合度高。
+    而对象组合则只要求被组合的对象具有良好定义的接口，耦合度低。
+
+    封装变化点
+
+    使用封装来创建对象之间的分界层，让设计者可以在分界层的一侧进行修改，而不会对另一侧产生不良的影响，从而实现层次间的松耦合。
+
+    针对接口编程，而不是针对实现编程
+
+    不将变量类型声明为某个特定的具体类，而是声明为某个接口。
+    客户程序无需获知对象的具体类型，只需要知道对象所具有的接口。
+    减少系统中各部分的依赖关系，从而实现“高内聚、松耦合”的类型设计方案。
+
+
+2. 关于回调函数的讲解：
+https://blog.csdn.net/u011754972/article/details/116536698
+https://blog.csdn.net/weixin_43056298/article/details/100520926
+https://zhuanlan.zhihu.com/p/326902537
+由于make_youtiao(10000)这个函数10分钟才能返回，你不想一直死盯着屏幕10分钟等待结果，那么一种更好的方法是让make_youtiao()这个函数知道制作完油条后该干什么，即，更好的调用make_youtiao的方式是这样的：“制作10000个油条，炸好后卖出去”，因此调用make_youtiao就变出这样了：
+
+make_youtiao(10000, sell);
+
+看到了吧，现在make_youtiao这个函数多了一个参数，除了指定制作油条的数量外还可以指定制作好后该干什么，第二个被make_youtiao这个函数调用的函数就叫回调，callback。
+
+现在你应该看出来了吧，虽然sell函数是你定义的，但是这个函数却是被其它模块调用执行的
+
+新的编程思维模式
+
+让我们再来仔细的看一下这个过程。
+
+程序员最熟悉的思维模式是这样的：
+
+    调用某个函数，获取结果处理获取到的结果
+
+res = request();
+handle(res);
+
+这就是函数的同步调用，只有request()函数返回拿到结果后，才能调用handle函数进行处理，request函数返回前我们必须等待，这就是同步调用
+但是如果我们想更加高效的话，那么就需要异步调用了，我们不去直接调用handle函数，而是作为参数传递给request：
+
+request(handle);
+
+我们根本就不关心request什么时候真正的获取的结果，这是request该关心的事情，我们只需要把获取到结果后该怎么处理告诉request就可以了，因此request函数可以立刻返回，真的获取结果的处理可能是在另一个线程、进程、甚至另一台机器上完成。
+
+这就是异步调用
+从编程思维上看，异步调用和同步有很大的差别，如果我们把处理流程当做一个任务来的话，那么同步下整个任务都是我们来实现的，但是异步情况下任务的处理流程被分为了两部分：
+
+    第一部分是我们来处理的，也就是调用request之前的部分第二部分不是我们处理的，而是在其它线程、进程、甚至另一个机器上处理的。
+
+我们可以看到由于任务被分成了两部分，第二部分的调用不在我们的掌控范围内，同时只有调用方才知道该做什么，因此在这种情况下回调函数就是一种必要的机制了。
+
+也就是说回调函数的本质就是“只有我们才知道做些什么，但是我们并不清楚什么时候去做这些，只有其它模块才知道，因此我们必须把我们知道的封装成回调函数告诉其它模块”。
+对于一般的函数来说，我们自己编写的函数会在自己的程序内部调用，也就是说函数的编写方是我们自己，调用方也是我们自己。
+
+但回调函数不是这样的，虽然函数编写方是我们自己，但是函数调用方不是我们，而是我们引用的其它模块，也就是第三方库，我们调用第三方库中的函数，并把回调函数传递给第三方库，第三方库中的函数调用我们编写的回调函数
+
+而之所以需要给第三方库指定回调函数，是因为第三方库的编写者并不清楚在某些特定节点，比如我们举的例子油条制作完成、接收到网络数据、文件读取完成等之后该做什么，这些只有库的使用方才知道，因此第三方库的编写者无法针对具体的实现来写代码，而只能对外提供一个回调函数，库的使用方来实现该函数，第三方库在特定的节点调用该回调函数就可以了。
+
+另一点值得注意的是，从图中我们可以看出回调函数和我们的主程序位于同一层中，我们只负责编写该回调函数，但并不是我们来调用的。
+
+最后值得注意的一点就是回调函数被调用的时间节点，回调函数只在某些特定的节点被调用，就像上面说的油条制作完成、接收到网络数据、文件读取完成等，这些都是事件，也就是event，本质上我们编写的回调函数就是用来处理event的，因此从这个角度看回调函数不过就是event handler，因此回调函数天然适用于事件驱动编程event-driven，我们将会在后续文章中再次回到这一主题。
+回调的类型
+
+我们已经知道有两种类型的回调，这两种类型的回调区别在于回调函数被调用的时机。
+
+注意，接下来会用到同步和异步的概念，对这两个概念不熟悉的同学可以参考上一盘文章《从小白到高手，你需要理解同步和异步》。
+
+同步回调
+
+这种回调就是通常所说的同步回调synchronous callbacks、也有的将其称为阻塞式回调blocking callbacks，或者什么修饰都没有，就是回调，callback，这是我们最为熟悉的回调方式。
+
+当我们调用某个函数A并以参数的形式传入回调函数后，在A返回之前回调函数会被执行，也就是说我们的主程序会等待回调函数执行完成，这就是所谓的同步回调。
+有同步回调就有异步回调。
+回调对应的编程思维模式
+
+让我们用简单的几句话来总结一下回调下与常规编程思维模式的不同。
+
+假设我们想处理某项任务，这项任务需要依赖某项服务S，我们可以将任务的处理分为两部分，调用服务S前的部分PA，和调用服务S后的部分PB。
+
+在常规模式下，PA和PB都是服务调用方来执行的，也就是我们自己来执行PA部分，等待服务S返回后再执行PB部分。
+
+但在回调这种方式下就不一样了。
+
+在这种情况下，我们自己来执行PA部分，然后告诉服务S：“等你完成服务后执行PB部分”。
+
+因此我们可以看到，现在一项任务是由不同的模块来协作完成的。
+
+即：
+
+    常规模式：调用完S服务后后我去执行X任务，
+    回调模式：调用完S服务后你接着再去执行X任务，
+
+其中X是服务调用方制定的，区别在于谁来执行。
+为什么异步回调这种思维模式正变得的越来越重要
+
+在同步模式下，服务调用方会因服务执行而被阻塞暂停执行，这会导致整个线程被阻塞，因此这种编程方式天然不适用于高并发动辄几万几十万的并发连接场景，
+
+针对高并发这一场景，异步其实是更加高效的，原因很简单，你不需要在原地等待，因此从而更好的利用机器资源，而回调函数又是异步下不可或缺的一种机制。
+回调地狱，callback hell
+
+有的同学可能认为有了异步回调这种机制应付起一切高并发场景就可以高枕无忧了。
+
+实际上在计算机科学中还没有任何一种可以横扫一切包治百病的技术，现在没有，在可预见的将来也不会有，一切都是妥协的结果。
+
+那么异步回调这种机制有什么问题呢？
+
+实际上我们已经看到了，异步回调这种机制和程序员最熟悉的同步模式不一样，在可理解性上比不过同步，而如果业务逻辑相对复杂，比如我们处理某项任务时不止需要调用一项服务，而是几项甚至十几项，如果这些服务调用都采用异步回调的方式来处理的话，那么很有可能我们就陷入回调地狱中。
+
+举个例子，假设处理某项任务我们需要调用四个服务，每一个服务都需要依赖上一个服务的结果，如果用同步方式来实现的话可能是这样的：
+
+a = GetServiceA();
+b = GetServiceB(a);
+c = GetServiceC(b);
+d = GetServiceD(c);
+
+代码很清晰，很容易理解有没有。
+
+我们知道异步回调的方式会更加高效，那么使用异步回调的方式来写将会是什么样的呢？
+
+GetServiceA(function(a){
+    GetServiceB(a, function(b){
+        GetServiceC(b, function(c){
+            GetServiceD(c, function(d) {
+                ....
+            });
+        });
+    });
+});
+
+我想不需要再强调什么了吧，你觉得这两种写法哪个更容易理解，代码更容易维护呢？
+
+博主有幸曾经维护过这种类型的代码，不得不说每次增加新功能的时候恨不得自己化为两个分身，一个不得不去重读一边代码；另一个在一旁骂自己为什么当初选择维护这个项目。
+
+异步回调代码稍不留意就会跌到回调陷阱中，那么有没有一种更好的办法既能结合异步回调的高效又能结合同步编码的简单易读呢？
+
+幸运的是，答案是肯定的，我们会在后续文章中详细讲解这一技术。
+总结
+
+在这篇文章中，我们从一个实际的例子出发详细讲解了回调函数这种机制的来龙去脉，这是应对高并发、高性能场景的一种极其重要的编码机制，异步加回调可以充分利用机器资源，实际上异步回调最本质上就是事件驱动编程，这是我们接下来要重点讲解的内容。
+
+我个人的理解是回调函数就是通过函数指针来调用的函数，为什么不直接调用函数是因为可以实现用普遍适用的函数来调用不同的回调函数。例如：系统层的程序猿会编写好接口供应用层的程序猿用，操作系统会调度这个接口，但应用程序猿只知道这是个函数指针，指针指向的函数是由他自己编写的，这一步叫做登记回调函数。这是回调函数/函数指针最重要的作用
+同步和异步整体阅读下来感觉和线程有关，回调函数本身并不能实现异步，但异步的实现离不开回调函数。比如pthread_create(...)创建线程，其中一个参数便是函数指针
+
+一 何为注册回调 
+
+   注册回调简单解释就是一个高层调用底层，底层再回过头来调用高层，这个过程就叫注册回调， 连接高层和底层就叫注册回调函数。高层程序C1调用底层程序C2，而在底层程序C2 又调用了高层程序C2的callback函数，那么这个callback函数对于高层程序C1来说就是回调函数。 在设计模式中这个方式叫回调模式。
 
 
 
@@ -2339,8 +2839,75 @@ TD平台更换logo后开机顺闪主界面，加#define WARNING_AND_NOWARING_IND
 
 
 # 需求
-1. 学会makefile，编写新项目的快速脚本
-2. 烧录flash的快速脚本
-3. 读懂各种与can，dab模块通信的协议，如何处理mcu发过来的数据
-4. 物联网，处理语音（信号与解调）
-5. 与车载行业有关的can诊断通讯（uds），中控驱动屏幕，与电机有关的无刷电机（FOC算法）
+1. pcQT完全重装（注册表），解决QT打包dll污染问题 
+（该问题已经通过拷贝王云杰电脑的qt5.99成功解决了）
+2. -65生产软件对策
+1297w，1307W（两个加了宏，需要重新编译，但是其实速度已经是10s左右了，不算卡，实际不知道是否需要；2267W要重新编译，去了过滤事件的宏，对策acc起来识别不了大灯的情况）
+3. Y-39-55完善CMMI文档
+（接口那个文档暂时还没写）
+4. 接过振昊空调CAN协议的的任务
+
+5. 广汽项目的CAN模拟器(可以模仿前人脚步)
+
+6. 缺少隐藏选项开关（ui宏前面不要带空格，脚本无法搜索替换，导致遗留部分流程代码）
+7. 更换频宽和国家码
+8. CPPCHECK和GOOGLE TEST框架结合起来自动测试单元测试：
+你可以结合CPPcheck和单元测试框架来进行C++代码的自动化单元测试和静态代码分析。下面是一个示例的C++代码自动化单元测试脚本，其中包括对代码的静态分析：
+
+
+#include <gtest/gtest.h>
+#include <cppcheck/cppcheck.h>
+
+TEST(MyTest, AdditionTest) {
+    int result = 2 + 2;
+    EXPECT_EQ(result, 4);
+}
+
+TEST(MyTest, SubtractionTest) {
+    int result = 5 - 3;
+    EXPECT_EQ(result, 2);
+}
+
+TEST(MyTest, StaticAnalysis) {
+    const char* cppFiles[] = {"file1.cpp", "file2.cpp"};
+
+    for (const char* file : cppFiles) {
+        std::string errorMessage;
+        if (!CppCheck::check(file, errorMessage)) {
+            FAIL() << "Static analysis failed for file: " << file << "
+"
+                   << errorMessage;
+        }
+    }
+}
+
+int main(int argc, char** argv) {
+    testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}
+
+在上述示例中，我们在MyTest测试套件中增加了一个测试用例StaticAnalysis，用于进行静态代码分析。在该测试用例中，我们遍历了需要进行静态分析的C++源文件，然后使用CPPcheck进行静态分析。
+
+在StaticAnalysis测试用例中，如果CPPcheck检测到错误，我们使用FAIL()宏来标记测试失败，并输出错误信息。这样，如果代码中有静态分析错误，测试框架会将其报告为测试失败。
+
+你可以将以上代码与CPPcheck和Google Test框架一起编译和运行，以进行C++代码的自动化单元测试和静态代码分析。请确保已正确安装和配置CPPcheck，并将其可执行文件路径添加到系统的PATH环境变量中。
+
+同时，你也可以根据需要自定义CPPcheck的参数和规则，以满足对代码进行更详细的静态分析的需求。
+
+
+
+
+
+
+
+
+
+
+
+
+*  学会makefile，编写新项目的快速脚本
+*   烧录flash的快速脚本
+*   读懂各种与can，dab模块通信的协议，如何处理mcu发过来的数据
+*   物联网，处理语音（信号与解调）
+*  与车载行业有关的can诊断通讯（uds），中控驱动屏幕，与电机有关的无刷电机（FOC算法）
+* 搞一个与后续有关的合订本APP，
