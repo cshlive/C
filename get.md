@@ -1408,6 +1408,58 @@ xxx为工程项目的绝对路径
 
 （3）提取按键坐标时，应尽量提取较大的按键范围，但前提是不干扰到其他按键或触摸区域。
 
+* 高亮显示编译错误
+在Linux中，可以使用一些工具来高亮显示编译错误信息，并将其翻译成中文。以下是一种常用的方法：
+
+    安装gcc编译器和gettext工具：
+
+复制代码
+sudo apt-get install gcc gettext
+
+    安装gccfilter工具：
+
+复制代码
+git clone https://github.com/nico/parse-analyzer.git
+cd parse-analyzer
+make
+sudo make install
+
+    配置gccfilter：
+
+复制代码
+sudo ln -s /usr/local/bin/gccfilter /usr/local/bin/cc
+sudo ln -s /usr/local/bin/gccfilter /usr/local/bin/c++
+
+    配置~/.bashrc文件，将以下内容添加到文件末尾：
+
+复制代码
+export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
+export CC=/usr/local/bin/gccfilter
+export CXX=/usr/local/bin/gccfilter
+
+    保存并退出~/.bashrc文件，然后执行以下命令使配置生效：
+
+复制代码
+source ~/.bashrc
+
+现在，当你使用gcc或g++编译代码时，错误信息将以高亮方式显示，并且错误信息也会被翻译成中文。
+4.删除或重装
+
+a) 删除 ~/.bashrc 后面的所有添加的 alias 别名，以免造成其他未知影响。
+b) 删除 /usr/local/bin/color_compile 可执行程序
+
+    1
+    2
+
+  sudo rm /usr/local/bin/color_compile
+
+    1
+
+其他情况：
+1、gcc 版本为 4.9.0 以上时，可以使用 gcc 内置的高亮显示，加上参数 -fdiagnostics-color=auto 即可
+2、需要修改其他颜色输出，只要修改 out_color_info.c 源码即可
+
+
 
 
 # 代码样例
@@ -2619,6 +2671,58 @@ androidautomoduleimpl.cpp里面：
 changeAADeviceConnectState
 后续结果是在homeview.cpp里面的checkBtDevice(int index)
 思路：先在homeview.cpp找到homeBtnList找到pushBackHomeBtn，focusCurrentSrc，switchActiveDevice，checkCurrentDeviceActive（找到关键词checkBtDevice），找到对应判断，修改判断状态
+
+0901:
+创建新样机
+cat filepath.txt | while read line;do git add -Af $line; done
+
+
+0905:
+TD收音机刻度尺问题其实是更换图片
+
+
+0906：
+关于Linux快照：
+https://blog.csdn.net/guyongqiangx/article/details/128494795
+
+0911:
+关于TD翻译，在app/config/对应项目改变量，如果没有则添加
+关于QT翻译，改动是通过修改ts，找到安装qt文件夹里面的语言家，发布qm文件，修改后需要全部编译才会生效，不能单独编译app因为没有效果，关于ts，先找到原来英文的语句，在vscode里面搜一下.cpp文件，一般会在具体区域show出来，其实是对应的ui控件view或者form文件里面的区域翻译对应的地方
+
+
+0913:
+find -iname +文件名（找路径）
+打开具体位置：nautilus /home/chenshihao/8368-XUCarSDK/application/reference_ui2/spLauncher/commons/comviews
+
+
+0915:
+搜索某种文件的关键词
+： 1. find ./  -type f -name "*.cpp" -o -name "*.h"  | xargs grep -n --color "MSG_RECEIVE_KEYS" > grep_111.txt，这样不行
+2.find ./  -type f -name "*.cpp" -o -name "*.h"  | xargs grep -n --color=always "Recevied" |  aha --black --title 'ls-with-colors' > ls-with-colors.html
+
+0919:
+dabview.cpp:
+#elif  defined(UI_NEW_TUCSON_1024_600)
+    m_PageSwitch->setGeometry(25, 472, 1024, 64);
+
+0926:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
