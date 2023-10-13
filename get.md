@@ -656,8 +656,8 @@ git commit -m '冲突解决'
 
 2. 更换开机logo
 (1). 更换开机logo： 
-找到项目底下目录的build/Tools/binary_gen，在此用终端打开，把焦点换到文件。把同名文件脚本拖到终端，再把bmp文件拖进去生成一个.bin文件（两个bin文件，可以将isp开头的的bin文件改为logo.bin），把这个文件拷贝到application/config/maxmade/项目名字，放到logo文件夹下并且rename文件为logo.bin
-图片格式要求为24位bmp(不能为大写的BMP,否则会无法显示),颜色为256色的图片 (如何获取24位256色的图片,可将24位大于256色的图片让美工先转为256色8位的图片,再转回24位,这样将可将logo图片的颜色降为256色);
+把24位图重新命名为logo.bmp,找到项目底下目录的build/Tools/binary_gen，在此用终端打开，把焦点换到文件。把同名文件脚本拖到终端，再把bmp文件拖进去生成一个.bin文件（两个bin文件，可以将isp开头的的bin文件改为logo.bin），把这个文件拷贝到application/config/maxmade/项目名字，放到logo文件夹下并且rename文件为logo.bin
+图片格式要求为24位bmp(不能为大写的BMP,否则会无法显示),颜色为256色的图片 (如何获取24位256色的图片,可将24位大于256色的图片让美工先转为256色8位的图片,再转回24位,这样将可将logo图片的颜色降为256色);实验可以将logo.bin放到out文件下，./mka....  rom编译看看是否有效
 (2). 生成可更换开机logo的方法：
 1.进入code的build/tools/binary_gen路径下 将图片也一并放入此目录下  图片格式要求为24位bmp图片
 2.使用命令./isp_bin_gen_palette  图片1 图片2 。。。生成每张图片对应的.bin文件以及将图片打包在一起的isp_part.bin文件  生成每张图片对应的.bin文件(需注意有没有各个图片对应的bin,没有就是错的)以及将图片打包在一起的isp_part.bin文件（每个图片命名格式为应为logo1.bmp，logo2.bin..........）
@@ -2226,7 +2226,7 @@ chatgpt ：https://cat2.imiku.me/user
 
 0627：
 TD平台更换logo后开机顺闪主界面，加#define WARNING_AND_NOWARING_INDEPENDENT_INI	1    //警告和无警告INI独立  
-搜该套UI，对应型号的homeview，改ini,增加warningini，和style的homerc
+搜该套UI，对应型号的homeview，改ini,增加warning.ini，和style的homerc
 
 0629：
 关于android auto S21手机连AA有异常，其他手机无异常的情况，对比S9和pixel4的正常情况的AA版本，发现S21原来测试时的android auto版本是9.4版本，正常手机是9.7版本，现在将S21手机升级AA的版本升级到最新（9.8），则可以解决出现地图显示不完整问题
@@ -2705,15 +2705,49 @@ dabview.cpp:
 #elif  defined(UI_NEW_TUCSON_1024_600)
     m_PageSwitch->setGeometry(25, 472, 1024, 64);
 
-0926:
+1008:
+卸载文件系统：
+来查看哪些进程正使用特定的文件系统：
+sudo lsof +f -- /mnt
+停止使用文件系统的进程
+
+一旦你确定了哪些进程在使用该文件系统，你就可以尝试停止它们。有些进程可能会在后台运行，你需要先使用kill命令将它们终止：
+
+sudo kill -9 1234
+
+如果进程仍然无法终止，你可以尝试使用fuser命令，它可以让系统为你查找出使用该文件系统的进程并将这些进程终止：
+
+sudo fuser -km /mnt
+
+以上命令将会终止所有使用/mnt目录下文件系统的进程。在这之后，你就可以试图再次卸载文件系统了。
+https://cloud.tencent.com/developer/article/2328088#:~:text=%E5%9C%A8%E8%A7%A3%E5%86%B3%E6%97%A0%E6%B3%95%E5%8D%B8%E8%BD%BD%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9A%84%E9%97%AE%E9%A2%98%E4%B9%8B%E5%89%8D%EF%BC%8C%E6%88%91%E4%BB%AC%E9%A6%96%E5%85%88%E9%9C%80%E8%A6%81%E4%BA%86%E8%A7%A3%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9A%84%E7%8A%B6%E6%80%81%E3%80%82%20%E5%BD%93%E4%B8%80%E4%B8%AA%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E8%A2%AB%E6%89%93%E5%BC%80%E5%B9%B6%E6%AD%A3%E5%9C%A8%E4%BD%BF%E7%94%A8%E7%9A%84%E6%97%B6%E5%80%99%EF%BC%8C%E5%AE%83%E8%A2%AB%E6%A0%87%E8%AE%B0%E4%B8%BA%E2%80%9C%E7%B9%81%E5%BF%99%E2%80%9D%E7%9A%84%E7%8A%B6%E6%80%81%EF%BC%8C%E8%BF%99%E6%84%8F%E5%91%B3%E7%9D%80%E5%AE%83%E4%B8%8D%E8%83%BD%E8%A2%AB%E5%8D%B8%E8%BD%BD%E3%80%82%20%E5%A6%82%E6%9E%9C%E4%BD%A0%E8%AF%95%E5%9B%BE%E5%8D%B8%E8%BD%BD%E4%B8%80%E4%B8%AA%E7%B9%81%E5%BF%99%E7%9A%84%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%EF%BC%8C%E4%BD%A0%E4%BC%9A%E5%BE%97%E5%88%B0%E4%B8%80%E4%B8%AA%E9%94%99%E8%AF%AF%E6%8F%90%E7%A4%BA%EF%BC%9A%20umount%3A,%2Fmnt%3A%20target%20is%20busy.
+无法在双系统下正常挂载Windows文件夹
+https://zhidao.baidu.com/question/1903494029219728140.html#:~:text=%E4%BE%9D%E6%AC%A1%E7%82%B9%E5%87%BB%E2%80%9C%E6%A3%80%E6%9F%A5%20%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F,%E2%80%9D%E5%92%8C%E2%80%9C%E4%BF%AE%E5%A4%8D%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E2%80%9D%EF%BC%8C%E5%86%8D%E4%BB%8E%E6%96%87%E4%BB%B6%E4%B8%AD%E7%82%B9%E5%87%BB%E6%9C%AA%E6%8C%82%E8%BD%BD%E7%9A%84%E7%9B%98%E7%AC%A6%E8%87%AA%E5%8A%A8%E9%87%8D%E6%96%B0%E6%8C%82%E8%BD%BD%E3%80%82%20%E8%BF%9B%E5%85%A5%E4%BF%AE%E5%A4%8D%E5%90%8E%E7%9A%84%E6%9C%BA%E6%A2%B0%E7%A1%AC%E7%9B%98%E5%86%85%E7%9A%84%E2%80%9C%E6%96%87%E6%A1%A3%EF%BC%88%E5%88%86%E5%8C%BA6%EF%BC%89%E2%80%9D%EF%BC%8C%E5%B7%B2%E7%BB%8F%E9%87%8D%E6%96%B0%E5%8F%AF%E4%BB%A5%E6%AD%A3%E5%B8%B8%E4%BD%BF%E7%94%A8%E4%BA%86%E3%80%82
+
+如果想要去除图标
+qt项目：
+1.可以把某个坐标拉到很远（拉到显示屏幕外）
+2.直接删掉该控件
+3.把该控件的高度宽度全都设为0（最安全，不会影响别的地方编译，有些直接去掉会报错）
+TD项目：
+把ini里面的控件删掉
+
+1009:
+n015usb视频切换到后台，进入设置点击切换语言会卡死
+音频不会，AUXIN也不会
+6255也不会
+头文件和UI有差异，
+检查了UIID，基本没有发现可疑的没翻译
+现在正对fileview的pri更换成6255的看看，换完之后没有问题
+对具体UI进行排除
+l
+最后排查到videomenu.ui有两个控件导致卡死，直接在qt里面点击取消翻译都会卡死，导致app到车机都会卡死
 
 
 
 
-
-
-
-
+1010：
+git log --author=suyq可以查看某个人的上传记录（例如suyq）
 
 
 
