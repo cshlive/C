@@ -2757,6 +2757,86 @@ harman机器连接AA卡死（有线和无线都会），首先6255的机器的�
 flash制作的时候不要改动设置项，会导致软件变动（比如别的语言改了默认英语，后面做的flash也会跟着改动，导致跟原先默认软件不一致）
 
 
+1103:
+快速打开某一路径的文件：nautilus application/reference_td2/tdLauncher/middleware/plugins/module/canmodule/
+
+
+1106：
+MCU转发can消息给app可以打断点去看里面的Buffer看看数据是不是一致的
+
+1113:
+关于空调手动退出，1.可以看一下手动关闭页面，定时器里面的槽有没有跑到，如果没跑到是不是多个页面导致，如果跑到看看为什么不生效 2.可以把顶栏隐藏掉，如果上面空一截，可以把整个ui界面往上提
+
+VScode :ctrl+alt+"-"返回上一个操作
+
+can的接收数据流动(air为例)：CAN_INFO_RX_AIR_INFO->CanImplNewDataSlot->UpdateCanInfoSig/OpenCanScreenSig（这个是展示一个页面）->UpdateCanInfoSlot->CanModuleNewDataSig->CanViewNewDataSlot
+
+can的发出数据流动：CAN_INFO_RX_BASIC_INFO->CanImplNewDataSlot->canInfoUpdateSig->canInfoUpdateSlot(自己可以改写或者新增这个槽，这个槽已经定义了传进去的参数是0,1,2那种)
+
+
+QT的常用快捷键：
+QT:
+    Ctrl+K: 快速搜索文件
+    Ctrl+Tab: 在打开的文件之间进行切换
+    Ctrl+Page Up: 切换到上一个打开的文件
+    Ctrl+Page Down: 切换到下一个打开的文件
+    Ctrl+K, Ctrl+O: 打开文件所在的目录
+    Ctrl+K, Ctrl+P: 切换到上一个编辑过的文件
+    F4: 定位到当前文件中选中的类或函数的定义
+    F2: 定位到下一个错误或警告
+    F12: 跳转到光标所在的函数或变量的定义
+    Ctrl+F2: 在文件中查找当前选中的函数或变量的所有引用
+    Ctrl+Shift+T: 在当前文件中切换 .h 和 .cpp 文件
+
+VScode:
+    Ctrl+Tab: 在打开的文件之间进行切换
+    Ctrl+P: 快速打开文件
+    Ctrl+P, @: 快速切换到符号（函数、变量等）定义的地方
+    Ctrl+P, #: 快速切换到最近编辑的文件
+    Ctrl+B: 打开/关闭侧边栏
+    Ctrl+Shift+: 跳转到匹配的括号或标签
+    F12: 跳转到定义
+    Ctrl+Shift+O: 跳转到文件中的符号（函数、变量等）
+    Ctrl+K, Ctrl+R: 在文件和资源管理器中显示当前文件
+    Alt+Left/Right: 切换编辑历史记录
+    Ctrl+K, Z: 进入 Zen 模式（全屏编辑）
+
+1121:
+一般这种缺少ui.h的报错，很大概率是pri里面走的逻辑有误
+
+注意中英文差别：
+℃（英文）
+°C
+
+
+1122:
+gnu改变图片注意是要导出而不是保存
+里面可以从图像去旋转和改变像素大小
+
+1125:
+TD:git apply
+增加config里面etc底下的一个文件log_default.cfg
+增加的环境变量地址不对，要取车机地址：“/usr/local/etc/log_default.cfg”;
+此时log会存储在默认路径：media/flash/nvm/log_service/currend/log.txt；
+敲命令要在根目录敲
+logset SHOW
+logset COPY /mnt/sda1
+
+串口通信：
+睿志诚力度调节搞反了,后视镜折叠，力度，回家时间，can时间，空调调节（全部失效）
+空调左右温度搞反了且多加了15度，而且无法调节，on，ac等有时候没作用，
+风向有误，平行吹风变为下吹风，平行下吹风变成平行吹风，下变平下，前变前下
+后视镜折叠，力度，回家时间，can时间，空调手动调节（全部失效）
+后视镜折叠，力度，回家时间:0xC6
+can时间：0xA6
+空调手动调节：0xC7
+目前已解决
+
+
+
+
+
+
 
 
 
