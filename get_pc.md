@@ -1105,6 +1105,8 @@ CPU 在从 CPU Cache 读取数据的时候，并不是读取 CPU Cache Line 中�
 
 
 
+# 软考
+关键路径长度是网络活动图中最耗时的最长路径
 
 
 
@@ -1112,4 +1114,10 @@ CPU 在从 CPU Cache 读取数据的时候，并不是读取 CPU Cache Line 中�
 
 
 
+
+# 新、
+1.接码：https://sms-activate.org/cn/freePrice#activation
+2.ip查询：https://whatismyipaddress.com/
+3.ip纯净度：https://whatismyipaddress.com/
+4.api：https://platform.openai.com/api-keys
 # 结尾
