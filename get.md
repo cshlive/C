@@ -656,7 +656,7 @@ git commit -m '冲突解决'
 
 2. 更换开机logo
 (1). 更换开机logo： 
-把24位图重新命名为logo.bmp,找到项目底下目录的build/Tools/binary_gen，在此用终端打开，把焦点换到文件。把同名文件脚本拖到终端，再把bmp文件拖进去生成一个.bin文件（两个bin文件，可以将isp开头的的bin文件改为logo.bin），把这个文件拷贝到application/config/maxmade/项目名字，放到logo文件夹下并且rename文件为logo.bin
+把24位图重新命名为logo(请注意，此操作非常重要，不然经常黑屏没效果),找到项目底下目录的build/Tools/binary_gen，在此用终端打开，把焦点换到文件。把同名文件脚本拖到终端，再把bmp文件拖进去生成一个.bin文件（两个bin文件，可以将isp开头的的bin文件改为logo.bin），把这个文件拷贝到application/config/maxmade/项目名字，放到logo文件夹下并且rename文件为logo.bin
 图片格式要求为24位bmp(不能为大写的BMP,否则会无法显示),颜色为256色的图片 (如何获取24位256色的图片,可将24位大于256色的图片让美工先转为256色8位的图片,再转回24位,这样将可将logo图片的颜色降为256色);实验可以将logo.bin放到out文件下，./mka....  rom编译看看是否有效
 (2). 生成可更换开机logo的方法：
 1.进入code的build/tools/binary_gen路径下 将图片也一并放入此目录下  图片格式要求为24位bmp图片
@@ -1881,7 +1881,7 @@ copy： git log /home/chenshihao/8368-U-QT/application/reference_ui2/spLauncher/
  1793  git show   bf5bd5bcc062feee426e595de8f4b490984fce42
 
 0329：
-用脚本更换开机logo，确保图片格式位24位256色的，不是该格式的话会黑屏显示
+用脚本更换开机logo，确保图片格式位24位256色的，不是该格式的话会黑屏显示，把24位图重新命名为logo(请注意，此操作非常重要，不然经常黑屏没效果)
 
 0330：
 AVIN，Reverse，Camera
@@ -2699,7 +2699,7 @@ find -iname +文件名（找路径）
 搜索某种文件的关键词
 ： 1. find ./  -type f -name "*.cpp" -o -name "*.h"  | xargs grep -n --color "MSG_RECEIVE_KEYS" > grep_111.txt，这样不行
 2.find ./  -type f -name "*.cpp" -o -name "*.h"  | xargs grep -n --color=always "Recevied" |  aha --black --title 'ls-with-colors' > ls-with-colors.html
-
+3. find ./ -type f -name "*.cpp" -o -name "*.h" | xargs grep -n --color=always "switchBar"在当前目录底下搜索有关这个的.cpp和.h
 0919:
 dabview.cpp:
 #elif  defined(UI_NEW_TUCSON_1024_600)
@@ -2815,6 +2815,12 @@ gnu改变图片注意是要导出而不是保存
 
 1125:
 TD:git apply
+git apply - < <patchfile>
+使用 - 参数可以从标准输入读取补丁文件。
+1.应用补丁文件到当前工作目录：
+
+git <patchfile>
+
 增加config里面etc底下的一个文件log_default.cfg
 增加的环境变量地址不对，要取车机地址：“/usr/local/etc/log_default.cfg”;
 此时log会存储在默认路径：media/flash/nvm/log_service/currend/log.txt；
@@ -2832,19 +2838,55 @@ can时间：0xA6
 空调手动调节：0xC7
 目前已解决
 
+1221:
+uart 0 linux打印口
+uart 1 MCU通讯口
+uart 2 蓝牙模块通讯口
+uart 3 GPS通讯口 （有时没有GNCSS功能，可改）
+uart 4 GPS通讯口  （XU的ecos打印口）
+api:
+work:
+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
 
+1226：
+8368P平台截图命令
 
+    机器插入U盘的情况下，先执行ls /media 查看U盘的路径， 比如U盘路径是 /media/sda1
 
+    则在串口执行
 
+    screenshot -o /media/sda1
 
+    就会在U盘生成 osd_fb-开头的截图文件。
 
+  大家看看各种负责的项目在MaxmadeDevelop2.0分支上能否正常编译运行，如果不行，那可能需要重新执行
 
+    make menuconfig对项目进行配置。（config底下的defconfig）
 
+    md5sum filename 可以看和对比文件的MD5校验和
 
+路由器相当于用户程序，插座相当于操作系统，墙相当于硬件，里面的电线相当于bootloader，裸机程序不用运行在操作系统但是类似main函数一样的运行入口，cpu系统会从这里开始运行第一段程序（bootloader是其中一种裸机程序），不同的cpu体系芯片会有不同的bootloader,想要运行在一块板子的程序移到另外一块板子，要修改bootloader程序（类似修改config）。bootloader的存在就是为了让操作系统启动，并且传递一些必要参数给操作系统的内核，等待内核完全掌握内存，bootloader像彻底死去了
+bootloader（1）需要初始化硬件设备，比如EMMC，DDR，时钟，内核本质也是一段程序，需要硬件进行初始化
+（2）建立内存空间的映射，程序是运行在内存上，这样内核才有“工作台”
+（3）创建内核的需要某些信息，并且将信息通过相关的机制传递给内核（内核起来之后要做根文件系统等镜像，镜像烧录进去之后需要所在地址传递过来）
+Uboot目录架结构：
+api：Uboot的接口函数
+arch：不同处理器架构的相关代码，对应了不同的初始化（某个选择而已）
+board:为开发板定制的相关代码，支持板级差异
+common：通用代码，大部分与uboot的命令行有关
+disk：磁盘分区相关
+doc：有readme.txt和一些开发板指南的文档
+driver：驱动相关 一般保证赶紧开机，很少动，uboot增加太多功能影响开机时间，某些api里面接口基于这个目录的驱动去完成
+examples:示例程序，接口怎么用看这个地方
+fs：文件系统
+lib：通用库
+net:网络相关代码
+post：上电自检程序，uboot的医生
+tools：配套的编译器，连接器，检查器
 
-
-
-
+0103:
+连接串口通信的时候，需要检查连接线（tx绿色要接白色，rx白色要接绿色，要与机器连接相反才能到达收和发的效果），然后还要用固定的波特率
+用cutecom发送时要注意发送的时候是按16进制去发（HEX）还是字符串（cr/rl）格式
 
 
 
