@@ -532,7 +532,7 @@ git revert：撤销某个提交，做反向操作，生成新的commitId，原�
 回退分两种情况：
    已 commit，未push到远程仓库。
 
-    git reset --soft（撤销commit）。
+    git reset --soft HEAD^（撤销commit）。
 
     git reset --mixed（撤销 commit 和 add 两个动作）。
 
@@ -652,7 +652,8 @@ git commit -m '冲突解决'
 # 经验
 1. 增改翻译：先在系统.pro配置文件加上对应的ts：TRANSLATIONS = \ 
 改变翻译的.ts文件（1：在项目application/ui2/splaucher目录下；2：在application/config/maxmade/项目文件/language下面），利用qt语言家（打开目录在qt安装目录的bin文件底下）
-用qt的languist先制作好ts文件（更新翻译），再生成qm文件（发布翻译），再在qt程序里面加载qm文件即可实现国际化
+用qt的languist先制作好ts文件（更新翻译），利用qt语言家生成对应的ts文件
+再生成qm文件（发布翻译），再在qt程序里面加载qm文件即可实现国际化
 
 2. 更换开机logo
 (1). 更换开机logo： 
@@ -841,7 +842,7 @@ GDB;
 tail -f /var/log/syslog
 插入u盘
 看自己是sdc1还是sdb别的
-umount /media/chenshihao/HOUSE  (弹出u盘)
+umount /media/chenshihao/HOUSE  (弹出u盘)  ps：输入指令最好，如果手动弹出U盘，要插入U盘。
 sudo dosfsck -v -a /dev/sdc1 
 
 14. 输出文件名字到一个文件里面
@@ -3225,6 +3226,7 @@ qApp->installTranslator(&translator); // 安装翻译器
 0204：
 更改某些不生效的翻译，首先在代码定位翻译位置
 然后看所处函数属于哪个类里面，把类名加一个新context的到ts，改qm文件，
+类似combar这种，直接在phoneview重写了一个新的homebar，直接在context的phoneview里面添加，因为他是在这个这个类new了一个并在这里初始化
 如果用了QObject::tr，直接放QObject里面
 makefile：
 #grep "^[^#].*" ui.cfg //获取所有不以 # 开头的非注释行。^[^#].* 是一个正则表达式，表示以除了 # 之外的任何字符开头的行。sed "s/_/-/g"：这个部分使用 sed 命令，将每一行中的下划线 _ 替换为连字符 -。这里的 s/_/-/g 是一个替换操作，其中 s 表示替换，_ 是要被替换的字符，- 是替换后的字符，而 g 表示全局替换。sed "s/:.*//"：这个部分使用 sed 命令，将每一行中冒号 : 后面的内容删除，保留冒号之前的部分。这样做的目的是截取配置行的关键信息。
@@ -3278,6 +3280,200 @@ ctrl+alt+- vcs返回上一个步骤
  * 其它源需要占用音频、显示资源时，比如倒车、拨打电话等，在这里做资源的切换。
 
 
+0227:
+/8368-PCarSDK/application/reference_ui的build_config.sh
+里面deconfig的CONFIG_GLB_GMNCFG_ENABLE_AVM添加了ENABLE_AVM的宏
+if [ "$CONFIG_GLB_GMNCFG_ENABLE_AVM" == "y" ]; then
+	echo '$CONFIG_GLB_GMNCFG_ENABLE_AVM enable'
+	echo 'DEFINES += ENABLE_AVM' >> $AUTOCFGHEADER
+	SDKQT_CONFIG="$SDKQT_CONFIG CONFIG+=ENABLE_AVM"
+    PRO_DEFINE="$PRO_DEFINE DEFINES+=ENABLE_AVM"
+else
+	echo '$CONFIG_GLB_GMNCFG_ENABLE_AVM disable'
+fi
+
+0229:
+git checkout   812becfc396ab4e101c99d2d3d3b7de8e3872ae0 '/home/chenshihao/8368-U-20200422/application/include/AV-1297WS-65HD-EDR.h' 
+回退某个版本的头文件
+
+0313:
+BaseControl::getInstance()->sendMcuKeyPressedSignal(UICC_POWER, 1);
+1代表按下，0代表弹起的意思
+N015需要在列表增加一个add控件，蓝牙将设置里面的最后增益选项隐藏或者去掉，usb背景换一下
+y039加一个辅助线，左右灯进入avm
+
+0319:
+flash打印：
+fatload usb 1:auto fa857e0 cfeh.bin                                             
+** Bad device size - usb 1 **                                                   
+fatload usb 1:0 fa857e0 cfeh.bin                                                
+** Bad device size - usb 1 **                                                   
+before detect USB1                                                              
+load USB1:fatload usb 1 fa857e0 cfeh.bin                                        
+** Bad device size - usb 1 **                                                   
+before detect SD0                                                               
+mmc dev 0                                                                       
+Card did not respond to voltage select!                                         
+mmc0(part 0) is current device                                                  
+mmc start                                                                       
+mmc - MMC sub system                                                            
+                                                                                
+Usage:                                                                          
+mmc read addr blk# cnt                                                          
+mmc write addr blk# cnt                                                         
+mmc erase blk# cnt                                                              
+mmc rescan                                                                      
+mmc part - lists available partition on current mmc device                      
+mmc dev [dev] [part] - show or set current mmc device [partition]               
+mmc list - lists available devices                                              
+mmc setdsr - set DSR register value                                             
+                                                                                
+fatload mmc 0 fa857e0 cfeh.bin                                                  
+Card did not respond to voltage select!                                         
+** Bad device mmc 0 **                                                          
+load SD0 1                                                                      
+fatload mmc 1 fa857e0 cfeh.bin                                                  
+MMC Device 1 not found                                                          
+** Bad device mmc 1 **                                                          
+load SD1 1                                                                      
+after user_update_check_header                                                  
+file name MP_EXTEN.bin in partition runtime_cfg offset a50 size 0xa00           
+file name ITU_EXTEN.bin in partition runtime_cfg offset 1450 size 0xa00         
+file name MP.bin in partition runtime_cfg offset 1e50 size 0x128                
+file name ITU.bin in partition runtime_cfg offset 1f80 size 0x128               
+file name DPS.bin in partition runtime_cfg offset 20b0 size 0x10a4  
+
+0321：
+检测内存情况：
+N015:
+oothBn](  720): [onTransact:2788] RFCOMMMGR_SEND_DATA
+[2024-03-21 10:44:38] I/[BT_MW][RG440_BlueTooth](  720): [btRfcommMgr_sendData:947] pstBtAddr(cf:de:e5:6d:28:3c) sdHandle=3 wDataLen=11
+[2024-03-21 10:44:38] GOC_D a2dp 178176 B/s len:4096
+[2024-03-21 10:44:38] goc a2dp write 178176 B/s len:4096
+[2024-03-21 10:44:38] D/[AAS][AndroidAutoBTServiceProxy](  732): rfcomm read endpoint recv:11
+[2024-03-21 10:44:39] W/AS      (  790): [writeOnce][311]source is not ready
+[2024-03-21 10:44:39] GOC_D avrcp_requst_play_status 3C286DE5DECF
+[2024-03-21 10:44:39] W/AS      (  790): [writeOnce][311]source is not ready
+[2024-03-21 10:44:39] W/AS      (  790): [writeOnce][311]source is not ready
+[2024-03-21 10:44:39] goc send_ind: [MP96003,252320]
+[2024-03-21 10:44:39] goc_app not response playing when AT#VI
+[2024-03-21 10:44:39] goc-ipc APRev: [MP96003,252320] ,version: V6.5GBTSD4.7NG5.6.2A2.54.2
+[2024-03-21 10:44:39] goc-ipc current [96003] total[252320]
+[2024-03-21 10:44:39] [QT] [BlueToothModuleImpl] BTAudioCBK : EVENT_AUDIO_PLAYBACK_TIME_IND
+[2024-03-21 10:44:39] [QT] [bluetoothmodule] checkBtAddressIsTheSameDevice line: 2313 run
+[2024-03-21 10:44:39] [QT] [bluetoothmodule] btGetConnectDeviceTotal line: 3482 ConnectDeviceTotal: 1
+[2024-03-21 10:44:39] [QT] [bluetoothmodule] btGetLocalConnectStatus line: 3427 run
+[2024-03-21 10:44:39] [QT] [bluetoothmodule] check is the same device,result:  true
+[2024-03-21 10:44:39] D/[BT_MW][IBlueToothCallbackBn](  732): [onTransact:788] AUDIO_CBK EVENT_AUDIO_PLAYBACK_TIME_IND
+[2024-03-21 10:44:39] W/AS      (  790): [writeOnce][311]source is not ready
+[2024-03-21 10:44:39] W/AS      (  790): [writeOnce][311]source is not ready
+[2024-03-21 10:44:39] W/AS      (  790): [writeOnce][311]source is not ready
+[2024-03-21 10:44:39] W/AS      (  790): [writeOnce][311]sour
+
+开机：
+total       used       free     shared    buffers     cached
+[2024-03-21 10:46:39] Mem:        191764     136804      54960        172      29928      41044
+[2024-03-21 10:46:39] -/+ buffers/cache:      65832     125932
+[2024-03-21 10:46:39] Swap:        36860          0      36860
+蓝牙：
+ total       used       free     shared    buffers     cached
+[2024-03-21 10:47:29] Mem:        191764     147404      44360        176      31676      43528
+[2024-03-21 10:47:29] -/+ buffers/cache:      72200     119564
+[2024-03-21 10:47:29] Swap:        36860          0      36860
+6255usb打电话
+ total       used       free     shared    buffers     cached
+[2024-03-21 15:03:54] Mem:        191764     171768      19996       1056      35876      53648
+[2024-03-21 15:03:54] -/+ buffers/cache:      82244     109520
+[2024-03-21 15:03:54] Swap:        36860          0      36860
+
+
+1. 使用 top 监控系统整体资源使用情况：
+top
+
+这将显示一个动态更新的系统资源使用情况列表，包括 CPU 使用率、内存使用情况、进程信息等。你可以按 q 键退出 top。
+2. 使用 ps 命令查看指定进程的详细信息：
+ps aux | grep your_process_name
+
+这将列出包含指定进程名称的所有进程，并显示它们的详细信息，包括进程ID、CPU 使用率、内存占用、进程状态等。你可以根据需要修改 grep 命令来过滤出你感兴趣的进程。
+3. 使用 pidstat 监控指定进程的资源使用情况：
+pidstat -u -r -d -p your_process_id 1
+
+这将以 1 秒为间隔动态显示指定进程的 CPU 使用情况、内存使用情况、IO 情况等。你需要将 your_process_id 替换为你要监控的进程的进程ID。
+4. 使用 htop 进行交互式监控：
+htop
+
+htop 是 top 的增强版，提供了交互式的界面和更多的功能。你可以使用箭头键和 F 键来进行导航和操作，以及查看更详细的进程信息。
+5. 使用 iotop 监控 IO 情况：
+iotop
+
+iotop 可以实时监控系统的磁盘IO情况，包括每个进程的磁盘IO使用情况，以及磁盘读写速率等。
+
+通过以上命令和工具，你可以实时监控程序的 CPU、内存、IO 使用情况，并且可以根据监控结果来排查和解决性能问题。
+
+
+将qrc转换成rcc：
+https://blog.csdn.net/SunInThePalm/article/details/112608162
+https://blog.hawkhai.com/blog/2022/01/11/qt-qrc
+ QT下资源使用和资源占用…（可以动态加载资源文件，这样不占内存）：
+https://www.cnblogs.com/findumars/p/5738968.html
+
+QT 多线程(处理密集时的界面响应保持)
+https://blog.csdn.net/ligare/article/details/124498542
+
+查找过程：
+内存足够情况下
+利用top指令来
+radio在20以下
+查到usb在百分60左右，甚至到70
+蓝牙百分之35，后面稳定在25
+can也在25
+设置在25
+主界面在usb播放时刚切在35左右，可能是infopage
+
+0403：
+AppCommon.h里面存放着各种源的名字
+
+为了兼容传统的CVBS摄像头，需要重新调试TP2815驱动，并需要对解码后的MIPI视频流重新解析。
+
+
+假关机：复现手法：mmmm(music)-> pppp(Poweroff)-> oooo(poweron)->bbbb(去掉usb)->cccc(插入usb)->vvvv(viedo8400行发生)
+
+
+走了：else if (ENTITY_Accessory == af) {}
+
+
+报错：
+
+[2024-04-08 19:15:26] [QT] [Error] [MediaControl>>] line: 348 No main Screen.Try to Get ScreenSrc...
+
+[2024-04-08 19:16:32] I/SPCarPlay(  731): [onScreenEvent:1451] event[1] cma: Request 228 pages failed
+
+[2024-04-08 19:16:32] [__chunk_malloc] out of memory! (listener:0x000E4000)
+[2024-04-08 19:16:32] 	alloc failed
+
+[2024-04-08 19:16:32] [video][ VideoUiRender.cpp VideoUiRender 23] INF: -alloc mem(933888) failed
+
+0410:
+. 使用git diff命令进行比较：git diff branch1 branch2可以比较两个分支之间的差异。该命令会显示修改的文件及具体的修改内容。
+
+2. 使用git log命令比较：git log branch1..branch2可以比较两个分支之间的提交记录差异。该命令会显示branch2相对于branch1增加或删除的提交记录。
+
+3. 使用git merge-base命令找到共同祖先：git merge-base branch1 branch2可以找到两个分支的共同祖先。可以通过该命令得到一个基准commit，然后使用git diff命令比较该基准commit与两个分支最新的commit之间的差异。
+ce0542187bdcf1ddecc46b01bbd2c84eda1564d1
+智能合并：（部分合并）
+git checkout -b article/list_temp 使用git checkout将根据A分支创建一个article/list_temp分支，避免影响article/list分支
+git merge article/show 将article/show分支合并到article/list_temp分支
+git checkout article/list
+git checkout article/list_temp message.html message.css message.js other.js 切换到article/list分支，并使用git checkout将article/list_temp分支上的系统消息功能相关文件或文件夹覆盖到article/list分支
+git branch -D article/list_temp
+
+
+
+
+
+
+
+
 
 
 
@@ -3305,16 +3501,11 @@ ctrl+alt+- vcs返回上一个步骤
 *   物联网，处理语音（信号与解调）
 *  与车载行业有关的can诊断通讯（uds），中控驱动屏幕，与电机有关的无刷电机（FOC算法）
 * 搞一个与后续有关的合订本APP，
-
 一、需求转换或者叫理解需求；
 
 二、分配时间；
 
 三、开发质量的问题；
-
-
-
-
 
 
 
@@ -3380,17 +3571,20 @@ int main(int argc, char** argv) {
 
 * Y039 :的倒车avm带辅助线（后续可能要加方向盘转角），
 在 360画面增加设置 色彩 与 亮度可调，调后保存。
-8368-PCarSDK/application/config/maxmade/AV_Y039_55/avm/params/avm3d    的auxiliaryInfo.xml文件里面
-左右方向灯需要打开avm，打左需要发送左摄像头信号，右显示右摄像头，
+8368-PCarSDK/application/config/maxmade/AV_Y039_55/avm/params/avm3d    的auxiliaryInfo.xml文件里面改<enable>0</enable>为1；
+倒车触发d->showReverseView(true);在里面触发ActivityManager::self()->start(AVM_SRC_NAME,Temporary);
+左右方向灯需要打开avm（在basecontrol触发，start一个avm），打左需要发送左摄像头信号（传送btnClickedSlot("ID_left_view");），右显示右摄像头，
 
 
 * P079 smartlinkui
+创建新页面，在点击cpaa弹提示语的时候将这个ui去show出来，还要连接槽去跳转
 
 * AV-G019-G0A7:快速倒车的问题
 ：从appdata.h找到getIsReversing->basecontrol.cpp的handlemcukey里面有个UICC_CAMERA
 ：别的：找BASE_REVERSE_ENABLE到customEvent；找ENABLE_AVM到mainstart.cpp的getReverseState
-
-
+AppData *pAD = AppData::GetInstance();
+pAD->setIsReversing(true);
+d->showReverseView(true);
 * 1307wsc-65
 通话状态下点击侧摄像头，直接死机
 setLauncherEQorBTActivityName
@@ -3416,14 +3610,42 @@ SYS_INFO_NAME_CPPHONE_CALL
 * 出货软件：
 3.12:
 N015-65
-AV-1297WS-65HSE   
+//AV-1297WS-65HSE   
 3.15
-AV-1327G-65-HX
-3.20
-AV-1297-65G-HX
-1297WS-65HD
+//AV-1327G-65-HX
+//AV-1297-65G-HX
+//1297WS-65HD
 * 样机
-AV-1277SC-65HA-HS
+//AV-1277SC-65HA-HS
+
+3.25
+* 2269,2229参展机器
+* 出货软件：n015-65（很多问题）
+乱跳触摸，其他奇怪问题 (怀疑是触摸屏的固件不好，暂时不处理后续要联系供应商升级固件)
+* 样机：AV-1305-26NG01 
+
+* 样机：P085-69(中低配车用8368-2U，+自制CAN盒) 用C125-rk来改
+高配车用8368P+9288支持原车高清360， 是不是用G019的机器来改样机 ？
+
+0401:
+样机：
+* AV_1279_43:UI_SWIFT_1024_600（UI移植）
+* 1305-26NG01（睿志诚斯威协议）
+* p085（基于 C125的基础上，改 CAN功能、车是前摄像头、工作逻辑 同AV-1307WSC-69的。 空调界面不是全屏，是一条栏 无触摸反控）
+* p089 （软件MIPI 相关，匹配F70车的360盒子。 外置CAN盒功能 与 P085差不多）
+
+增加avm源
+void HomeView::srcItemSelected(const QString &modeName)
+增加
+#if defined (UI_CHERY_BW_1280_720)
+            else if (AVM_SRC_NAME == modeName)
+            {
+                    ActivityManager::self()->start(AVM_SRC_NAME,Permanent);
+
+            }
+#endif
+在ui里面将iconname avm
+
 
 
 
@@ -3482,230 +3704,54 @@ int main() {
 
 在这个示例中，getTurnSignal() 函数模拟了获取转向灯状态的过程。然后，程序会不断地轮询当前转向灯状态，并与上一次的状态进行比较，以检测转向灯状态的变化。根据不同的状态，可以执行相应的操作。
 
+* usb视频源切换到auxin源花屏
+当涉及信号切换延迟和信号兼容性时，这些问题通常出现在视频信号传输和处理过程中。下面是对这两个问题的详细说明：
+1. 信号切换延迟：
 
+切换视频源时，涉及到从一个视频输入源切换到另一个的过程。这种切换可能导致屏幕在切换过程中出现短暂的黑屏、花屏或者信号丢失。这种情况发生的原因有：
 
+    信号切换时间：视频源切换需要一些时间，这取决于设备的硬件和软件处理能力。在切换过程中，显示屏可能会暂时丢失信号或者调整到新信号。
 
+    显示屏响应时间：即使切换信号的设备立即发送新的信号，显示屏本身也需要时间来接收和处理新的信号。在这个过程中，显示屏可能会出现短暂的黑屏或者花屏。
+
+2. 信号兼容性：
+
+不同的视频信号格式和参数可能导致设备无法正确解码或显示视频。当切换到一个与之前不同格式或参数的视频信号时，可能会出现以下问题：
+
+    分辨率不匹配：如果新信号的分辨率与显示屏不匹配，可能会导致图像变形、模糊或者裁剪。
+
+    刷新率不匹配：显示屏和视频信号的刷新率不匹配可能导致屏幕闪烁或者出现水平或垂直条纹。
+
+    色彩空间不匹配：如果视频信号的色彩空间与显示屏不匹配，可能会导致图像颜色不准确或者失真。
+
+为了解决这些问题，可以采取以下措施：
+
+    确保信号格式和参数一致：在设计和配置视频信号输入和输出设备时，确保它们的视频信号格式和参数一致，以减少兼容性问题。
+
+    使用自动切换器件：一些视频切换器件具有自动检测和调整功能，可以自动识别输入信号的格式和参数，并相应地调整输出信号以保持一致性。
+
+    优化信号传输路径：确保视频信号传输路径中的所有设备（如线缆、转换器等）都是高质量的，并且符合所需的视频信号标准和规范。
+
+    调整显示屏设置：对于显示屏，可以调整其设置以适应不同的视频信号输入，如调整分辨率、刷新率和色彩空间。
+
+通过这些方法，可以最大程度地减少信号切换延迟和信号兼容性问题，提高视频信号切换的平滑度和稳定性。
+
+我感觉出现了水平条纹，可能是刷新率不匹配
 
 
 
 # 打印信息
 * G019:
-快速：
- I/SPVideoIn(  954): [GetInstance:158] SPVideoIn instance is created! mRefCount=1 +++++
-[18:43:02:786] D/[QT]    (  954): [AuxinModuleImpl] get VideoIn instance finish.
-[18:43:02:786] I/ResourceManager(  926): [SResourceManager]associate ,pid:[954] obj[1] index[8] 
-[18:43:02:786] I/ResourceManager(  954): [CResourceManager]associate success,resource name:MainScreen 
-[18:43:02:793] D/[QT]    (  954): [AuxinModuleImpl] Enter
-[18:43:02:793] I/ResourceManager(  926): [SResourceManager]associate ,pid:[954] obj[1] index[9] 
-[18:43:02:793] I/ResourceManager(  954): [CResourceManager]associate success,resource name:MainAudio 
-[18:43:02:793] I/ResourceManager(  926): [SResourceManager]associate ,pid:[954] obj[1] index[10] 
-[18:43:02:793] I/ResourceManager(  954): [CResourceManager]associate success,resource name:RearAudio 
-[18:43:02:793] D/[QT]    (  954): [AuxinModuleImpl] AuxinModuleImpl line: 80 run
-[18:43:02:793] D/[QT]    (  954): [AuxinModuleImpl] StreamOn and RevOn, remove BS.
-[18:43:02:801] D/[QT]    (  954): ddddddddddddddddddddd5
-[18:43:02:801] D/[QT]    (  954): [InfoModuleImpl] =================>>>>moduleAlready  "auxin"
-[18:43:02:801] D/[QT]    (  954): [AuxinModuleImpl] enableVideoBlack
-[18:43:02:801] D/[QT]    (  954): ddddddddddddddddddddd6
-[18:43:02:801] D/[QT]    (  954): [InfoModuleImpl] "auxin" ready  QTime("01:00:31.725")
-[18:43:02:801] D/[QT]    (  954): [SetupModule] moduleReady "auxin"
-[18:43:02:801] D/[QT]    (  954): [SetupModule] avinModuleReady 246
-[18:43:02:801] D/[QT]    (  954): ImplicitRuleManager PostEvent: eventId  0
-[18:43:02:801] D/[QT]    (  954): [ModuleManager] "auxin" startup successful!
-[18:43:02:807] D/[QT]    (  954): [basecontrol] customEvent 1005
-[18:43:02:807] D/[QT]    (  954):  == BASE_REVERSE_ENABLE ==
-[18:43:02:807] D/[QT]    (  954): [basecontrol] showReverseView 264 en: true , UIManager::isRightDrive(): false
-[18:43:02:807] D/[QT]    (  954): [ActivityManagerImpl] start "avm" 1
-[18:43:02:807] D/[QT]    (  954): waitDestroyActivity: "home"  newActivity: "avm"
-
-等app初始化完之后倒车：
- D/[QT]    (  954): [AVMModuleImpl] [Debug] unsetVideoSrc [--OUT--]
-[18:43:16:753] D/[QT]    (  954): [AVMModuleImpl] [Debug] setScreenRes [--IN--]
-[18:43:16:753] D/[QT]    (  954): [AVMModuleImpl] [Debug] setScreenRes [--OUT--]
-[18:43:16:753] D/[QT]    (  954): [AVMModule] [Debug] exitAVM [--OUT--]
-[18:43:16:753] D/[QT]    (  954): ddddddddddddddddddddd15
-[18:43:16:759] W/[QT]    (  954): [ActivityManagerImpl] line: 1391 startActivity line: 1391 not quit cur aty
-[18:43:16:759] W/[QT]    (  954): [ActivityManagerImpl] line: 1422 startActivity line: 1422 start  aty
-[18:43:16:759] D/[QT]    (  954): [HomeView] ============>>>>HomeView onStart  58
-[18:43:16:759] D/[QT]    (  954): [HomeView] mediaInfoChangedSlot "home"
-[18:43:16:759] D/[QT]    (  954): [CHERY_infopage] setTitle 92 ""
-[18:43:16:759] D/[QT]    (  954): [HomeView] mediaInfoChangedSlot 3722 58
-[18:43:16:759] D/[QT]    (  954): [CHERY_infopage] clearInfopage_Btn 208
-[18:43:16:759] D/[QT]    (  954): [HomeView] ====================>>>mediaInfoChangedSlot  "home"
-[18:43:16:766] D/[QT]    (  954): [HomeView] showEvent
-[18:43:16:766] D/[QT]    (  954): ============>>>setCurActivityInfo  "home"
-[18:43:16:774] D/[QT]    (  954): QWaylandWindow::handleNativeEvent()
-[18:43:16:774] <0x1b>[0;1;31m[TS]  --> APP 1st Frame[n] 25684 ms(>0)<0x1b>[0m
-[18:43:16:774] D/[QT]    (  954): [basecontrol] nativeEvent
-[18:43:16:774] D/[QT]    (  954): [MAPPC_D] loop 99 MAINAPP:RX CMD: 1 13078 16711680 16
-[18:43:16:774] D/[QT]    (  954): [MAPPC_D] resolvePacket 260 Main app normal msg: 13078 16711680 256
-[18:43:16:774] D/[QT]    (  954): sendMcuKeyPressedSignal 16711680 256
-[18:43:16:774] D/[QT]    (  954): [basecontrol] Before emit mcuKeyPressed
-[18:43:16:774] D/[QT]    (  954): [MAPPC_D] loop 99 MAINAPP:RX CMD: 1 13078 16711680 16
-[18:43:16:782] D/[QT]    (  954): [MAPPC_D] resolvePacket 260 Main app normal msg: 13078 16711680 1
-[18:43:16:782] D/[QT]    (  954): sendMcuKeyPressedSignal 16711680 1
-[18:43:16:782] D/[QT]    (  954): [basecontrol] Before emit mcuKeyPressed
-[18:43:16:782] D/[QT]    (  954): [MAPPC_D] loop 99 MAINAPP:RX CMD: 1 13078 16711680 16
-[18:43:16:782] D/[QT]    (  954): [MAPPC_D] resolvePacket 260 Main app normal msg: 13078 16711680 512
-[18:43:16:782] D/[QT]    (  954): sendMcuKeyPressedSignal 16711680 512
-[18:43:16:782] D/[QT]    (  954): [basecontrol] Before emit mcuKeyPressed
-[18:43:16:788] D/[QT]    (  954): [mediaplay] keyDispatch 16711680 256
-[18:43:16:788] D/[QT]    (  954): [mediaplay] --------------------------------- getMediaPlayer
-[18:43:16:788] D/[QT]    (  954): handleMcuKey 16711680 256
-[18:43:16:788] D/[QT]    (  954): ==================>>>>setIsReversing false
-[18:43:16:795] D/[QT]    (  954): [QT] [Warning] pAaInstance is Null! androidautomoduleimpl/androidautomoduleimpl.cpp 3891
-[18:43:16:795] D/[QT]    (  954): [HomeView] mcuKeySlot 16711680 256
-[18:43:16:802] D/[QT]    (  954): [QT] [Warning] pAaInstance is Null! androidautomoduleimpl/androidautomoduleimpl.cpp 3891
-[18:43:16:802] D/[QT]    (  954): [HomeView] mcuKeySlot 16711680 1
-[18:43:16:810] D/[QT]    (  954): handleMcuKey 16711680 512
-[18:43:16:810] Recevied keycode from MCU 0x47 
-[18:43:16:810]  UICC_FRONT_SRC!! = 0x2, 0x0
-[18:43:16:810] D/[QT]    (  954): [MAPPC_D] loop 99 MAINAPP:RX CMD: 1 529 13 16
-[18:43:16:810] D/[QT]    (  954): [MAPPC_D] resolvePacket 260 Main app normal msg: 529 13 2
-[18:43:16:810] D/[QT]    (  954): [ActivityManagerImpl] last is  2
-[18:43:16:810] D/[QT]    (  954): HandleMCUSourceMsg startLastSource
-[18:43:16:817] D/[QT]    (  954): [CarplayModule] --------- CP_VechileStatusChanged 493 1 0
-[18:43:16:817] E/[QT]    (  954): [CarplayModuleImpl] line: 896 CP uiStatusIndex 1 Val:  0
-[18:43:16:817] E/[QT]    (  954): [AndroidAutoModuleImpl] line: 3890 uiStatusIndex,Val: 1 0
-[18:43:16:817] D/[QT]    (  954): [QT] [Warning] pAaInstance is Null! androidautomoduleimpl/androidautomoduleimpl.cpp 3891
-[18:43:16:817] D/[QT]    (  954): illumi false illumi brightNess 18
-[18:43:16:817] D/[QT]    (  954): [HomeView] mcuKeySlot 16711680 512
-[18:43:16:817]  Recevied keycode from MCU 0x7a 
-[18:43:16:817]  MSG_RECEIVE_KEYS!! = 0x7a, 0x0
-[18:43:16:824] D/[QT]    (  954): [MAPPC_D] loop 99 MAINAPP:RX CMD: 1 13078 122 16
-[18:43:16:824] D/[QT]    (  954): [MAPPC_D] resolvePacket 260 Main app normal msg: 13078 122 0
-[18:43:16:824] D/[QT]    (  954): sendMcuKeyPressedSignal 122 0
-[18:43:16:824] D/[QT]    (  954): [basecontrol] Before emit mcuKeyPressed
-[18:43:16:824] D/[QT]    (  954): [bluetoothmodule][bluetoothmodule.cpp  keyDispatch ][line is 4140] keyDispatch 4140
-[18:43:16:824] D/[QT]    (  954): [mediaplay] keyDispatch 122 0
-[18:43:16:824] D/[QT]    (  954): [mediaplay] --------------------------------- getMediaPlayer
-[18:43:16:824] D/[QT]    (  954): handleMcuKey 122 0
-[18:43:16:831] D/[QT]    (  954): [basecontrol] HandleMcuFakerPowerInfo false val 0
-[18:43:16:831] D/[QT]    (  954): sendMcuKeyPressedSignal 62 0
-[18:43:16:831] D/[QT]    (  954): [basecontrol] Before emit mcuKeyPressed
-[18:43:16:831] D/[QT]    (  954): [bluetoothmodule][bluetoothmodule.cpp  keyDispatch ][line is 4140] keyDispatch 4140
-[18:43:16:831] D/[QT]    (  954): [mediaplay] keyDispatch 62 0
-[18:43:16:831] D/[QT]    (  954): [mediaplay] --------------------------------- getMediaPlayer
-[18:43:16:831] D/[QT]    (  954): handleMcuKey 62 0
-[18:43:16:831] D/[QT]    (  954): [basecontrol] --pAD->curAudioSource()  58
-[18:43:16:838] D/[QT]    (  954): [HomeView] mcuKeySlot 62 0
-[18:43:16:838] D/[QT]    (  954): [DisplayControl] set cvbs out disable success! out state: true
-[18:43:17:389] D/[QT]    (  954): SetTimeSlot 1654 "01:00 AM" "AM"
-[18:43:17:392] D/[QT]    (  954): SetTimeSlot 1668 0 1 0 2023 1 1 0
-[18:43:17:411] D/[QT]    (  954): [HomeView] check Device Status after FileDeviceParser create
-[18:43:17:411] D/[QT]    (  954): [MAPPC_D] loop 99 MAINAPP:RX CMD: 3 0 21 21
-[18:43:17:411] D/[QT]    (  954): CanImplNewDataSlot 399 32
-[18:43:17:411] D/[QT]    (  954): [basecontrol] CanInfoUpdateSlot 6879
-[18:43:17:411] D/[QT]    (  954): [Audiocontrol] playRadarWarningSound
-[18:43:17:431] D/[QT]    (  954): [AVMView] setRadarlevel 485 0
-[18:43:17:431] D/[QT]    (  954): [MAPPC_D] loop 99 MAINAPP:RX CMD: 3 0 18 18
-[18:43:17:431] D/[QT]    (  954): CanImplNewDataSlot 399 33
-[18:43:18:415] D/[QT]    (  954): [MAPPC_D] loop 99 MAINAPP:RX CMD: 3 0 21 21
-[18:43:18:415] D/[QT]    (  954): CanImplNewDataSlot 399 32
-[18:43:18:427] D/[QT]    (  954): [basecontrol] CanInfoUpdateSlot 6879
-[18:43:18:427] D/[QT]    (  954): [Audiocontrol] playRadarWarningSound
-[18:43:18:427] D/[QT]    (  954): [AVMView] setRadarlevel 485 0
-[18:43:18:427] D/[QT]    (  954): [MAPPC_D] loop 99 MAINAPP:RX CMD: 3 0 18 18
-[18:43:18:427] D/[QT]    (  954): CanImplNewDataSlot 399 33
-[18:43:19:102] D/[QT]    (  954): [MAPPC_D] loop 99 MAINAPP:RX CMD: 1 13078 16711680 16
-[18:43:19:106] D/[QT]    (  954): [MAPPC_D] resolvePacket 260 Main app normal msg: 13078 16711680 256
-[18:43:19:106] D/[QT]    (  954): sendMcuKeyPressedSignal 16711680 256
-[18:43:19:106] D/[QT]    (  954): [basecontrol] Before emit mcuKeyPressed
-[18:43:19:106] D/[QT]    (  954): [mediaplay] keyDispatch 16711680 256
-[18:43:19:116] D/[QT]    (  954): [mediaplay] --------------------------------- getMediaPlayer
-[18:43:19:116] D/[QT]    (  954): handleMcuKey 16711680 256
-[18:43:19:116] D/[QT]    (  954): ==================>>>>setIsReversing false
-[18:43:19:116] D/[QT]    (  954): [CarplayModule] --------- CP_VechileStatusChanged 493 2 0
-[18:43:19:116] E/[QT]    (  954): [CarplayModuleImpl] line: 896 CP uiStatusIndex 2 Val:  0
-[18:43:19:116] E/[QT]    (  954): [AndroidAutoModuleImpl] line: 3890 uiStatusIndex,Val: 2 0
-[18:43:19:116] D/[QT]    (  954): [QT] [Warning] pAaInstance is Null! androidautomoduleimpl/
-[18:43:19:127] D/[QT]    (  954): [HomeView] mcuKeySlot 16711680 256
-[18:43:19:461] D/[QT]    (  954): [MAPPC_D] loop 99 MAINAPP:RX CMD: 3 0 21 21
-[18:43:19:461] D/[QT]    (  954): CanImplNewDataSlot 399 32
-[18:43:19:461] D/[QT]    (  954): [basecontrol] CanInfoUpdateSlot 6879
-[18:43:19:461] D/[QT]    (  954): [Audiocontrol] playRadarWarningSound
-[18:43:19:461] D/[QT]    (  954): [AVMView] setRadarlevel 485 0
-[18:43:19:484] D/[QT]    (  954): [MAPPC_D] loop 99 MAINAPP:RX CMD: 3 0 18 18
-[18:43:19:484] D/[QT]    (  954): CanImplNewDataSlot 399 33
-[18:43:19:629] W/AudioService(  855): [~PerformanceChecker][37][PerformanceChecker.cpp]src/ServerPropertyUtils.cpp:xmlSaveFile:128, limit=2ms, real=3ms, 
-[18:43:19:646] W/AudioService(  855): [~PerformanceChecker][37][PerformanceChecker.cpp]src/ServerPropertyUtils.cpp:xmlSaveFile:104, limit=5ms, real=8ms, 
-[18:43:20:466] D/[QT]    (  954): [MAPPC_D] loop 99 MAINAPP:RX CMD: 3 0 21 21
-[18:43:20:466] D/[QT]    (  954): CanImplNewDataSlot 399 32
-[18:43:20:466] D/[QT]    (  954): [basecontrol] CanInfoUpdateSlot 6879
-[18:43:20:478] D/[QT]    (  954): [Audiocontrol] playRadarWarningSound
-[18:43:20:478] D/[QT]    (  954): [AVMView] setRadarlevel 485 0
-[18:43:20:478] D/[QT]    (  954): [MAPPC_D] loop 99 MAINAPP:RX CMD: 3 0 18 18
-[18:43:20:478] D/[QT]    (  954): CanImplNewDataSlot 399 33
-[18:43:20:950] [BRT]file /media/flash/nvm/TL.INI size : -179861360
-[18:43:20:950] [BRT]file /media/flash/nvm/TL.INI size < 100
-[18:43:20:960] [BRT]bt_snoop_delay:do not need to save other
-[18:43:20:966] D/[QT]    (  954): [MAPPC_D] loop 99 MAINAPP:RX CMD: 3 0 18 18
-[18:43:20:976] D/[QT]    (  954): CanImplNewDataSlot 399 24
-[18:43:20:976] D/[QT]    (  954): [MAPPC_D] loop 99 MAINAPP:RX CMD: 3 0 21 21
-[18:43:20:985] D/[QT]    (  954): CanImplNewDataSlot 399 10
-[18:43:21:026] D/[QT]    (  954): [MAPPC_D] loop 99 MAINAPP:RX CMD: 3 0 88 88
-[18:43:21:026] D/[QT]    (  954): CanImplNewDataSlot 399 52
-[18:43:21:026] D/[QT]    (  954): CanImplNewDataSlot 642
-[18:43:21:026] D/[QT]    (  954): CanImplNewDataSlot 651 72
-[18:43:21:475] D/[QT]    (  954): [MAPPC_D] loop 99 MAINAPP:RX CMD: 3 0 21 21
-[18:43:21:475] D/[QT]    (  954): CanImplNewDataSlot 399 32
-[18:43:21:497] D/[QT]    (  954): [basecontrol] CanInfoUpdateSlot 6879
-[18:43:21:497] D/[QT]    (  954): [Audiocontrol] playRadarWarningSound
-[18:43:21:497] D/[QT]    (  954): [AVMView] setRadarlevel 485 0
-[18:43:21:497] D/[QT]    (  954): [MAPPC_D] loop 99 MAINAPP:RX CMD: 3 0 18 18
-[18:43:21:497] D/[QT]    (  954): CanImplNewDataSlot 399 33
-[18:43:21:940] 2222222222222222222222222222222222
-[18:43:21:941] /bin/ash: 2222222222222222222222222222222222: not found
-[18:43:21:948] root@Gemini:/# 
-[18:43:21:948] root@Gemini:/# D/[QT]    (  954): [basecontrol] ===============>BaseControl::systemHeartbeatTimerSlot
-[18:43:22:246] D/[QT]    (  954): [MAPPC_D] loop 99 MAINAPP:RX CMD: 1 13144 79 16
-[18:43:22:246] D/[QT]    (  954): [MAPPC_D] resolvePacket 260 Main app normal msg: 13144 79 76
-[18:43:22:246] D/[QT]    (  954): [MAPPC_D] resolvePacket 296 ==========>MSG_M2A_MCU_TYPE: O tuner type:  L
-[18:43:22:390] D/[QT]    (  954): SetTimeSlot 1654 "01:00 AM" "AM"
-[18:43:22:406] D/[QT]    (  954): SetTimeSlot 1668 0 1 0 2023 1 1 0
-[18:43:22:485] D/[QT]    (  954): [MAPPC_D] loop 99 MAINAPP:RX CMD: 3 0 21 21
-[18:43:22:485] D/[QT]    (  954): CanImplNewDataSlot 399 32
-[18:43:22:508] D/[QT]    (  954): [basecontrol] CanInfoUpdateSlot 6879
-[18:43:22:508] D/[QT]    (  954): [Audiocontrol] playRadarWarningSound
-[18:43:22:508] D/[QT]    (  954): [AVMView] setRadarlevel 485 0
-[18:43:22:508] D/[QT]    (  954): [MAPPC_D] loop 99 MAINAPP:RX CMD: 3 0 18 18
-[18:43:22:508] D/[QT]    (  954): CanImplNewDataSlot 399 33
-[18:43:23:170] D/[QT]    (  954): [MAPPC_D] loop 99 MAINAPP:RX CMD: 3 0 18 18
-[18:43:23:170] D/[QT]    (  954): CanImplNewDataSlot 399 24
-[18:43:23:170] D/[QT]    (  954): sendMcuKeyPressedSignal 16711680 0
-[18:43:23:170] D/[QT]    (  954): [basecontrol] Before emit mcuKeyPressed
-[18:43:23:191] D/[QT]    (  954): [QT] [Warning] pAaInstance is Null! androidautomoduleimpl/androidautomoduleimpl.cpp 3891
-[18:43:23:191] D/[QT]    (  954): [HomeView] mcuKeySlot 16711680 0
-[18:43:23:214] D/[QT]    (  954): [MAPPC_D] loop 99 MAINAPP:RX CMD: 3 0 18 18
-[18:43:23:230] D/[QT]    (  954): CanImplNewDataSlot 399 24
-[18:43:23:515] D/[QT]    (  954): [MAPPC_D] loop 99 MAINAPP:RX CMD: 3 0 21 21
-[18:43:23:515] D/[QT]    (  954): CanImplNewDataSlot 399 32
-[18:43:23:515] D/[QT]    (  954): [basecontrol] CanInfoUpdateSlot 6879
-[18:43:23:527] D/[QT]    (  954): [Audiocontrol] playRadarWarningSound
-[18:43:23:527] D/[QT]    (  954): [AVMView] setRadarlevel 485 0
-[18:43:23:527] D/[QT]    (  954): [MAPPC_D] loop 99 MAINAPP:RX CMD: 3 0 18 18
-[18:43:23:527] D/[QT]    (  954): CanImplNewDataSlot 399 33
-[18:43:23:527] D/[QT]    (  954): [basecontrol] CanInfoUpdateSlot 6879
-[18:43:23:527] D/[QT]    (  954): [AVMView] setRadarlevel 485 1
-[18:43:23:537] D/[QT]    (  954): [MAPPC_D] loop 99 MAINAPP:RX CMD: 3 0 18 18
-[18:43:23:537] D/[QT]    (  954): CanImplNewDataSlot 399 31
-[18:43:23:700] I/VideoInImpl(  856): Skip reverse image and RAL display
-[18:43:23:703] D/[QT]    (  954): [AuxinModuleImpl] Enter
-[18:43:23:703] D/[QT]    (  954): [AuxinModuleImpl] StreamOn and RevOn, remove BS.
-[18:43:23:703] D/[QT]    (  954): ddddddddddddddddddddd5
-[18:43:23:703] D/[QT]    (  954): [AuxinModuleImpl] enableVideoBlack
-[18:43:23:703] D/[QT]    (  954): ddddddddddddddddddddd6
-[18:43:23:725] D/[QT]    (  954): ImplicitRuleManager PostEvent: eventId  0
-[18:43:23:725] D/[QT]    (  954): [CarPlayResourceManager] reverseGear 939 true
-[18:43:23:725] D/[QT]    (  954): [AndroidAutoModuleImpl] reverseGear line: 3822 run
-[18:43:23:725] D/[QT]    (  954): [AndroidAutoModuleImpl] reverseGear start: true
-[18:43:23:725] D/[QT]    (  954): [basecontrol] customEvent 1005
-[18:43:23:725] D/[QT]    (  954):  == BASE_REVERSE_ENABLE ==
-[18:43:23:725] D/[QT]    (  954): [basecontrol] showReverseView 264 en: true , UIManager::isRightDrive(): false
-[18:43:23:725] D/[QT]    (  954): [ActivityManagerImpl] start "avm" 1
-[18:43:23:743] D/[QT]    (  954): waitDestroyActivity: "home"  newActivity: "avm"
-
+快速倒车：
 
 怀疑：
 AuxinModule::setAVInMode
 AVMModule::enterAVM
 [basecontrol] showReverseView
+
+* N015
+SWC:
+#elif defined(PANEL_M057) || defined(PANEL_N015)
+    BaseControl::getInstance()->sendMcuKeyPressedSignal(UICC_MENU, 1);
+    点击面板上的回到主菜单
+    
