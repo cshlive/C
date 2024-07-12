@@ -222,7 +222,7 @@ tar
     tar –xZvf file.tar.Z   解压tar.Z
     unrar e file.rar 解压rar
     unzip file.zip 解压zip
-
+unzip -O CP936  +file.zip (防止解压出现乱码)
 
 总结
 
@@ -2025,6 +2025,78 @@ p = Func;          /*将Func函数的首地址赋给指针变量p*
 
 
 ```
+* 多线程示例代码：
+(1)C++:
+#include <iostream>
+#include <thread>
+#include <future>
+
+int calculate() {
+    // 做一些计算或处理
+    int result = 12345; // 假设这是我们的结果
+    return result;
+}
+
+int main() {
+    std::promise<int> prom; // 创建一个promise对象
+    std::future<int> fut = prom.get_future(); // 从promise获取一个future
+
+    std::thread t([&prom] {
+        int result = calculate(); // 在子线程中计算结果
+        prom.set_value(result); // 将结果存入promise
+    });
+
+    int result = fut.get(); // 从future中获取结果
+    std::cout << "The result is: " << result << std::endl;
+
+    t.join();
+
+    return 0;
+}
+在这个例子中，我们创建了一个std::promise对象和一个std::future对象。我们在子线程中执行计算，并将结果存入promise。然后，我们在主线程中从future中获取这个结果。
+
+注意，future.get()会阻塞，直到结果可用。如果你不希望主线程阻塞，你可以使用future.wait_for()或future.wait_until()来等待一段时间，或者使用future.valid()来检查结果是否已经可用。
+
+此外，如果你希望子线程调用主线程的某个函数，你可以将该函数作为参数传递给子线程。但请注意，多线程环境中共享数据和资源需要特别小心，以避免竞态条件和死锁等问题。
+
+(2)QT
+#include <QThread>
+#include <QObject>
+#include <QDebug>
+
+class Worker : public QObject {
+    Q_OBJECT
+public slots:
+    void doWork() {
+        // 做一些计算或处理
+        int result = 12345; // 假设这是我们的结果
+        emit resultReady(result);
+    }
+
+signals:
+    void resultReady(int result);
+};
+
+int main() {
+    QThread thread;
+    Worker worker;
+
+    QObject::connect(&worker, &Worker::resultReady, [&thread](int result) {
+        qDebug() << "The result is:" << result;
+        thread.quit();
+    });
+
+    worker.moveToThread(&thread);
+
+    QObject::connect(&thread, &QThread::started, &worker, &Worker::doWork);
+    thread.start();
+
+    return 0;
+}
+在这个例子中，我们创建了一个Worker类，它有一个槽doWork()和一个信号resultReady(int)。我们在doWork()中做一些计算，然后通过resultReady(int)信号将结果传递出去。在主线程中，我们连接了resultReady(int)信号和一个lambda函数，这个函数接收结果，打印结果，然后退出线程。
+
+这个例子中，我们没有直接使用共享内存或者锁，而是通过Qt的信号和槽机制来在不同的线程之间传递数据。这种方式比直接操作共享内存和锁要简单得多，也更符合Qt的编程风格。
+
 
 
 # 日常改动
@@ -3467,36 +3539,185 @@ git checkout article/list
 git checkout article/list_temp message.html message.css message.js other.js 切换到article/list分支，并使用git checkout将article/list_temp分支上的系统消息功能相关文件或文件夹覆盖到article/list分支
 git branch -D article/list_temp
 
+0415:
+以添加波兰语为例	
+	
+步骤	备注
+确保QT Creator-->Tools-->External-->Linguist-->Update Translations(lupdate)和Release Translations(lrelease)有作用。	若无作用则需要在Tools->Options...->Environment->External Tools->Linguist设置项下将对应的设置项执行程序路径设置到对应的安装目录。
+在Launcher.pro文件中将新增语言的缩写加入到TRANSLATIONS。	自定义波兰语的缩写为pl。有些语言的缩写已经定义。
+点击QT Creator-->Tools-->External-->Linguist-->Update Translations(lupdate)	在Launcher.pro所在的目录将会生成lang_pl.ts
+使用languageTool.exe工具将ts文件生成为xlsx表格。	整理该表格后将其发给翻译人员翻译成想要的语言。
+客户翻译完成后将xlsx生成为对应的ts文件。	选定之前的ts文件。生成后覆盖该ts文件。
+将ts文件拷贝到Launcher.pro所在的目录	
+点击QT Creator-->Tools-->External-->Linguist-->Release Translations(lrelease)	将会生成.qm文件
+将qm文件拷贝到spLauncher/sysset/src/lang目录下面	
+"在datastringid.h文件中增加对应语言的存储变量。已有则不需要添加。
+在datastringid.cpp中添加语言的缩写。"	const QString SetupStrIdConst::setupLangPoLand="pl"
+"在syslanguage.cpp文件exeLanguage函数中添加对应语言的分支。如果已有则不添加。
+在systempage.cpp文件里添加改语言设置类SysLanguagePolish. 在SetupSysLanguage()构造函数里添加LanguageIDtoDisplayName.insert(""pl"", ""Polish"");"	SysLanguagePolish
+
+备注
+若无作用则需要在Tools->Options...->Environment->External Tools->Linguist设置项下将对应的设置项执行程序路径设置到对应的安装目录。
+自定义波兰语的缩写为pl。有些语言的缩写已经定义。
+在Launcher.pro所在的目录将会生成lang_pl.ts
+整理该表格后将其发给翻译人员翻译成想要的语言。
+选定之前的ts文件。生成后覆盖该ts文件。
+
+将会生成.qm文件
+
+const QString SetupStrIdConst::setupLangPoLand="pl"
+SysLanguagePolish
+
+0417：
+2269：
+连接完无线cp之后删除连接无线AA，后面删掉aa发现有卡死的情况
+
+Segmentation Fault!
+info.si_signo = 11
+info.si_errno = 0
+info.si_code  = 1 (SEGV_MAPERR)
+info.si_addr  = 0x7ee0005f97
+Stack trace (non-dedicated):
+root@Gemini:/# 
+ Launcher  program was hang
+
+0418：
+查找log的报错：
+关键词：
+fail
+error
+die
+[QT] [Error]
+
+0419：
+在Linux下面用windows模拟器首先需要装wine/ukylin-wine(ukylin-wine装Linux微信的时候就已经有了)
+在home目录下按ctro + h 显示隐藏目录
+进入~/.ukylin-wine/wechat/dosdevices 底下输入 ll -l 显示当前设备端口列表
+找到ubuntu 上串口识别为ttyUSB0之类，我的为com33 ，usb1为com34
+找到exe ,右键用winebrowers打开 ，选择com33，打开即可
+如果不行，
+sudo ln -s /dev/ttyUSB0 ~/.wine/dosdevices/com33
+sudo chmod 777 ~/.wine/dosdevices/com33
+
+即可在wine的应用程序使用串口
+
+每次使用的时候还要再输一次
+sudo chmod 777 ~/.wine/dosdevices/com33
+(但是我输入这个的时候接车机重新开机，不知道进行了什么操作)
+
+怎么断开与串口的关联：
+首先，你需要断开任何正在使用该串口的程序或服务。可以通过关闭占用串口的程序或者终止相关服务来实现。
+删除之前的软链接：执行以下命令删除之前创建的软链接：
+rm ~/.wine/dosdevices/com33
+重置串口权限：如果需要重新设置串口的权限，可以再次执行：
+sudo chmod 777 /dev/ttyUSB0
+重新使用串口：现在 /dev/ttyUSB0 端口就可以被其他程序或服务所使用了。你可以再次启动需要使用该串口的程序或服务。
+
+
+在can发送雷达信号的时候，后雷达正常，但是前雷达一点就会死机
+看了打印=== signal_segv ===
+段错误
+这次是candefine里面定义的数组太小导致在impl里面存的时候直接疯狂存不下
+
+0423:
+加打印：
+例子:qDebug()<<"zzzzzzzzzzzzzzCarModelVal"<<CarModelVal<<__FUNCTION__<<__LINE__;
+printf("%s:%d\n", __FUNCTION__, __LINE__);
+printf("=========\n");
+ qDebug()<<"kobe3";
+
+0426：
+sudo minicom -s 按o进入设置里面，将usb0改掉为usb1即可（-h可以获取更多信息）
+
+0429：
+1305-26NG03：
+Camera=1，需要#define D_SUPPORT_FRONT_REAR_CAMERA_POWER   1 //前后摄像头供电这个宏才能看到Camera
+N025： 可能是硬件的Pctrl引脚没有设为常驻12v供电
 
 
 
 
+0430:
+数组的默认值获取：
+int isTimeSyncDef = DataDefault::getDefault(SetupStrIdConst::setupNaviGPSTime).toInt();
+int isTimeSync = DataSaveControl::readSettingData(SetupStrIdConst::setupNaviGPSTime, isTimeSyncDef).toInt();
+开关的默认值获取：
+   bool shouldUpdateIconDef = DataDefault::getDefault(SetupStrIdConst::setupDisplayBatteryStatus).toBool();
+    bool shouldUpdateIcon = DataSaveControl::readSettingData(SetupStrIdConst::setupDisplayBatteryStatus, shouldUpdateIconDef).toBool();
 
 
+0506:
+dataid.h,cpp 和systempage.cpp 加普通的头文件没有作用，可能要改can_fun 或者UI_INNOVA_1024_600类型的才行
+
+0511:
+arm板子里面的gdb
+cd /usr/local/bin (/tmp/sp/usr/local/bin)
+ls
+chmod +x gdbus
+chmod: gdbus: Read-only file system
+
+0527:
+aux进源速度优化，在初始化先显示noSIGNAL页面出来
+
+0528:
+audiocontrol.cpp里面是声音控制
+0530:
+C++过滤器：
+c++filt _ZNK16HistoryListModel4dataERK11QModelIndexi
+应对报错后编译后的信息复原
+
+0604：
+哈曼问题：During the Siri recognition, enter the reverse. When Siri ends, the background sound output 1s fully.在Siri识别过程中，倒车。当Siri结束时，背景音输出是完全的。
+2229开机warnning问题，蓝牙联系人卡死，删除aacp出现空白设备问题
+26ng01can开门初始化问题
+
+0613:
+查看2173a474的log，将dvr移植到XU
+0617：
+对于26NG01的倒车按其他按钮会退出去倒车 MCU处理，当收到左右灯打开摄像头画面 而不是打开摄像头
+MCU那边从收到左右灯进入倒车改为打开摄像头画面
+
+0624:
+回退蓝牙补丁，查找苹果手机加减音量问题
+5b7e8c94ee9d41a767d49d74785915effe912341
+d31f04b6f44688c6d2b0264e30dd03893a4b17b3
+4a0c96c5252c76fe250603a80626650a42aaaa50
+be1cf9a451c5729dffe86580053bdf4a1c934244
+6bc9b609e342bdc17b710780576b37297bd0cffe 苹果手机直接暂停都没效果了
+ff7b127f505c437eed3363270e452c0c017e2511不正常
+ea357d88e7cd3059341b1f97cb4898d9105da175 这个正常
+
+0703 :
+6255 xu1.0: 当用户建立蓝牙连接、接听电话并在几秒钟内断开通话时，"私密 "模式会在蓝牙界面上短暂显示约一秒钟。
+测试小组注意到，从隐私角度来看，"私密 "模式只有在用户主动将通话从蓝牙设备转移到手机（听筒）时才会启用。
+哈曼：
+1.During incoming/outgoing calls, after triggering reverse, exit reverse and then hang up the phone, the sound at the near end of the HU is suppressed
+HW Ver.: DV1 R5
+SW Ver.: V1.1.2.4
+FR:100%
+Pre-conditions:
+1.开机且系统已准备就绪后
+2.CP/AA/BT设备已连接
+Steps:.
+1.来/去电通话中，进入倒车，结束通话，结束倒车
+2.来/去电通话
+Actual result:
+1.车机近端声音被压低
+Expected result:
+1.车机近端通话声音满音输出。
+2.During AA/CP voice broadcasting，go to the reverse image. When the voice is over, exit the reverse. Then awake the AA/CP voice again and the voice is muted.
+HW:Legend700 &700D DV2 R8
+SW:v1.1.2.8
+Checked it is NG.
+Set the Reverse Volume to Half. Connect the CP and awake the Siri Then enter the reverse. When the voice is over, exit the reverse. Then awake the siri again and the voice is lower than before.
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+setMainAudioDunkingMode 0 未压低声音
 
 # 需求
 展望：
 *  学会makefile，编写新项目的快速脚本
-*   烧录flash的快速脚本
+*   怎么给人带来价值
 *   读懂各种与can，dab模块通信的协议，如何处理mcu发过来的数据
 *   物联网，处理语音（信号与解调）
 *  与车载行业有关的can诊断通讯（uds），中控驱动屏幕，与电机有关的无刷电机（FOC算法）
@@ -3645,9 +3866,20 @@ void HomeView::srcItemSelected(const QString &modeName)
             }
 #endif
 在ui里面将iconname avm
+ 0508：
+ 2269：增加信道可选择 （在8368P使用了WifiControl这个类里面的setWifiChannel这个接口），对策问题
+ 6195：改单路lvds显示输出,在/8368-XUCarSDK/application/tools/tcon_bin_generator/SPHE8368U路径下面找到对应defconfig配置的lvds选项在#define PANEL_LVDS_DUAL     FALSE （false 代表双路输出）对策问题
+哈曼：对策问题
+2309：改蓝色ui和2308一样
+-26:需要加上Camera里面的avm按钮，对策问题
 
-
-
+0603：
+AV-1307WSC-PCHX 出货软件
+-26车门初始化问题
+1488C蓝牙部分
+哈曼问题
+AV-1297-PCVA 待确认是否有效
+RDS功能在-65上都没做
 
 
 # 实现思路
@@ -3739,6 +3971,32 @@ int main() {
 我感觉出现了水平条纹，可能是刷新率不匹配
 
 
+
+# 优化代码
+ * AuxinModuleImpl::~AuxinModuleImpl()
+ {
++#if defined(AJUST_VIDEO_SOUCE)
++    mutexLock("screenMutex", screenMutex);
++
++       if(videoInstance) {
++           videoInstance->UnregisterCallback(this);
++           videoStreamOff();
++           SPVideoIn::ReleaseInstance(videoInstance);
++           videoInstance = nullptr;
++       }
++
++       mutexUnLock("screenMutex", screenMutex);
++
++       MLOGD(__FUNCTION__);
++#else
+     if(videoInstance) {
+         videoInstance->UnregisterCallback(this);
+         SPVideoIn::ReleaseInstance(videoInstance);
+         videoInstance = NULL;
+     }
+     MLOGD(__FUNCTION__);
++#endif
+ }
 
 # 打印信息
 * G019:
