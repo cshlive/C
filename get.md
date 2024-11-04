@@ -576,6 +576,37 @@ git revert --quit
 
     如果遇到冲突可以修改冲突，然后重新提交相关信息
 
+关于合并分支：
+首先执行 git merge <branch-name> 命令来合并目标分支到当前分支。在合并过程中可能会出现大量冲突。
+
+当出现大量冲突时，可以使用以下命令将所有文件标记为已解决：
+
+git checkout --theirs .
+
+这个命令会选择合并分支的版本作为解决方案，即保留合并分支的内容。
+
+接下来，对于那些你想要保留原分支内容的文件，可以使用以下命令取消这些文件的修改：
+
+git checkout --ours <file-path>
+
+对于那些你想要保留合并分支内容的文件，可以使用以下命令取消这些文件的修改：
+
+git checkout --theirs <file-path>
+
+ 自动保留某一分支的版本:
+
+如果确定整个分支的更改优先于另一分支，可以使用 -X 参数让 Git 自动选择某个分支的更改：
+
+    保留当前分支（ours）的更改：
+
+    git merge -X ours <branch_name>
+
+    保留合并分支（theirs）的更改：
+
+    git merge -X theirs <branch_name>
+
+
+
 git add .
 git commit -m "提交的信息"
 
@@ -1517,6 +1548,42 @@ b) 删除 /usr/local/bin/color_compile 可执行程序
     不将变量类型声明为某个特定的具体类，而是声明为某个接口。
     客户程序无需获知对象的具体类型，只需要知道对象所具有的接口。
     减少系统中各部分的依赖关系，从而实现“高内聚、松耦合”的类型设计方案。
+
+* 展频
+【客户问题-麦思美】【8368-P】如何开启展频和调整如下，请参考
+
+1.wreg 4 22 0x40004009 -> 開啟展頻
+G4.22 bit14：展频功能开关：0——》disable，1——》enable
+2.wreg 4 23 0x7F0011 -> 設定展頻頻率與幅度都為level 1,這組就由客戶自己調整到能過EMI和畫面不失真（可以先敲指令lreg 4查看当前G4.23的设定在调整）
+調整為0~6bit,
+G4.23 bit0~2:展頻幅度 -> 展频幅度选择，数值越大展频幅度越大，范围0~7，通常是調整這個讓展頻变大
+G4.23 bit3:展頻兩倍 ——》一般不开
+G4.23 bit4~6:展頻頻率 ——》展频速率选择，数值越大频率越慢，数值范围0~7
+注意：这组寄存器的前16 bit是mask bit,修改寄存器时修改到后16bit中的任意一个bit位时需要将对应的mask bit也要设置为1才写入进去了，
+比如我要修改G4.22 bit0设置为1，我写入的命令是：wreg 4 22 0x00010001
+
+* 增益接口
+设置op pga gain 合并为一个接口setInputGain，只需要填写op+pga 总值即可，底层自动分配。设置uplink的接口变更为：setRecordGain。
+新增配置文件，records_property.xml。
+所以设置增益有两种方式，配置文件或调用接口。目前是以配置文件里的增益为默认增益，如果在项目头文件里添加了麦克风增益的宏，则头文件的配置通过调用底层接口的方式覆盖配置文件里的配置。
+新接口：virtual int setInputGain(const char *name, const char *tag, float leftGain, float rightGain) = 0;
+virtual int getInputGain(const char *name, const char *tag, float &leftGain, float &rightGain) = 0;
+virtual int setRecordGain(const char *name, const char *tag, float gain) = 0;
+virtual int getRecordGain(const char *name, const char *tag, float &gain) = 0;
+1.audio service为每个record实例存储对应的input gain/record gain(见records_property.xml)
+2.每当record实例被激活时，audio service会加载存储的gain值并设置到音频硬件层
+3.如果record实例的input gain不需要动态修改，那么应用层只需要对record实例的input gain设置一次即可，或者出厂时在audio_service/src/customize/records_property.xml文件手动添加设定值即可，以后就一直沿用存储的gain值。
+废弃接口:
+setAdcOpGain
+getAdcOpgain
+setAdcPgaGain
+getAdcPgagain
+setMicAnalogGain
+getMicAnalogGain
+setUplinkGain
+getUplinkgain
+
+新增配置文件:records_property.xml。
 
 
 2. 关于回调函数的讲解：
@@ -3067,6 +3134,7 @@ VScode:
     Ctrl+K, Ctrl+R: 在文件和资源管理器中显示当前文件
     Alt+Left/Right: 切换编辑历史记录
     Ctrl+K, Z: 进入 Zen 模式（全屏编辑）
+    Ctrl+Alt+-:切换上一个地方
 
 1121:
 一般这种缺少ui.h的报错，很大概率是pri里面走的逻辑有误
@@ -3122,8 +3190,8 @@ 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
 
     则在串口执行
 
-    screenshot -o /media/sda1
-
+    screenshot -o /media/sda1/screenshot
+    screenshot -o /media/sdb1/screenshot
     就会在U盘生成 osd_fb-开头的截图文件。
 
   大家看看各种负责的项目在MaxmadeDevelop2.0分支上能否正常编译运行，如果不行，那可能需要重新执行
@@ -3602,6 +3670,7 @@ sudo chmod 777 ~/.wine/dosdevices/com33
 即可在wine的应用程序使用串口
 
 每次使用的时候还要再输一次
+usb0是com33但是用来连打印建议：sudo chmod 777 ~/.wine/dosdevices/com34
 sudo chmod 777 ~/.wine/dosdevices/com33
 (但是我输入这个的时候接车机重新开机，不知道进行了什么操作)
 
@@ -3713,6 +3782,334 @@ Set the Reverse Volume to Half. Connect the CP and awake the Siri Then enter the
 
 
 setMainAudioDunkingMode 0 未压低声音
+
+
+0715:
+2229log3:
+log:videoStreamOff:17958
+reverse:BASE_REVERSE_DISABLE:19626
+log：fast reversing：20187
+按下：333333333:23865
+
+0720:
+2229：点击cp不进去
+初步怀疑：
+- D/[QT]    (  955): [HomeView] checkCarplayState 3209 sdRet:  -1
+
+D/[QT]    (  955): [CarPlayResourceManager] phoneEntityChangedByiPhone  to  0 (1:cp,2:acc)
+E/[QT]    (  955): [ActivityManagerImpl] line: 1715 stopActivity: "camera" fail!
+正常倒车黑屏：
+D/[QT]    (  953): [CarPlayResourceManager] priority: 0 state 3 (1:take,2:borw)
+D/[QT]    (  953): [CarplayModuleImpl] startupCarplayMgr 1145
+2024-07-23T14:16:55.180 - D/[QT]    (  953): [CarplayModuleImpl] carplayMgrStartup 1065 tru
+
+0726：
+正确的效果是需要什么样，是并且需要区分清楚来去电后倒车和倒车后来去电，这两类情况是要怎么样的，因为我们倒车的时候是判定如果车机处于蓝牙空闲（非通话中，非来去电）才会去减低音量。
+
+0805 :
+bar的顶栏实现有问题：
+在倒车时有概率显示
+topbar->showTopBar();
+showEvent
+customEvent
+
+0807:
+880：
+蓝牙结束电话有概率会静音
+关键词：   EVENT_CALL_INCOMING  borrowResource phoneCallAudioSource
+怀疑：
+[2024-08-07 15:22:39] [QT] [bluetoothmodule] handleAudioStateMuteOperation 4774 phoneAudioEvent:  32769
+[2024-08-07 15:22:39] [QT] [bluetoothmodule] 4790 @@@@@@ [PHONE_AUDIO ON] mute pop
+[2024-08-07 15:22:39] [QT] [bluetoothmodule] 4792 @@@@@@ for mute pop, 1 second later unmute
+[2024-08-07 15:22:39] [QT] [bluetoothmodule] creatDelayUnmuteTimer line: 4308 run
+[2024-08-07 15:22:39] QObject::killTimer(): Error: timer id 1 is not valid for object 0x4a698 (BlueToothModule, ), timer has not been killed
+[2024-08-07 15:22:39] [QT] [bluetoothmodule] scoOnCheckCPCallState line is  521
+[2024-08-07 15:22:39] [QT] [bluetoothmodule] getPhoneSource line is  530
+[2024-08-07 15:22:39] [QT] [CarPlayResourceManager] blockResource 1 ygc in (1:scr,2:aud) true
+[2024-08-07 15:22:39] [QT] [CarPlayResourceManager] blockResource 1  ygc out (1:scr,2:aud)
+[2024-08-07 15:22:39] [QT] [CarPlayResourceManager] borrowResource 2357 1 500 1000 3
+[2024-08-07 15:22:39] [QT] [Error] [CarPlayResourceManager] line: 2405 resourceID 1 changeModes fail: -1
+
+0909补充：[QT] [Error] [Audiocontrol] line: 848 set back earphone error -8992
+D_BTCALL_NO_NEED_MUTE
+[QT] [Audiocontrol] setVolumeByStreamType 920  streamType:  phone  volume:  26  realVol:  65
+[QT] [Error] [Audiocontrol] line: 926 set phone  volume success, ret:  0
+根据抓的打印：
+1.销毁定时器无效和报错
+QObject::killTimer(): Error: timer id 1 is not valid for object 0x4a698 (BlueToothModule, ), timer has not been killed 这个是 检查定时器是否重复销毁，如果某个定时器已经销毁，但再次调用 killTimer() 可能会导致无效的定时器 ID 错误。确保在调用 killTimer() 前检查定时器的 ID 是否有效，需要在销毁定时器的地方判断不为0时将其置为0； 
+解决方案：
+if(0 != timerIdDelayUnmute)
+    {
+        killTimer(timerIdDelayUnmute);
+        timerIdDelayUnmute = 0;  // 确保重置定时器ID
+    }
+2.现在发现定时器id有可能会重复：
+ [QT] [bluetoothmodule] event->timerId(): 3  timerId: 0  timerIdLoadPbk: 0
+[2024-09-14 12:04:32.234] xufei : timerEvent 2544 event->timerId(): 3
+[2024-09-14 12:04:32.235] xufei : timerEvent 2545 timerId: 0
+[2024-09-14 12:04:32.235] xufei : timerEvent 2546 timerIdLoadPbk: 0
+[2024-09-14 12:04:32.236] xufei : timerEvent 2547 timerHandsFreeID: 0
+[2024-09-14 12:04:32.236] xufei : timerEvent 2548 timerHandsFreeID2: 0
+[2024-09-14 12:04:32.237] xufei : timerEvent 2549 timerIdTalking: 3
+[2024-09-14 12:04:32.237] xufei : timerEvent 2550 timerIdDelayUnmute: 3
+[2024-09-14 12:04:32.238] xufei : timerEvent 2551 timerIdDelayCheckAndroidDevice: 0
+[2024-09-14 12:04:32.241] [QT] [bluetoothmodule] BT Module talking time count
+猜想思路：
+1.重复创建定时器
+检查 startTimer() 调用时，是否有多个地方重复创建了同一个定时器ID，比如 timerIdTalking 或 timerIdDelayUnmute，导致定时器ID相同。在某些情况下，startTimer 返回的ID可能与已经存在的ID重复。如果你有多次启动同一功能的定时器，可能会造成冲突。
+启动定时器前检查状态： 在启动定时器之前，检查是否已经有定时器在运行，避免重复启动。例如：
+``````
+if (timerIdTalking == 0) {
+    timerIdTalking = startTimer(1000); // 防止多线程下可能误判重复创建定时器
+}
+``````
+2.
+    (1)killTimer 之后没有立即将 timerIdTalking 置为 0：
+    在调用 killTimer(timerIdTalking) 后，虽然定时器被销毁，但此时 timerIdTalking 仍然保持旧的值，直到下一行代码重新分配定时器ID。如果在这段时间内出现其他操作（例如多线程环境），可能会导致某些地方误认为该定时器仍然存在或重复启动。
+
+    (2)潜在的竞争条件：
+    如果这个函数在不同的线程中调用，或者有其他地方使用 timerIdTalking，在 killTimer 和重新启动定时器之间可能会出现短暂的竞争条件，导致重复或混淆。ps：另外怀疑跟线程有关，加互斥锁比较复杂，可能改写为信号和槽的方式放在主线程会好点，具体参考苏工commit：29af2872f121c3f912ee6763b4c3dc73ef5679b2
+优化建议：
+你可以把 createTalkingTimer 和 destroyTalkingTimer 中的定时器创建和销毁操作封装成一个通用函数，确保逻辑统一且减少重复代码。例如：
+void BlueToothModule::restartTimer(int &timerId, int interval)
+{
+    if (0 != timerId)
+    {
+        killTimer(timerId);
+        timerId = 0;  // 确保立即清零
+    }
+    timerId = startTimer(interval);
+}
+void BlueToothModule::createTalkingTimer()
+{
+    restartTimer(timerIdTalking, 1000);
+}
+互斥锁：适合较简单的多线程场景，直接解决竞态问题。
+信号槽机制：让主线程处理定时器操作，避免多线程直接操作定时器，适合 Qt 应用。
+原子变量：确保对定时器 ID 的访问是线程安全的，适合较高频率的操作。
+延迟操作队列：适用于复杂的多线程环境，将定时器操作延迟到特定线程中执行。
+
+打印：
+少了3次回调
+[2024-09-19 16:23:00.928] 1111111111
+[2024-09-19 16:23:18.160] [QT] [BlueToothModuleImpl] BTPhoneCBK :  EVENT_PHONE_BTCALL_STATE_CHANGE  value 4098
+[2024-09-19 16:23:48.498] [QT] [BlueToothModuleImpl] BTPhoneCBK :  EVENT_PHONE_BTCALL_STATE_CHANGE  value 4098
+[2024-09-19 16:24:32.594] 222222
+[2024-09-19 16:25:50.259] [QT] [BlueToothModuleImpl] BTPhoneCBK :  EVENT_PHONE_BTCALL_STATE_CHANGE  value 4098
+[2024-09-19 16:26:25.900] [QT] [BlueToothModuleImpl] BTPhoneCBK :  EVENT_PHONE_BTCALL_STATE_CHANGE  value 4098
+[2024-09-19 16:28:07.640] 33333333333333333333333
+[2024-09-19 16:28:16.201] [QT] [BlueToothModuleImpl] BTPhoneCBK :  EVENT_PHONE_BTCALL_STATE_CHANGE  value 4098
+[2024-09-19 16:28:54.468] [QT] [BlueToothModuleImpl] BTPhoneCBK :  EVENT_PHONE_BTCALL_STATE_CHANGE  value 4098
+[2024-09-19 16:29:29.444] 4444
+[2024-09-19 16:29:48.440] [QT] [BlueToothModuleImpl] BTPhoneCBK :  EVENT_PHONE_BTCALL_STATE_CHANGE  value 4098
+[2024-09-19 16:30:35.580] [QT] [BlueToothModuleImpl] BTPhoneCBK :  EVENT_PHONE_BTCALL_STATE_CHANGE  value 4098
+[2024-09-19 16:31:31.771] 55555555555555555555
+[2024-09-19 16:32:02.067] aaaaaaaa
+[2024-09-19 16:33:22.109] [QT] [BlueToothModuleImpl] BTPhoneCBK :  EVENT_PHONE_BTCALL_STATE_CHANGE  value 4098
+[2024-09-19 16:34:02.103] 66666
+[2024-09-19 16:35:25.956] bbbbbbbbbbbbb
+[2024-09-19 16:36:10.985] [QT] [BlueToothModuleImpl] BTPhoneCBK :  EVENT_PHONE_BTCALL_STATE_CHANGE  value 4098
+[2024-09-19 16:36:58.818] 7777777
+[2024-09-19 16:37:09.025] [QT] [BlueToothModuleImpl] BTPhoneCBK :  EVENT_PHONE_BTCALL_STATE_CHANGE  value 4098
+[2024-09-19 16:37:46.529] [QT] [BlueToothModuleImpl] BTPhoneCBK :  EVENT_PHONE_BTCALL_STATE_CHANGE  value 4098
+[2024-09-19 16:38:26.125] 88888
+[2024-09-19 16:38:37.040] [QT] [BlueToothModuleImpl] BTPhoneCBK :  EVENT_PHONE_BTCALL_STATE_CHANGE  value 4098
+[2024-09-19 16:39:10.139] [QT] [BlueToothModuleImpl] BTPhoneCBK :  EVENT_PHONE_BTCALL_STATE_CHANGE  value 4098
+[2024-09-19 16:39:51.322] 99999
+[2024-09-19 16:40:11.725] ccccccccccccccc
+[2024-09-19 16:42:23.047] [QT] [BlueToothModuleImpl] BTPhoneCBK :  EVENT_PHONE_BTCALL_STATE_CHANGE  value 4098
+[2024-09-19 16:43:14.185] //////
+[2024-09-19 16:43:31.811] [QT] [BlueToothModuleImpl] BTPhoneCBK :  EVENT_PHONE_BTCALL_STATE_CHANGE  value 4098
+[2024-09-19 16:44:03.397] [QT] [BlueToothModuleImpl] BTPhoneCBK :  EVENT_PHONE_BTCALL_STATE_CHANGE  value 4098
+
+
+
+
+
+2229-65
+Flash减小为256MB的可能性很小。8368-P自带的SDK已经很大了，更新后会变得更大。所以要维持512M的Flash。        
+关于内存，请陈世浩提供当前软件运行中各状态下的内存占用情况。再来判断内存能否降低为512MB。假设当前软件的内存占用能够使用512M的内存，那么这个软件状态后续不能变化太大，比如重新变一套GUI，增加功能等等。
+哈曼：
+倒车声音
+6255：
+我们发现了与蓝牙连接设备交互时系统行为的问题。当用户：
+1.系统上的电源
+2.建立蓝牙连接
+3.打开收音机
+4.通过各种系统接口（如日期和时间、EQ、时间对齐、出厂默认值、系统版本、开源许可证或手册）直接从手机发起挂断
+挂断时，系统错误地显示拨号盘几秒钟。预期的行为是只显示系统上的呼入/呼出界面，而不显示拨号盘。
+请查看下面的共享视频以了解更多详细信息，因为此界面也将进入收音机/DAB主页2的联系人界面。
+8368U
+自动化移植
+
+2229改gps：
+1. 代码中的数据包处理逻辑
+
+代码会从接收到的 $DRTXT 数据包中解析出一些特定的头部信息，然后根据这些信息执行相应的处理。
+
+cpp
+
+else if(headstr.contains("MSG:"))
+{
+    MLOGD(__FUNCTION__<<__LINE__<<"get MSG Data");
+    if(m_pOwner)
+    {
+        m_pOwner->sendGpsTrackCmd("$RDTXT,ACK",10);//发送ACK
+    }
+    QString data = gpsstr.remove("$DRTXT,MSG:");
+    if(data == "POP_1")
+    {
+        DataSaveControl::saveSettingData(SetupStrIdConst::setupgpstrackinfo,1);
+    }
+    else if(data == "POP_2")
+    {
+        DataSaveControl::saveSettingData(SetupStrIdConst::setupgpstrackinfo,2);
+    }
+    else if(data == "POP_3")
+    {
+        DataSaveControl::saveSettingData(SetupStrIdConst::setupgpstrackinfo,3);
+    }
+    MLOGD(__FUNCTION__<<__LINE__<<data);
+    emit BaseControl::getInstance()->canMessageSgl(data,10);
+}
+
+这个代码片段处理接收到的 MSG: 信息，data 包含的是 POP_xx 的值。根据 data 的内容，它可能执行不同的操作，比如保存某些设置信息，并通过信号发出通知。
+2. 根据 POP_xx 的范围显示不同区域的字符串提示信息
+
+假设你需要在 Smart GPS Tracker 的弹出栏中，根据不同的 POP_xx 值来显示特定的提示信息。你可以根据 POP_xx 值的范围来决定应该显示哪个区域的信息。比如：
+
+    POP_1 到 POP_50：显示智利区域的信息
+    POP_51 到 POP_100：显示哥斯达黎加区域的信息
+    POP_101 到 POP_150：显示拿马区域的信息
+
+实现逻辑
+
+你可以在处理 MSG: 信息的代码中，使用 if-else 或 switch-case 语句，根据 POP_xx 的值来显示不同的区域提示信息。
+
+cpp
+
+if (headstr.contains("MSG:"))
+{
+    MLOGD(__FUNCTION__ << __LINE__ << "get MSG Data");
+    if (m_pOwner)
+    {
+        m_pOwner->sendGpsTrackCmd("$RDTXT,ACK", 10); //发送ACK
+    }
+
+    QString data = gpsstr.remove("$DRTXT,MSG:");
+    int popValue = data.mid(4).toInt(); // 提取 "POP_xx" 中的数字部分
+
+    if (popValue >= 1 && popValue <= 50)
+    {
+        // 显示智利区域的信息
+        MLOGD(__FUNCTION__ << __LINE__ << "显示智利区域的信息：" << data);
+        // 显示弹出信息（智利）
+    }
+    else if (popValue >= 51 && popValue <= 100)
+    {
+        // 显示哥斯达黎加区域的信息
+        MLOGD(__FUNCTION__ << __LINE__ << "显示哥斯达黎加区域的信息：" << data);
+        // 显示弹出信息（哥斯达黎加）
+    }
+    else if (popValue >= 101 && popValue <= 150)
+    {
+        // 显示拿马区域的信息
+        MLOGD(__FUNCTION__ << __LINE__ << "显示拿马区域的信息：" << data);
+        // 显示弹出信息（拿马）
+    }
+    else
+    {
+        MLOGD(__FUNCTION__ << __LINE__ << "未知的POP值：" << data);
+    }
+
+    emit BaseControl::getInstance()->canMessageSgl(data, 10);
+}
+
+总结
+
+    代码关系：代码解析收到的 $DRTXT 数据包，并根据内容决定相应的处理动作。当数据包包含 MSG: 时，代码会提取 POP_xx 值并根据该值执行不同的操作。
+
+    区域信息显示：根据 POP_xx 的范围值（1-50, 51-100, 101-150），显示不同国家的提示信息，如智利、哥斯达黎加和拿马的特定信息。
+
+这个方案可以灵活地适应不同区域的提示信息需求，并确保在合适的场景下触发相应的操作
+
+
+0812:
+cp和aa播放音乐卡死
+怀疑：
+1：
+[2024-08-12 16:46:10] [Error-Launcher] style parse error: "
+[2024-08-12 16:46:10] window.smartphone_win {
+[2024-08-12 16:46:10] bg="None", stretch_normal
+[2024-08-12 16:46:10] alpha = 0;
+[2024-08-12 16:46:10] }"
+2：
+[2024-08-12 16:41:13] [AP][ActivityManagerImpl]activityOnStart:carplay,0 
+[2024-08-12 16:41:13] [Debug-Launcher] widget(type=window,name=smartphone_win) got focus
+[2024-08-12 16:41:14] bt adress 94:f6:d6:48:5a:52
+[2024-08-12 16:41:14] [AP][CarplayModuleImpl]disableBluetooth here!!
+[2024-08-12 16:41:14] [AP][I][CarplayModule] disConnectBT line:417
+[2024-08-12 16:41:14] [AP][CarplayModule]in carplaymoudle disConnectBT success![AP][I][CarplayModule] btSetCPDenyConnection line:429
+[2024-08-12 16:41:14] [AP][CarplayModule]in carplaymoudle Bt set CP DenyConnection success![AP][CarplayModule]in carplaymoudle Bt set Srv_startAutoConnectionAddr success![AP][I][BlueToothModuleImpl] BTIMPL_StartAutoConnectionAddr line:1969
+[2024-08-12 16:41:14] 
+[2024-08-12 16:41:14] 52=5A=48=D6=F6=94=
+[2024-08-12 16:41:14] E/IBlueTooth(  808): [onTransact:5322] Unknown code: 0x8
+[2024-08-12 16:41:14] E/IBlueTooth(  808): [onTransact:5322] Unknown code: 0x8
+[2024-08-12 16:41:14] 0000: FF 30 9C 83                                       .0..            
+[2024-08-12 16:41:14] [BT_PFC] pfc_getBtMac in.
+[2024-08-12 16:41:14] [BT_PFC] Error: Oh My God!The mac address is not valid.We need random address
+[2024-08-12 16:41:14] 
+[2024-08-12 16:41:14] [BT_PFC] Error: Oh My God!We use random address flow
+[2024-08-12 16:41:14] 
+[2024-08-12 16:41:14] [BT_PFC] /media/flash/nvm/Sphe900BTMacAddress.INI is exist.So read it.
+[2024-08-12 16:41:14] [BT_PFC] pfc_getBtMac out.
+
+0828：
+为什么使用 lambda 表达式？
+
+lambda 表达式是一种简洁的方式来编写小型的匿名函数，并且可以捕获周围的变量（例如 this 指针）。在延时操作中使用 lambda 表达式，可以让你方便地在延时结束后执行代码逻辑。
+
+例如，在 QTimer::singleShot 中使用 lambda 表达式的作用是：
+
+    捕获上下文：在 lambda 中捕获 this 指针，使得延时结束后可以调用类的成员函数。
+    避免创建额外的函数：如果不使用 lambda 表达式，你可能需要为每个定时器触发的操作创建一个单独的成员函数，这样会增加代码复杂度和冗余。
+    内联代码逻辑：lambda 表达式允许你在定时操作中直接编写内联代码逻辑，而不需要额外定义函数，从而使代码更加简洁和清晰。
+
+0909:
+cam和cp频繁切换容易在cam黑屏
+1.引入信号稳定延迟，确保视频信号稳定后再显示相机界面，避免刚切换时的短暂信号不稳定导致黑屏。
+2.增加互斥锁，避免 CarPlay 和 Camera 同时争用视频资源。
+3.检查 CarPlay 的资源释放，确保 CarPlay 彻底停止后再启动相机模块。
+4.优化定时器事件调度，确保定时器事件不会与活动切换冲突。
+
+
+
+1009：
+1.Y049w-55 蓝牙新ui
+2.2229cp和倒车，挂断电话会回到主界面
+3.650从xu移植到u，更换蓝牙模块
+4.1307w-14
+
+1024:
+关于acc流程：
+打印：
+ acc state: 0
+  ======>>handleAccOff resume src  "radio"
+[2024-10-24 09:40:40] D/[QT]    (  936): [basecontrol] KeyPowerProcess KeyPowerProcess Release
+[2024-10-24 09:40:40] D/[QT]    (  936): [AndroidAutoModuleImpl] final line: 59 run
+[2024-10-24 09:40:40] D/[QT]    (  936): [AndroidAutoModuleImpl] [Debug] shutdown [--IN--]
+[2024-10-24 09:40:40] D/[QT]    (  936): [AndroidAutoModuleImpl] aa manager shutdown 0
+[2024-10-24 09:40:40] D/[QT]    (  936): [AndroidAutoModuleImpl] cleanAAProjectionStatus line: 1332 run
+[2024-10-24 09:40:40] D/[QT]    (  936): [AndroidAutoModuleImpl] clean Cur Activated MD
+
+1025:
+关于有线机器拔掉有线AA，拔掉换成有线CP
+应该蓝牙还会连接上，导致打电话给aa实际是打给自己
+无线机器则正常
+
+[11:50:59:040] E/IBlueToothCallback(  808): [BTAudioCbk:421] Unknown event type: 19␍␊
+
+
 
 # 需求
 展望：
@@ -3868,7 +4265,10 @@ void HomeView::srcItemSelected(const QString &modeName)
 在ui里面将iconname avm
  0508：
  2269：增加信道可选择 （在8368P使用了WifiControl这个类里面的setWifiChannel这个接口），对策问题
- 6195：改单路lvds显示输出,在/8368-XUCarSDK/application/tools/tcon_bin_generator/SPHE8368U路径下面找到对应defconfig配置的lvds选项在#define PANEL_LVDS_DUAL     FALSE （false 代表双路输出）对策问题
+ 原本：const int wifiChannelValues[14] = {36, 40, 44,48, 56, 64, 104, 112, 120, 128, 136, 144, 153, 161};
+ 将之前的改成是不是通道的影响const int wifiChannelValues[14] = {36, 40, 44,48, 56, 36, 104, 112, 120, 128, 136, 36, 153, 161};
+ 看到抓到的打印；之前是往右选56的下一个就死机了，往左边选153的上一个就死机了，里面有打印写Hardware does not support configured channel
+ 6195：改单路lvds显示输出,在/8368-XUCarSDK/application/tools/tcon_bin_generator/SPHE8368U路径下面找到对应defconfig配置的lvds选项在#define PANEL_LVDS_DUAL     FALSE （false 代表单路输出）对策问题
 哈曼：对策问题
 2309：改蓝色ui和2308一样
 -26:需要加上Camera里面的avm按钮，对策问题
@@ -3880,6 +4280,15 @@ AV-1307WSC-PCHX 出货软件
 哈曼问题
 AV-1297-PCVA 待确认是否有效
 RDS功能在-65上都没做
+
+* 2229W-65C外置麦克风噪音问题
+1.有时候噪音很大，像鞭炮声音一样听不清声音
+2.经常会有敲击桌子的噪音，这个与麦克风增益有关，调大就会更大
+3.双方讲话会卡顿，不完整
+
+
+
+
 
 
 # 实现思路
@@ -3970,7 +4379,14 @@ int main() {
 
 我感觉出现了水平条纹，可能是刷新率不匹配
 
-
+* cp频繁切换Camera会导致进入Camera黑屏
+1.信号检测、UI 更新延迟或者信号切换时机不当引起
+可以尝试在检测到信号丢失时，添加一个短暂的延时机制，以避免误判信号丢失：发现还是会有
+2.底层逻辑或信号同步问题
+增加状态恢复机制
+在切换过程中，如果因为某种原因导致信号短暂丢失，系统不应立刻黑屏，可以在短暂丢失信号时，尝试重新初始化相机控件，或者重新发送信号给MCU，确保状态恢复。重新初始化页面也还会有
+3.UI刷新和绘制问题
+信号状态虽然正常，但黑屏现象可能是由于 UI 未能正确更新或重绘导致的。UI 绘制函数 TwUpdateShow() 可能在某些条件下没有触发有效的刷新。
 
 # 优化代码
  * AuxinModuleImpl::~AuxinModuleImpl()
@@ -4013,3 +4429,43 @@ SWC:
     BaseControl::getInstance()->sendMcuKeyPressedSignal(UICC_MENU, 1);
     点击面板上的回到主菜单
     
+* 2229:
+cp界面先倒车，打电话，结束倒车，挂断电话，会回到主界面
+怀疑：
+[2024-10-09 17:51:32] I/SPCarPlay(  936): [onModesChanged:682] accessoryId=1
+[2024-10-09 17:51:32] D/[QT]    (  936): [CarPlayResourceManager] [Debug] modesChanged [--IN--]
+[2024-10-09 17:51:32] D/[QT]    (  936): [CarPlayResourceManager] modesChanged 487 1 2 1 2
+[2024-10-09 17:51:32] D/[QT]    (  936): [CarPlayResourceManager] modesChanged 489 2 2 1 2
+[2024-10-09 17:51:32] D/[QT]    (  936): [CarPlayResourceManager] screenEntityChangedByiPhone  to  2 (1:cp,2:acc)
+[2024-10-09 17:51:32] D/[QT]    (  936): [CarPlayResourceManager] cpReleaseOrEndUseResource 2382
+[2024-10-09 17:51:32] D/[QT]    (  936): [CarPlayResourceManager] cpReleaseResource 1 ygc in (1:scr,2:aud)
+[2024-10-09 17:51:32] D/[QT]    (  936): [CarPlayResourceManager] OccupiedResource 1 ygc in (1:scr,2:aud) 0
+[2024-10-09 17:51:32] D/[QT]    (  936): [DisplayControl] setDisplayVisible false
+[2024-10-09 17:51:32] D/[QT]    (  936): [DisplayControl] set display visiable  6 false output Mask 1
+[2024-10-09 17:51:32] I/DispControlImpl( 1097): func: SetAppLayerVisible line: 523
+[2024-10-09 17:51:32] D/[QT]    (  936): [CarPlayResourceManager] OccupiedResource 1  ygc out (1:scr,2:aud)
+[2024-10-09 17:51:32] W/ResourceManager(  916): [MainScreen]ResourceSilos::untakerequester:[936][2][1] 
+[2024-10-09 17:51:32] D/[QT]    (  936): [CarPlayResourceManager] cpReleaseResource 1  ygc out (1:scr,2:aud)
+[2024-10-09 17:51:32] D/[QT]    (  936): [CarPlayResourceManager] ruleTriggerActivity 2582 false
+[2024-10-09 17:51:32] D/[QT]    (  936): ImplicitRuleManager stop :  "carplay"
+[2024-10-09 17:51:32] D/[QT]    (  936): [CarPlayResourceManager] [Debug] modesChanged [--OUT--]
+[2024-10-09 17:51:32] D/SPCarPlay(  936): [SPCarPlay.cpp][onModesChanged][ts:89141][cast:2][--OUT--]
+[2024-10-09 17:51:32] D/IAppleCarPlayManager( 1276): [IAppleCarPlayManager.cpp][modesChanged][ts:89141][cast:2][--OUT--]
+[2024-10-09 17:51:32] D/AppleCarPlayManagerImpl( 1276): [AppleCarPlayManagerImpl.cpp][modesChanged][ts:89141][cast:2][--OUT--]
+[2024-10-09 17:51:32] W/[QT]    (  936): [ActivityManagerImpl] line: 1055 checkActivityIsCur "carplay"
+[2024-10-09 17:51:32] D/AppleCarPlay( 1276): [AppleCarPlay.cpp][onModesChanged][ts:89141][cast:2][--OUT--]
+[2024-10-09 17:51:32] I/AppleCarPlay( 1276): <CarPlayClient>18:01:14.354 [_AirPlaySessionModesChanged] delegate->modesChanged used[1ms]
+[2024-10-09 17:51:32] D/[QT]    (  936): [carplayview] onStop 51
+[2024-10-09 17:51:32] D/[QT]    (  936): [CarplayModule] --------- onCpView 648
+[2024-10-09 17:51:32] D/[QT]    (  936): [HomeView] ============>>>>HomeView onStart  0
+[2024-10-09 17:51:32] D/[QT]    (  936): [HomeView] mediaInfoChangedSlot "home"
+[2024-10-09 17:51:32] D/[QT]    (  936): [HomeView] ====================>>>mediaInfoChangedSlot  "home"
+[2024-10-09 17:51:32] D/[QT]    (  936): [HomeGrid] clearMouseReleaseInfo 2416
+[2024-10-09 17:51:32] D/[QT]    (  936): [HomeView] showEvent
+[2024-10-09 17:51:32] D/[QT]    (  936): ============>>>setCurActivityInfo  "home"
+[2024-10-09 17:51:32] D/[QT]    (  936): [AuxInModule] activityStartSlot 284
+[2024-10-09 17:51:32] D/[QT]    (  936): [AuxInModule] activityStartSlot 295
+[2024-10-09 17:51:32] D/[QT]    (  936): [carplayview] ~CarplayView
+[2024-10-09 17:51:32] D/[QT]    (  936): [carplayview] ~CarplayWidget
+[2024-10-09 17:51:32] D/[QT]    (  936): [CarplayModule] --------- hideScreen 399
+[2024-10-09 17:51:32] D/[QT]    (  936): [CarplayModuleImpl] carplayHide 641
