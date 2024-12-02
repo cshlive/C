@@ -3336,7 +3336,23 @@ void HomeView::srcItemSelected(const QString &modeName)
 pmAUD_EXT_DAC_IFX0=3
 pmAUD_EXT_DAC_IFX1=3
 pmAUD_EXT_DAC_IFX2=3
+现在需要加上#define D_SUPPORT_I2S_DAC_AUDIO	1	//支持使用I2S加DAC做音频输出，自动修改替换5_xu_demo文件内容才行
+#!/bin/bash
 
+#grep "^[^#].*" ui.cfg 
+name=$(grep "^[^#].*" ui.cfg| sed  "s/_/-/g"| sed  "s/:.*//")
+echo $name
+value=$(grep "^[^/][^/].*D_SUPPORT_I2S_DAC_AUDIO" application/include/$name.h | wc -l)
+echo $value
+if [ $value == 1 ]
+then
+
+cp application/tools/runtime_cfg_generator/pmGROUP/5_xu_demo_IFX3 application/tools/runtime_cfg_generator/pmGROUP/5_xu_demo|echo new
+
+else 
+cp application/tools/runtime_cfg_generator/pmGROUP/5_xu_demo_IFX2 application/tools/runtime_cfg_generator/pmGROUP/5_xu_demo|echo old
+
+fi
 
 
     运行 lupdate 工具：Qt 提供了一个名为 lupdate 的工具，它用于从 Qt 项目中提取标记的文本，并生成 TS 文件。您可以通过命令行或 Qt Creator 的界面来运行它。在命令行中，可以执行以下命令：
@@ -4109,6 +4125,324 @@ cam和cp频繁切换容易在cam黑屏
 
 [11:50:59:040] E/IBlueToothCallback(  808): [BTAudioCbk:421] Unknown event type: 19␍␊
 
+1104:
+哈曼在aux接听电话，挂断第三方来电
+radio:
+[2024-11-01 17:39:37] [QT] [Audiocontrol] set audio stream output source main S+none
+[2024-11-01 17:39:57]  Recevied keycode from MCU 0xbe 
+[2024-11-01 17:39:57] [QT] [basecontrol] handleMcuKey 8453   @@@UICC_BT_HUNGUPCALL
+[2024-11-01 17:39:57] [QT] [basecontrol] handleMcuKey 8458
+[2024-11-01 17:39:57] [QT] [CarplayModule] --------- keyDispatch 424
+[2024-11-01 17:39:57] [QT] [CarplayModuleImpl] keyDispatch: 1100243
+[2024-11-01 17:39:57] [QT] [CarplayModule] setRadioDABOutputSourceNone line: 635 run
+[2024-11-01 17:39:57] [QT] [CarplayModuleImpl] [Debug] setRadioDABOutputSourceNone [--IN--]
+[2024-11-01 17:39:57] [QT] ImplicitRuleManager PostEvent: eventId  0
+[2024-11-01 17:39:57] [QT] [CarplayModuleImpl] [Debug] setRadioDABOutputSourceNone [--OUT--]
+[2024-11-01 17:39:57] [QT] [basecontrol] handleCPMessengerPhoneCallAudio curAudioSrc:  0
+[2024-11-01 17:39:57] [QT] [Audiocontrol] set audio stream output source main S+AuxIn
+
+
+[2024-11-01 17:40:03] root@Gemini:/# 
+AUX:
+
+[2024-11-01 17:40:17] ============>>>setCurActivityInfo  "auxin"//刚打开
+[2024-11-01 17:40:17] [QT] [ActivityManagerImpl] activityOnCreat: "auxin" 0
+[QT] [CarPlayResourceManager] [Debug] modesChanged [--IN--]//来电
+
+Recevied keycode from MCU 0xbe 
+[2024-11-01 17:40:49]  MSG_RECEIVE_KEYS!! = 0xbe, 0x4
+[2024-11-01 17:40:49] sendMcuKeyPressedSignal 190 4    //挂断
+[QT] [bluetoothmodule] keyDispatch 4561
+[2024-11-01 17:40:49] handleMcuKey 190 4
+[2024-11-01 17:40:49] [QT] [basecontrol] handleMcuKey 8453   @@@UICC_BT_HUNGUPCALL
+[2024-11-01 17:40:49] [QT] [basecontrol] handleMcuKey 8458
+[2024-11-01 17:40:49] [QT] [CarplayModule] --------- keyDispatch 424
+[2024-11-01 17:40:49] [QT] [CarplayModuleImpl] keyDispatch: 1100243
+[2024-11-01 17:40:50] [QT] [basecontrol] handleCPMessengerPhoneCallAudio curAudioSrc:  5
+[2024-11-01 17:40:50] [QT] [Audiocontrol] set audio stream output source main S+AuxIn
+
+
+1111：
+洪工:
+ 用同样的原车麦克风，用原车主机连接蓝牙使用whatapp录了一段语音，用我们公司的车机也同样手法录制了一段语音，
+ 同样的嘈杂环境，发现我们公司的车机的背景音会一直存在有点类似不规则的嗡嗡音，客户对这种不规则的背景音不接受，看是否能否优化一下或者压制低一点
+ 两份文件whatsapp音频放在附件，同时我们公司车机的录音还抓取了aec_dump文件
+ 
+hi,洪工，whatsapp 语音和打电话 分别是不一样的效果
+在records_property.xml  发现streamType 是有区分为voice 和 phone
+语音的时候streamType value走的是voice ，打电话走的是phone
+如果想要支持whatsapp语音和通话都能动态修改麦克风增益 在蓝牙或者AA的通话
+在int AudioControl::setMicGainType(int nType)这个函数内
+setting->setInputGain("S+BtPcmPhone","uplink",SPECIFIC_MIC_GAIN_EXTERNAL_OP_ANDROIDAUTO+extMicGain,SPECIFIC_MIC_GAIN_INTERNAL_OP_ANDROIDAUTO+intMicGain);
+在BT或者AA
+setInputGain函数将streamType value="voice" 的5个参数都尝试放进去，但是实际语音均没有生效
+但是CP第一个参数："S+CarPlaySpeech"可以实现，可以生效
+想问一下BT或者AA怎么才能实现语音也支持动态修改
+
+1114：
+app发送给MCU
+是使用MCUmoudle 里面的loop函数
+PackageData(GID_A2M_SETUP_DATA,SETUP_TYPE_SAFEDOOR_MODE,(unsigned char)(pstMainAppToMcusrvNormalCmd->uiPtr2));
+
+1118:
+hi,洪工，方便告知我们提供的补丁具体修改和调整了什么参数吗？
+目前该降噪补丁是仅适用于适用于需要低增益高灵敏度的原车麦克风吗？如果设置项有两种外置麦克风及不同增益下可以同时兼容此补丁吗？
+而且是这样的话同时想询问关于这个op和opa增益底层分配的具体值，wiki上有点对应不上
+比如说另外一款S139用我们公司自制的麦克风（灵敏度-42），30的增益，使用该补丁后会有存在说话概率会降低人声，默认的初始化对麦克风有影响，请具体看一下此附件167
+但是自制的麦克风的外置增益降低到18之后的效果还可以，调到30直接失真了，
+
+复现问题思路：
+各位，
+
+以下是我总结的关于难重现问题的处理方法。并附了一个我最近经历的一个案例。请大家参考来对付难重现的问题。
+以下内容我也上传到了8368-P平台的Wiki上了：http://192.168.10.11:3000/projects/8368-p/wiki/%E5%85%B3%E4%BA%8E%E9%97%AE%E9%A2%98%E5%A6%82%E4%BD%95%E5%A4%8D%E7%8E%B0%E7%9A%84%E7%BB%8F%E9%AA%8C
+
+
+
+
+
+1119:
+QScrollBar:vertical
+{
+background:transparent;
+border-image: url(:/PairWnd/Zhizi_images/PairWnd/scrollBarBg1.png);
+margin:0px, 0px, 0px, 0px;
+width:10px;
+}
+
+QScrollBar::handle:vertical
+{
+background:url(:/PairWnd/Zhizi_images/PairWnd/scrollBar1.png);
+border-radius:4px;
+min-height:100;
+width:10px;
+}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical{
+height:0px;
+widget:0px;
+border: none;
+background: none;
+} 
+
+QScrollBar::add-page:vertical,
+QScrollBar::sub-page:vertical
+{
+height:0px;
+widget:0px;
+border: none;
+background: none;
+}
+
+``````
+    QScrollBar:vertical：
+        background:transparent;：设置滚动条的背景为透明。
+        border-image: url(:/PairWnd/Zhizi_images/PairWnd/scrollBarBg1.png);：使用指定的图片作为滚动条的边框图像。这里的路径:/PairWnd/Zhizi_images/PairWnd/scrollBarBg1.png指的是资源文件中的路径。
+        margin:0px, 0px, 0px, 0px;：设置滚动条的外边距为0。这里的写法实际上是不正确的，正确的应该是margin: 0px;或者分别指定上下左右的边距，例如margin-top: 0px; margin-right: 0px;等。
+        width:10px;：设置滚动条的宽度为10像素。
+    QScrollBar::handle:vertical：
+        background:url(:/PairWnd/Zhizi_images/PairWnd/scrollBar1.png);：设置滚动条滑块（handle）的背景图片。
+        border-radius:4px;：设置滑块边框的圆角半径为4像素，使滑块边缘更加圆润。
+        min-height:100;：设置滑块的最小高度为100（单位缺失，通常应为像素px）。
+        width:10px;：设置滑块的宽度为10像素，与滚动条的宽度保持一致。
+    QScrollBar::add-line:vertical 和 QScrollBar::sub-line:vertical：
+        height:0px;：设置增加和减少滚动条区域的高度为0，意味着不显示这些区域。
+        widget:0px;：这个属性是不正确的，Qt样式表中没有widget这个属性用于设置高度或宽度。
+        border: none;：设置边框为无，即不显示边框。
+        background: none;：设置背景为无，即不显示背景。
+    QScrollBar::add-page:vertical 和 QScrollBar::sub-page:vertical：
+        这些属性的设置与增加和减少滚动条区域的设置相同，意味着快速滚动条（页面滚动）的区域也不显示。
+``````
+
+1126:
+蓝牙打印流程
+void btServicePhoneCbk::BTPhoneCBK(BTAddr *pstBtAddr, BTPhoneEventType eEvent, int sdValue)
+
+[QT] [BlueToothModuleImpl]  BTPhoneCBK 4096 value 4099 // EVENT_CALL_OUTGOING,  /*!<there is call outgoing*/ //1003 4099
+sendBtCallStatesChange 408 4099
+ [QT] [InfoModuleImpl] 
+bt phone call state:true 
+BaseControl btPhoneCallStatesChangedSlot 3
+[QT] [bluetoothmodule] bt Call borrow screen successfully
+[QT] [bluetoothmodule] ruleTriggerPhoneNewCall line: 2484 run
+
+[QT] BtPhoneActivity callEventOutgoing:callnum: "10086"
+
+ [QT] [BlueToothModuleImpl]  BTPhoneCBK 4096 value 4105 //EVENT_CALL_INFO_UPDATE 1009
+
+ [QT] BtPhoneActivity checkModuleIsCalling calltype: 2
+ [QT] BtPhoneActivity btCallStatesChangeSlot event: 259
+ [QT] [BlueToothModuleImpl] BTPhoneIMPL_getOutgoingCallNum line: 2534 run
+ [QT] [BlueToothModuleImpl] BTPhoneIMPL_getOutgoingCallNum   10086
+ [QT] BtPhoneActivity callEventOutgoing:callnum: "10086"
+ [QT] BtPhoneActivity getCallStatus(): 257
+ [QT] BtPhoneActivity getTelNameByNum in
+ [QT] BtPhoneActivity the tel num is "10086" -1
+ [QT] BtPhoneActivity getTelNameByNum in
+ [QT] BtPhoneActivity the tel num is "10086" -1
+ [QT] BtPhoneActivity outGoingCallSlotFormTalkingForm number: "10086"
+ [QT] BtPhoneActivity outGoingCallSlotFormTalkingForm name: ""
+ [QT] BtPhoneActivity setCallInfoLable callnumber: "10086" name "" callStatus 259 isFristCall true
+
+ BaseControl btPhoneCallStatesChangedSlot 8
+ BaseControl btPhoneCallStatesChangedSlot  end  8
+ [QT] [InfoModuleImpl] infoModule btPhoneCall other event: 264
+[QT] [BlueToothModuleImpl]  BTPhoneCBK 4096 value 4100  //EVENT_CALL_PROGRESS //1004
+BaseControl btPhoneCallStatesChangedSlot 4
+ BaseControl btPhoneCallStatesChangedSlot  end  4
+ [QT] BtPhoneActivity btCallStatesChangeSlot event: 260
+
+[QT] [BlueToothModuleImpl]  BTPhoneCBK 4096 value 4097//EVENT_CALL_IDLE 4097
+TD改style:
+TwButtonChangeStyle(volumeIcon, "logo_telephone_mute_style_suzuki");
+
+1128:
+死机流程：
+D/SPCarPlay(  935): [SPCarPlay.cpp][onModesChanged][ts:81206][--IN--]
+2024-11-27T17:05:30.246 - I/SPCarPlay(  935): [onModesChanged:682] accessoryId=1
+2024-11-27T17:05:30.247 - D/[QT]    (  935): [CarPlayResourceManager] [Debug] modesChanged [--IN--]
+2024-11-27T17:05:30.248 - D/[QT]    (  935): [CarPlayResourceManager] modesChanged 488 2 2 1 2
+2024-11-27T17:05:30.248 - D/[QT]    (  935): [CarPlayResourceManager] modesChanged 490 2 2 2 2
+2024-11-27T17:05:30.250 - D/[QT]    (  935): [CarPlayResourceManager] screenEntityChangedByiPhone  to  2 (1:cp,2:acc)
+2024-11-27T17:05:30.250 - W/[QT]    (  935): [CarPlayResourceManager] line: 312 not resourceOccupied(RESOURCEID_MainScreen)
+2024-11-27T17:05:30.251 - D/[QT]    (  935): [CarPlayResourceManager] audioEntityChangedByiPhone  to  2 (1:cp,2:acc)
+2024-11-27T17:05:30.252 - D/[QT]    (  935): [CarPlayResourceManager] cpReleaseOrEndUseResource 2395
+2024-11-27T17:05:30.253 - D/[QT]    (  935): [CarPlayResourceManager] cpEndUseResource 2 ygc in (1:scr,2:aud)
+2024-11-27T17:05:30.254 - D/AppleCarPlayManagerImpl( 1248): [AppleCarPlayManagerImpl.cpp][changeModes][ts:81206][cast:13][--OUT--]
+2024-11-27T17:05:30.255 - D/[QT]    (  935): [CarPlayResourceManager] OccupiedResource 2 ygc in (1:scr,2:aud) 0
+2024-11-27T17:05:30.256 - D/[QT]    (  935): [CarPlayResourceManager] OccupiedResource 2  ygc out (1:scr,2:aud)
+2024-11-27T17:05:30.257 - D/[QT]    (  935): [CarPlayResourceManager] [Debug] recordInitialResource [--IN--]
+2024-11-27T17:05:30.258 - D/[QT]    (  935): [CarPlayResourceManager] OccupiedResource 2 ygc in (1:scr,2:aud) 0
+2024-11-27T17:05:30.259 - D/[QT]    (  935): [CarPlayResourceManager] record state: 1 id 2
+2024-11-27T17:05:30.260 - D/[QT]    (  935): [CarPlayResourceManager] OccupiedResource 2  ygc out (1:scr,2:aud)
+2024-11-27T17:05:30.260 - D/[QT]    (  935): [CarPlayResourceManager] [Debug] recordInitialResource [--OUT--]
+2024-11-27T17:05:30.262 - W/ResourceManager(  918): [MainAudio]ResourceSilos::unborrowrequester:[935][2][1] 
+2024-11-27T17:05:30.262 - I/ResourceManager(  918): [STransferTransmitter]unborrowed ,pid:[935] obj[1] index[14] 
+2024-11-27T17:05:30.263 - D/[QT]    (  935): [mediaplay] --------------unborrowed 2 2
+2024-11-27T17:05:30.266 - D/[QT]    (  935): [MediaControl>>] -------resource unborrowed,play---- 2 true
+2024-11-27T17:05:30.357 - D/[QT]    (  935): deviceReady(420) Error:[0xa021a0]read:708 return:0 atEnd:1 pos:24576
+2024-11-27T17:05:30.365 - D/[QT]    (  935): deviceReady(420) Error:[0xa021a0]read:708 return:0 atEnd:1 pos:24576
+
+ D/[QT]    (  936): [mediaplay] --------------unborrowed 2 2␍␊
+[16:13:24:305] D/[QT]    (  936): [MediaControl>>] -------resource unborrowed,play---- 2 true␍␊
+[16:13:24:305] D/[QT]    (  936): [MediaControl>>]  MediaplayerControl:audioUnBorrowed.␍␊
+[16:13:24:497] W/AudioService(  853): [wait][104][AudioLimiter.cpp]playbackDurationMs:272 elapsedDurationMs:272, underflow!!!␍␊
+[16:13:24:498] W/AudioService(  853): [setUnderflowed][544][ServiceTrack.cpp][QtOutput]totalPlaybackDurationMs:198 processedDurationMs:272 elapsedDurationMs:279 remainBystes:504␍␊
+[16:13:24:504] W/AudioService(  853): [setUnderflowed][546][ServiceTrack.cpp][QtOutput]underflow count:1␍␊
+[16:13:24:514] I/aud     (  853): [aud]output fifo(0xf) underflow␍␊
+
+对比正常：
+D/SPCarPlay(  935): [SPCarPlay.cpp][onModesChanged][ts:72589][--IN--]
+2024-11-27T17:05:21.630 - I/SPCarPlay(  935): [onModesChanged:682] accessoryId=1
+2024-11-27T17:05:21.631 - D/[QT]    (  935): [CarPlayResourceManager] [Debug] modesChanged [--IN--]
+2024-11-27T17:05:21.633 - D/[QT]    (  935): [CarPlayResourceManager] modesChanged 488 2 2 1 2
+2024-11-27T17:05:21.633 - D/[QT]    (  935): [CarPlayResourceManager] modesChanged 490 2 2 2 2
+2024-11-27T17:05:21.633 - D/[QT]    (  935): [CarPlayResourceManager] screenEntityChangedByiPhone  to  2 (1:cp,2:acc)
+2024-11-27T17:05:21.634 - D/AppleCarPlayManagerImpl( 1248): [AppleCarPlayManagerImpl.cpp][changeModes][ts:72590][cast:20][--OUT--]
+2024-11-27T17:05:21.636 - W/[QT]    (  935): [CarPlayResourceManager] line: 312 not resourceOccupied(RESOURCEID_MainScreen)
+2024-11-27T17:05:21.636 - D/[QT]    (  935): [CarPlayResourceManager] audioEntityChangedByiPhone  to  2 (1:cp,2:acc)
+2024-11-27T17:05:21.637 - D/[QT]    (  935): [CarPlayResourceManager] cpReleaseOrEndUseResource 2395
+2024-11-27T17:05:21.639 - D/[QT]    (  935): [CarPlayResourceManager] OccupiedResource 2 ygc in (1:scr,2:aud) 0
+2024-11-27T17:05:21.639 - D/[QT]    (  935): [CarPlayResourceManager] OccupiedResource 2  ygc out (1:scr,2:aud)
+2024-11-27T17:05:21.641 - D/[QT]    (  935): [CarPlayResourceManager] [Debug] recordInitialResource [--IN--]
+2024-11-27T17:05:21.641 - D/[QT]    (  935): [CarPlayResourceManager] cpEndUseResource 2 ygc in (1:scr,2:aud)
+2024-11-27T17:05:21.642 - D/[QT]    (  935): [CarPlayResourceManager] record state: 1 id 2
+2024-11-27T17:05:21.643 - D/[QT]    (  935): [CarPlayResourceManager] [Debug] recordInitialResource [--OUT--]
+2024-11-27T17:05:21.644 - D/[QT]    (  935): [CarPlayResourceManager] OccupiedResource 2 ygc in (1:scr,2:aud) 0
+2024-11-27T17:05:21.644 - D/[QT]    (  935): [CarPlayResourceManager] OccupiedResource 2  ygc out (1:scr,2:aud)
+2024-11-27T17:05:21.646 - W/ResourceManager(  918): [MainAudio]ResourceSilos::unborrowrequester:[935][2][1] 
+2024-11-27T17:05:21.647 - W/ResourceManager(  918): [MainAudio]taked owner take again 
+2024-11-27T17:05:21.648 - W/ResourceManager(  918): [MainAudio]resourceWorkItemCheck fail,invaild resource rolemBorrowedOwner:[-1][0][-1]requester:[935][2][1] 
+2024-11-27T17:05:21.648 - E/ResourceManager(  918): [SResourceManager]endUse release fail !! 
+2024-11-27T17:05:21.649 - I/ResourceManager(  935): [CResourceHolder]take success 
+2024-11-27T17:05:21.650 - D/[QT]    (  935): [MediaControl>>]  Take  2  audio successful!
+2024-11-27T17:05:21.651 - D/[QT]    (  935): [MediaControl>>]  reset front seat audio successful!
+2024-11-27T17:05:21.651 - D/[QT]    (  935): [CarPlayResourceManager] cpEndUseResource 2  ygc out (1:scr,2:aud)
+2024-11-27T17:05:21.653 - D/[QT]    (  935): [Audiocontrol] set audio stream output source main Qspmediaplayer
+2024-11-27T17:05:21.654 - D/[QT]    (  935): [CarPlayResourceManager] [Debug] modesChanged [--OUT--]
+可能原因分析
+1. 音频资源重置未完全成功
+
+    setAudioRes 的调用可能未成功完成，导致资源释放后音频流未正确重新分配，或者没有完全清除旧资源的状态。
+    虽然日志中看不到明确的 setAudioRes 问题，但可以进一步验证其内部调用链，确保 AudioControl::setOutputSource 和资源位的更新是有效的。
+
+2. 音频数据流供应不及时
+
+    日志表明音频服务发生了下溢，这可能是由于：
+        在资源释放后，音频硬件的输入 FIFO 没有及时收到新的音频数据流。
+        resumePlay 调用的 playFile 未能快速提供数据。
+    可能的原因包括：
+        数据流重新初始化未完成（如文件流打开、数据缓冲）。
+        音频流填充延迟（例如读取操作阻塞）。
+
+3. 多线程竞争问题
+
+    如果其他线程在调用 resumePlay 的同时也在访问音频资源，可能导致 playFile 未能正确执行。
+    这种问题通常发生在没有完全锁定音频资源的情况下。
+
+4. 数据流格式不兼容或初始化失败
+
+    如果当前音频流的格式、状态（如采样率、通道）与音频硬件要求不匹配，可能导致音频服务拒绝数据流。
+
+// 检查锁状态
+    // 尝试锁定 avMutex，检查是否已被其他线程持有
+        if (!avMutex.tryLock()) {
+            MPC_E("avMutex is locked by another thread, skipping operation.");
+            return;
+        }
+        avMutex.unlock();  // 立即释放锁以恢复初始状态，后续正常加锁
+
+1130 :
+BaseControl::CanTxDataSlot
+can发送MCU打印：
+/*printf("appSendMCU data: ");
+        for (i = 0; i < tx_data.length; i++) {
+            printf("%02x ", tx_data.data[i + 1]);//包括类型
+        }
+        printf("\n");*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # 需求
@@ -4387,6 +4721,37 @@ int main() {
 在切换过程中，如果因为某种原因导致信号短暂丢失，系统不应立刻黑屏，可以在短暂丢失信号时，尝试重新初始化相机控件，或者重新发送信号给MCU，确保状态恢复。重新初始化页面也还会有
 3.UI刷新和绘制问题
 信号状态虽然正常，但黑屏现象可能是由于 UI 未能正确更新或重绘导致的。UI 绘制函数 TwUpdateShow() 可能在某些条件下没有触发有效的刷新。
+
+# 关于问题如何复现的经验
+1. 仔细观摩客户回发的文字描述，视频，照片等。
+2. 搭建客户遇见问题时相同的环境，或类似环境尝试重现问题。
+3. 尝试各种方法将小概率出现的问题操作成大概率出现的问题。努力把小概率问题通过各种围堵方法，围堵到一个角落，让它大概率出现并能大概率捕捉到它。
+4. 如果在公司内部通过各种方法都无法复现，则去出现问题的现场来复现问题。到这一步后，解决问题的代价会很高。
+5. 到了客户现场后，同样尝试各种方法，让问题大概率暴露出来。
+6. 重现问题的过程中，脸皮要厚，该请客户帮忙要请客户帮忙。
+终其原因，所有的问题归结为设计问题。如果在设计时多想一想，可以避免后面的大代价修复。话虽这么说，但无法规避所有问题。但还有个但是，如果设计时多想一想，则可以大幅度减少后端代价的总和！
+
+
+
+案例1
+项目型号：AV-G019-G0
+问题概要：车厂生产车辆过程中，发现有的车辆在测试时雷达声不响。
+问题暴露时间：2024年10月10日
+问题重现人：赵文华
+问题重现和解决过程：
+        客户回报问题。据客户描述，车辆生产过程中，检查雷达的时候发现有车辆出现雷达无声音问题。客户分别告知我们以及雷达供应商铁将军该问题。铁将军先行去客户现场进行了分析。分析发现，出现问题时显示屏上雷达图标显示有变化。所以推断雷达模块工作正常，问题属于车机。我们分析后印证了铁将军的推断，因为出现雷达无声音时，系统的按键音也不响。系统的按键音和雷达声都是由QSound进行播放。所以推测某种情况下QSound播放声音失效。但重现问题却非常困难。接到投诉后，我们软件开发人员自测以及测试部门专门测试均未能重现到该问题。
+        10月18日，我去到广汽杭州工厂，处理其它问题的同时，在尝试复现该雷达无声音问题。绝大部分时间花在重现该问题上。本希望当天能抓到规律重现，第二天回深圳。住宿都只是定了周五一晚上。但是当天没有重现到，并且一天下来整车流水线没有报告雷达无声音问题。但想了想，来都来了，还是得想办法试试。当天早些时候我和瑞阔客户的人员沟通，明天周六广汽能否派人员加班。他们回复，广汽一般不加班。意思是周六大家都不要上班。但快下班时我再和广汽对接人王工沟通，能否协调第二天把车辆给我们用。经他申请，我们可以周六继续用车。他也过来加班陪同。这很好，至少多了一天用车的时间。于是我把回程的时间改到10月22日周二，准备周一跟他们开个总结会就回来。希望周六能重现到问题。但遗憾的是，我们周六并没有重现到雷达无声音问题。
+        21日周一上班后，我和瑞阔客户的王工，袁工以及广汽的王工在一辆车上继续尝试重现该问题。全程操作我负责，他们帮忙配合。比如往雷达近距离的地方放凳子。眼看到了下午还是没有重现到问题，准备开个总结会第二天就打道回府了。但是，下午大概2，3点左右，整车流水线报告出现一辆车无雷达声音。此时心情复杂，问题终于又出现了，但对于如何操作出来的还是不知道。于是我就喊着广汽王工一起去问那个岗位的操作人员，如何个测试手法。人家回复，只是正常检查车辆的声音。我于是站在那个工位旁边，准备观摩他怎么操作的。只见他上下其手，速度非常快。一会进设置，一会调EQ，一会调音量，一会切源播U盘，一会儿倒车。没看明白时，一个类似线长的人就过来说不能站在那看。要站在那看的话，就要向他们的上级申请。于是请王工跟他们的上级打电话沟通，之后我再观察了一段时间且拍了他们的操作视频后尝试去另一辆车上重现。但直到下班，也没重现到问题。按计划，当前要和他们开总结会。总结会上，其它问题过了一遍后，针对该问题进行了讨论。我向他们表述，我已经差不多摸到了重现的规律了，我会留下来继续重现并整改该问题。但其实我没把握能重现到该问题，更何况怎么整改。只是要跟客户表明我们的决心。当天我跟苏永泉以及凌阳描述道，播U盘音乐，要快速调EQ的同时调节音量。试试看能否重现。也只能这样交代了。但公司内部还是没有测到该问题。
+        22日周二，我继续尝试重现该问题，但依然重现不到。而且下午整车流水线又报告一辆车出现雷达无声音问题。此时的思路又回到要去操作岗旁边站岗，观摩。但线长看到我去了后，又不允许我站在旁边看。又说需要他们更高一级的领导批准。没啥好说的，拉上王工打电话，继续申请。此时我注意到，车辆到这个岗位之前是开过来的。开过来后，会先熄火。熄火后，有个工位检查车门，引擎等等，此时他们会给整车上电。并且不关电的情况下，车辆流到下一个工位。下一个工位就检查车辆的各种声音。正是这个检查声音的工位会报告车辆雷达无声音。我看那个测试声音的测试员，拿着一根长长的优盘，有时会跑到检查车门引擎的工位捣鼓几下。我心想，这个人会不会有时在检查车门引擎的工位把声音给测了。检查车门和引擎的工位和测试声音的工位，对于雷达无声音发生有什么不一样吗？不知道。但至少心里有这个意识。正是有了这个意识，在接下来的尝试中客观上发挥了最直接的作用。因为公司测试人员和我都在已开机的情况下，用类似的手法操作了很多遍还是没有重现到问题。我试着假定这个测试员有时跑到上一个检查车门和引擎的地方先把这个声音测试给测了，这样测试员必定要自己给整车整机上电才可以开始测试。再结合以前的经验，开机过程中进行各种操作的话，可能会出现各种问题。于是，我到另一辆车上试试。上电后，立马进行之前观察到各种操作。几轮操作下来，奇迹出现了。开机过程中不断地按Mode按键，加减音量按键，终于出现了雷达无声音的问题。此时的感受犹如在河里把一条看不见的鱼逼到了一个角落，并亲手抓住了它。接下来重现的概率变成了100%。该问题在接近两周的时间里从无法重现到最终可以百分之百重现它，简直就是这两周以来“天大的喜讯”。赶紧通知苏永泉以及凌阳测试手法，看看能否尽快解决。
+        23日周三，在问题在已经可以100%重现的情况下，我们算是不大费功夫就把问题给解决了。问题原因为两个线程同时让QSound播放声音的话，会出问题。这算是凌阳平台的缺陷，但在已知缺陷无法快速解决的情况下，我们想办法只在一个线程中调用QSound播放声音。问题得到上层的规避解决。
+
+为什么我写以上这些零散过程，因为里面包含了几个机会点。如果只是简单走过场的话，机会就溜过去了。我们也无法把问题围住并逼出来。
+1. 如果不和广汽的王工沟通周六用车的事情，只听瑞阔客户人员的说法。那么周六将无法用车，少了一天用车时间。而且，周末用车的话无人员打扰。
+2. 如果不是我全程主导操作的话，整个重现的次数必定少很多。这是我实际的观察、沟通和比较得来的，所以我在那主导测试，自己操作。
+3. 如果只服从产线人员的指令，不能站在旁边观摩的话，我们就得不到第一手操作手法。很可能延期几天终究无法复现，打道回府。问题也得不到解决。申请资源和便利很重要，得主动沟通申请，才能获得站在操作岗旁边的机会。
+4. 细心观察，尝试拓宽基于观察得出的想法。试一试，可能无意中离真相又近了一步。
+5. 在平台有缺陷的情况下，而且不能快速对策的情况下，上层规避也是一个务实的方法。如果等凌阳来在底层解决，那不知等到什么时候。客户无法忍受问题迟迟不能解决。截止今天2024年11月18日，凌阳还是没有解决多线程调用QSound带来的问题。
+6. 虽说该问题不能完全归结为设计问题，但可以归类为设计问题。事实上其它绝大多数不好重现的问题，最终都会是修改那么一点点就不会有这个问题。
 
 # 优化代码
  * AuxinModuleImpl::~AuxinModuleImpl()
