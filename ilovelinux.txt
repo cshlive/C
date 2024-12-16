@@ -1,0 +1,56 @@
+today is the first day i begin to learn how to use git
+i can use git
+love me
+hello
+i am xiaoming and this is my verson.
+git status  查看当前状态
+git log  查看提交日志
+git merge dev  合并dev分支至当前分支
+git add .      添加当前目录全部文件至暂存区
+git commit -m '测试'     提交，提交信息为测试
+git push origin master  推送至远端分支（master为需要推送分支，按实际需要选择）
+git pull origin master  合并远端分支至本地 (git pull 等于 git fetch + git merge)
+git pull --rebase origin master rebase方式合并远端分支至本地
+git branch 查看当前分支
+git branch dev 创建dev分支  （dev可选）
+git branch -d dev 删除dev分支
+git branch -r 查看远程分支
+git branch -a 查看所有分支 （包括远程分支）
+git checkout master 切换至master分支
+git checkout -b dev 创建dev分支并切换至dev分支
+git checkout -b dev origin/dev 创建远程分支到本地
+git restore file 丢弃工作区修改（file为具体文件名称）
+git restore * 丢弃所有工作区修改
+git restore --staged file  回退暂存区文件 不会更改文件内容
+git rebase --continue   rebase后继续操作
+git rebase --abort 退出rebase 操作
+
+
+git reset：回退版本，可指定某一次提交的版本。git reset [--soft | --mixed | --hard] commitId。
+git revert：撤销某个提交，做反向操作，生成新的commitId，原有提交记录保留。git revert commitId。
+回退分两种情况：
+   已 commit，未push到远程仓库。
+
+    git reset --soft（撤销commit）。
+
+    git reset --mixed（撤销 commit 和 add 两个动作）。
+
+已 commit，并且push到了远程仓库。
+
+    git reset --hard（撤销并舍弃版本号之后的提交记录）。
+
+    git revert（撤销，但是保留了提交记录）。
+
+
+git@github.com:cshlive/C.git
+//rm -rf ~/.ssh/*
+工作电脑的公钥：ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDGB8xDMbZLqaW9O/hckB63sdEfohg12tTgWwgj6tS9TI8IhwLPDWC5KUUl+jgCWcadE8DGRl6BjnpmIMxdQGYqXU2jrmtIeGy3j8dnD/tKQuUNUomzhjZdVjCEQCBQ9zSPmFVbf4+PL8uIldmIFb4AagoP+UN5dqcbazGHp9xFOGH0R84YmPuotY4gTKbnVlOhheeclZi8F3HwP2xQIWgFxajEdDS6e8FvsKL0XkrcT2x3zTYWSGCdVr6G4l2j0lHhbJI7Yh3y33lz/4X/XIpOjJWD8gY0GRPsGCZZOL3fiybaZp43reyYTQJrfeYttb59Cfzel25FARf+xl1S7LiJ chensh@maxmade.com
+
+这边是github线上改动的
+git add 文件添加到暂存区
+git commit 上传到本地仓库
+git status 查看工作状态
+git branch 查看工作分支
+git log --oneline
+git push origin（远程仓库） master（远程仓库的分支）
+git checkout +分支名 进行分支的切换
