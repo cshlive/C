@@ -4836,7 +4836,7 @@ btsnoop.log
 需要调整etc里面的物理高度和宽度
 
 
-
+蓝牙相关时间对照枚举
 typedef enum
 {
 	callEventBase = btPhoneCallStatesChange,//256
@@ -4869,6 +4869,179 @@ typedef enum {
     EventBtPairCancel,
     EventBtMAX = 0xff,
 } BtServiceEvent;
+
+1227:
+1307wsc-pc-hx:
+开机马上触发右视，过5s回不去
+
+string curSourceName() const;
+void setCurSourceName(string curSourceName);
+
+string GetSourceName(SOURCE_ID_T enSrcID);
+int getSourceID(string srcName);
+
+开机后有段时间会设为update
+ 00:00@@@@@@  [m_pRunUpdateDelayTimer2->stop]␍␊
+[18:39:15:889] @@@@@@   [check MCU update]␍␊
+[18:39:15:895] [AP][ActivityManagerImpl]activityOnCreat,update,0 
+[18:39:20:030] Current Source: update
+void ActivityManagerImpl::onTimerRunUpdate2()
+printf("@@@@@@  [m_pRunUpdateDelayTimer2->stop]\n");
+	printf("@@@@@@   [check MCU update]\n");
+	setUpdateActivity(UPDATE_SRC_NAME);
+	if (activityRunUpdate())
+	{				
+	} 
+
+    这里导致有问题
+
+    后面在设置升级源的地方，加上判断，防止出错
+    // 判断当前状态是否已经切换到非 UPDATE_SRC_NAME
+    if (AppData::GetInstance()->GetCurSourceName() == CAMERA_SRC_NAME) {
+        printf("@@@@@@   [current source is Camera, skip MCU update]\n");
+        return;
+    }
+	setUpdateActivity(UPDATE_SRC_NAME);
+
+
+1228：
+
+va650-08：无线cp在通话中断开WiFi，此时车机蓝牙界面显示空白通话
+void TalkingWidget::setCallInfoLable(QString number,QString name,bool isFristCall)
+void btServicePhoneCbk::sendBtCallStatesChange(BTAddr *address, int sdValue)
+
+[14:33:15:532] [QT] [BlueToothModuleImpl] BTSrv_ServiceCBK :  EVENT_SRV_ACL_DISCONNECT␍
+[14:33:17:176] [QT] [BlueToothModuleImpl] BTSrv_ServiceCBK :  EVENT_SRV_ACL_CONNECTED␍
+[14:33:31:587] [QT] [BlueToothModuleImpl] BTSrv_ServiceCBK :  EVENT_SRV_ACL_DISCONNECT
+[14:34:15:844] [QT] [BlueToothModuleImpl] BTSrv_ServiceCBK :  EVENT_SRV_AUTOCONN_START
+[14:34:16:600] [QT] [BlueToothModuleImpl] BTSrv_ServiceCBK :  EVENT_SRV_ACL_CONNECTED
+[14:34:17:787] [QT] [BlueToothModuleImpl] Call state change:  EVENT_CALL_PROGRESS
+[14:34:18:324] [QT] [BlueToothModuleImpl] BTSrv_ServiceCBK :  EVENT_SRV_AUTOCONN_STOP
+[14:34:19:758] [QT] btphonemodule.cpp [Debug] btCallStatesSlot [--OUT--]␍␊
+[14:34:19:758] [QT] [InfoModuleImpl] infoModule btPhoneCall other event: 264␍␊
+[14:34:19:758] BaseControl btPhoneCallStatesChangedSlot 8␍␊
+[14:34:19:758] [QT] [BlueToothModuleImpl] handlebtphonePopSlot line: 1477 run␍␍␊
+[14:34:19:758] [QT] [HomeLauncher] entryChanged "btMusicMode" 1␍␊
+[14:34:22:297] root@Gemini:/# 
+怀疑：
+异常时：
+[14:34:19:328] [QT] BtPhoneActivity btCallStatesChangeSlot event: 260
+[14:34:19:694] [QT] BtPhoneActivity btCallStatesChangeSlot event: 260//callEventProgress
+[14:34:29:397] [QT] BtPhoneActivity btCallStatesChangeSlot event: 257
+
+[14:34:19:338] [QT] BtPhoneActivity getCallStatus(): false isfristCall: true
+[14:34:19:686] [QT] BtPhoneActivity checkModuleIsCalling calltype: 3␍␊
+[14:34:19:694] [QT] phoneview/talking/talkingwidget.cpp [Debug] btCallStatesChangeSlot [--IN--]␍␊
+[14:34:19:694] [QT] BtPhoneActivity btCallStatesChangeSlot event: 260␍␊
+[14:34:19:694] [QT] [Error] BtPhoneActivity line: 1168 btCallStatesChangeSlot bt device address is not all 0.␍␊
+[14:34:19:694] [QT] [BlueToothModuleImpl] BTPhoneIMPL_isCallProgressing line: 2859 run␍␊
+[14:34:19:694] [BRT][hfp] MG2␍␍␊
+[14:34:19:694] I/[BT_MW][IVT1421SI_BlueTooth](  700): [btSrv_getBondedDeviceByIndex:160] sdIndex=1␍␊
+[14:34:19:694] [QT] BtPhoneActivity getCallStatus(): false isfristCall: true␍␊
+正常：
+[2024-12-28 15:14:01] [QT] [BlueToothModuleImpl] BTSrv_ServiceCBK :  EVENT_SRV_ACL_DISCONNECT
+[2024-12-28 15:14:03] [QT] [BlueToothModuleImpl] BTSrv_ServiceCBK :  EVENT_SRV_ACL_CONNECTED
+[2024-12-28 15:14:05] [QT] [BlueToothModuleImpl] BTSrv_ServiceCBK :  UNKNOWN_EVENT_ID
+[2024-12-28 15:14:13] [QT] [BlueToothModuleImpl] BTSrv_ServiceCBK :  EVENT_SRV_ACL_DISCONNECT
+[2024-12-28 15:14:40] [QT] [BlueToothModuleImpl] BTSrv_ServiceCBK :  EVENT_SRV_AUTOCONN_START
+[2024-12-28 15:14:40] [QT] [BlueToothModuleImpl] BTSrv_ServiceCBK :  EVENT_SRV_ACL_CONNECTED
+[2024-12-28 15:14:42] [QT] [BlueToothModuleImpl] BTSrv_ServiceCBK :  UNKNOWN_EVENT_ID
+[2024-12-28 15:14:42] [QT] [BlueToothModuleImpl] BTSrv_ServiceCBK :  EVENT_SRV_AUTOCONN_STOP
+[2024-12-28 15:14:42] [QT] [BlueToothModuleImpl] Call state change:  EVENT_CALL_OUTGOING
+[2024-12-28 15:14:43] [QT] [InfoModuleImpl] infoModule btPhoneCall other event: 264
+[2024-12-28 15:14:43] BaseControl btPhoneCallStatesChangedSlot 8
+[2024-12-28 15:14:43] [QT] phoneview/talking/talkingwidget.cpp [Debug] btCallStatesChangeSlot [--IN--]
+[2024-12-28 15:14:43] [QT] BtPhoneActivity btCallStatesChangeSlot event: 264
+[2024-12-28 15:14:43] [QT] BtPhoneActivity btCallStatesChangeSlot LINE 1769
+[2024-12-28 15:14:43] [QT] phoneview/talking/talkingwidget.cpp [Debug] btCallStatesChangeSlot [--OUT--]
+[2024-12-28 15:14:43] [QT] [HomeLauncher] entryChanged "btMusicMode" 1
+[2024-12-28 15:14:45] root@Gemini:
+
+[2024-12-28 15:14:43] [QT] BtPhoneActivity btCallStatesChangeSlot event: 259//callEventOutgoing
+[2024-12-28 15:14:43] [QT] BtPhoneActivity btCallStatesChangeSlot event: 264
+[2024-12-28 15:14:43] [QT] BtPhoneActivity btCallStatesChangeSlot event: 260
+[2024-12-28 15:14:43] [QT] BtPhoneActivity btCallStatesChangeSlot event: 264
+[2024-12-28 15:14:42] [QT] BtPhoneActivity checkModuleIsCalling calltype: 0
+[2024-12-28 15:14:43] [QT] phoneview/talking/talkingwidget.cpp [Debug] btCallStatesChangeSlot [--IN--]
+[2024-12-28 15:14:43] [QT] BtPhoneActivity btCallStatesChangeSlot event: 260
+[2024-12-28 15:14:43] [QT] [Error] BtPhoneActivity line: 1567 btCallStatesChangeSlot bt device address is not all 0.
+[2024-12-28 15:14:43] [QT] [BlueToothModuleImpl] BTPhoneIMPL_isCallProgressing line: 2951 run
+[2024-12-28 15:14:43] goc-ipc BTPhoneMgr_isCallProgressing isTrue=1
+[2024-12-28 15:14:43] I/[BT_MW][RG440_BlueTooth](  722): [btPhoneMgr_BTPhone_getOutgoingCall:579] pstBtAddr(52:5a:48:d6:f6:94)
+[2024-12-28 15:14:43] [QT] BtPhoneActivity getCallStatus(): true isfristCall: true
+[2024-12-28 15:14:43] I/[BT_MW][RG440_BlueTooth](  722): [btPhoneMgr_isCallProgressing:406]
+
+20250102：
+TD：1.1297wsc-JT8:先进入收音界面，再进入蓝牙搜索界面，点击Refresh键，无作用，蓝牙不工作（1次）log时间.20：33分
+
+异常打印：
+2024-12-28T20:30:44.970 - W/[AndroidAutoSubServiceController](  823): wait 1278 exit,number j = 1
+
+2024-12-28T20:33:19.991 - [AP][I][BlueToothModuleImpl] BTIMPL_IsDiscovering line:2108
+2024-12-28T20:33:19.992 - [AP][BTPhoneWidget][setBtStartDiscovery] [line:637] bStart:0.
+2024-12-28T20:33:19.993 - [AP][I][BlueToothModuleImpl] BTIMPL_GetBondedDevicesNum line:2464
+2024-12-28T20:33:19.994 - [AP][I][BlueToothModuleImpl] BTIMPL_CancelDiscovery line:2127
+2024-12-28T20:33:19.997 - [AP][BTPhoneWidget]cancel discover device cmd Success==
+
+正常时：
+2024-12-28T20:21:10.866 - [AP][I][BlueToothModuleImpl] BTIMPL_IsDiscovering line:2108
+2024-12-28T20:21:10.866 - [AP][BTPhoneWidget][setBtStartDiscovery] [line:637] bStart:1.
+2024-12-28T20:21:10.868 - [AP][I][BlueToothModuleImpl] BTIMPL_GetBondedDevicesNum line:2464
+2024-12-28T20:21:10.872 - [AP][I][BlueToothModuleImpl] BTIMPL_StartDiscovery line:2145
+2024-12-28T20:21:10.872 - [AP][BTPhoneWidget]Start discover device cmd Success==
+2024-12-28T20:21:10.885 - [AP][BlueToothModuleImpl]BTSrv_ServiceCBK:EVENT_SRV_DISCOVERY_STARTED
+
+2024-12-28T20:22:57.328 - [AP][I][BlueToothModuleImpl] BTIMPL_IsDiscovering line:2108
+2024-12-28T20:22:57.329 - [AP][BTPhoneWidget][setBtStartDiscovery] [line:637] bStart:0.
+2024-12-28T20:22:57.330 - [AP][I][BlueToothModuleImpl] BTIMPL_GetBondedDevicesNum line:2464
+2024-12-28T20:22:57.330 - Ack id 43 send id 89
+2024-12-28T20:22:57.331 - [AP][I][BlueToothModuleImpl] BTIMPL_CancelDiscovery line:2127
+2024-12-28T20:22:57.334 - [AP][BTPhoneWidget]cancel discover device cmd Success==
+2024-12-28T20:22:57.338 - [AP][BlueToothModuleImpl]BTSrv_ServiceCBK:EVENT_SRV_DISCOVERY_FINISHED
+2024-12-28T20:22:57.338 - [AP][W][BlueToothModuleImpl]pstBtAddr is NULL!
+2024-12-28T20:22:57.338 - [AP][AndroidAutoWireless]BTSrv_ServiceCBK,eEvent:0x107
+
+2.RF:无线CP连接状态，在设备列表删除无线CP，断电起来，几秒后无线CP自动连接上，但设备列表无电话和音频图标显示（苹果14/12手机）
+2024-12-28T13:54:22.311 - [AP][CarplayModule]get local address err![AP][W][CarplayWireless]=======================================>mAccessoryName W-CPAAWMM[Info]: BTSrv_regSdpRfcommUuid success!
+
+
+2024-12-28T13:54:21.887 - [AP][BlueToothModuleImpl]local bluetooth mac address: 77:aa:08:4a:fc:6d
+2024-12-28T13:54:21.893 - [AP][AndroidAutoModuleImpl]set bluetooth mac address:6D:FC:4A:08:AA:77
+2024-12-28T13:54:22.887 - [AP][BlueToothModuleImpl]local bluetooth mac address: 77:aa:08:4a:fc:6d
+2024-12-28T13:54:22.891 - [AP][BlueToothModuleImpl]local bluetooth mac address: 77:aa:08:4a:fc:6d
+2024-12-28T13:54:22.892 - [AP][E][BlueToothModuleImpl]set local name err!
+
+2024-12-28T13:54:22.914 - WMM[Info]: BTSrv_regSdpRfcommUuid success!
+2024-12-28T13:54:22.915 - WMM[Erro]: Register mBTCBK_RfComm failed!
+2024-12-28T13:54:22.918 - WMM[Erro]: Register SPPCBK failed!
+3.RF:车机配对AA和CP设备，在设备列表界面点击CP图标，连接上无线CP后，手动点击另外一个设备连接上音频，从BT Phone进入蓝牙音乐界面，点击播放音乐无作用ID3信息显示Unknown(2次）
+2024-12-28T19:36:11.561 - [AP][BlueToothModuleImpl]address: 0xed 0xfd 0x91 0x76 0x54 0xb0 
+2024-12-28T19:36:11.564 - [AP][BlueToothModuleImpl]address: 0x3a 0x54 0x09 0x17 0x6d 0xe0 
+
+2024-12-28T19:36:11.578 - [AP][DeviceListView]updateUnifiedList 499 bt device in list mac:0xb0547691fded SupportStatus:3, ConnectStatus: 2, name:Galaxy S24
+2024-12-28T19:36:11.580 - [AP][DeviceListView]updateUnifiedList 499 bt device in list mac:0xe06d1709543a SupportStatus:3, ConnectStatus: 0, name:iPhone12
+2024-12-28T19:36:11.581 - [AP][DeviceListView]updateUnifiedList 521 cp device in list mac:0xe06d1709543a SupportStatus:11, ConnectStatus: 0, name:iPhone12
+2024-12-28T19:36:11.584 - [AP][DeviceListView][generateBTAddrStr][1046] str: ed:fd:91:76:54:b0.
+2024-12-28T19:36:11.585 - WMM[Info]: Device[0]   Valid, ID=0xE06D1709543A, name=iPhone12 0
+2024-12-28T19:36:11.585 - WMM[Info]: Device[1]   Valid, ID=0xAC161567DB65, name=iPhone14mmmmm 0
+2024-12-28T19:36:20.652 - [AP] bluetoothmodule.cpp [Debug] devcelistview_disconnect [--IN--]
+2024-12-28T19:36:20.654 - [AP][I][BlueToothModuleImpl] BTIMPL_IsBtServiceEable line:2182
+2024-12-28T19:36:20.654 - [AP][I][BlueToothModuleImpl] BTIMPL_Disconnect_Profile_A2dpsink line:1900
+
+20250103:
+如果代码里面自己定义的宏文件不生效的，可以在对应的cpp里面加上#include "ProjectCfg.h"
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

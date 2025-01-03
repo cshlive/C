@@ -253,3 +253,459 @@ void CanAirInfoScreen::timerEvent(QTimerEvent *event)
 接下来，重写了类的timerEvent函数来处理定时器事件。在函数中，我们检查事件的定时器ID是否与我们的十秒定时器ID匹配。如果匹配，我们在这个事件中执行CanTxDataSlot(tx_data)函数。如果不匹配，则将事件传递给父类进行处理。
 
 请注意，在使用定时器后，确保在不需要定时器时及时停止或重置它，以避免不必要的定时器触发。在代码中使用killTimer函数即可停止定时器。
+
+2.关于动态can帧：
+要将您现有的处理逻辑从固定类型和长度的数据解析，转变为支持动态帧解析的方式（根据每帧的字段灵活变化），需要根据以下几个方面进行修改：
+1. 帧边界检测：
+
+首先，您需要在接收到数据时，根据帧的边界（0x7E）来判断开始和结束，并且每帧数据可能具有不同的长度。这要求动态接收数据，并解析每个帧的内容。
+2. 字节填充：
+
+由于字节填充（byte stuffing），需要处理特殊字节（0x7E和0x7D）。接收到这些字节时，您需要在解码时恢复原始数据。
+3. 动态解析数据：
+
+不同的帧可能有不同的结构，需要根据帧头的信息（如命令字节、数据段长度等）动态解析数据。
+4. FCS 校验：
+
+根据帧的结构和协议要求，计算校验和（FCS），并与接收到的FCS值进行比对，确保数据的完整性。
+具体实现步骤：
+1. 帧接收逻辑修改：
+
+根据您当前的结构，首先要进行帧边界检测，检查每个数据段的开始（0x7E）和结束（0x7E），然后提取数据。每个帧的数据长度是动态的，需要根据不同的情况进行解析。
+
+void CanModuleImpl::CanImplNewDataSlot(MCUSRV_TO_MAIN_APP_T can_data)
+{
+    unsigned char cmd_id;
+    unsigned char cmd_length;
+    CAN_DATA_BUFFER temp;
+    memset(&temp, 0, sizeof(temp));
+
+    // 解析数据流
+    int i = 0;
+    int packetStartIndex = 0; // 用于标记帧的开始位置
+
+    // 帧边界检测：寻找 0x7E 起始和结束
+    for (int i = 0; i < can_data.dataLen; i++) {
+        if (can_data.uiData[i] == 0x7E) {
+            if (packetStartIndex != i) {
+                // 解析前一个帧的数据
+                // 处理该帧数据
+                processFrame(can_data.uiData + packetStartIndex, i - packetStartIndex);
+
+                // 更新帧起始位置
+                packetStartIndex = i;
+            }
+        }
+    }
+    
+    // 处理最后一帧
+    if (packetStartIndex < can_data.dataLen) {
+        processFrame(can_data.uiData + packetStartIndex, can_data.dataLen - packetStartIndex);
+    }
+}
+
+2. 字节填充解码：
+
+接收到的数据中，如果有0x7D，需要进行反向填充，还原成原始数据。
+
+void CanModuleImpl::processFrame(unsigned char* pFrame, int frameLen) {
+    // 字节填充解码
+    unsigned char decodedFrame[frameLen];
+    int decodedLen = 0;
+    for (int i = 0; i < frameLen; i++) {
+        if (pFrame[i] == 0x7D) {
+            if (i + 1 < frameLen) {
+                if (pFrame[i + 1] == 0x5E) {
+                    decodedFrame[decodedLen++] = 0x7E;
+                } else if (pFrame[i + 1] == 0x5D) {
+                    decodedFrame[decodedLen++] = 0x7D;
+                }
+                i++; // 跳过下一个字节
+            }
+        } else {
+            decodedFrame[decodedLen++] = pFrame[i];
+        }
+    }
+
+    // 解析该帧的控制字节和数据段
+    parseControlAndData(decodedFrame, decodedLen);
+}
+
+3. 动态解析帧结构：
+
+每个帧可能有不同的结构，例如命令字节、数据段、CRC 校验等，需要根据帧的控制字节来动态解析。
+
+void CanModuleImpl::parseControlAndData(unsigned char* decodedFrame, int decodedLen) {
+    if (decodedLen < 3) return; // 数据长度不足，无法解析
+
+    unsigned char cmd_id = decodedFrame[0]; // 命令字节
+    unsigned char cmd_length = decodedFrame[1]; // 数据长度
+
+    // 控制字节解析
+    switch (cmd_id) {
+        case CAN_INFO_RXRearRadar:
+            // 解析 Rear Radar 数据
+            parseRearRadarData(decodedFrame + 2, cmd_length - 2);
+            break;
+        case CAN_INFO_RXFrontRadar:
+            // 解析 Front Radar 数据
+            parseFrontRadarData(decodedFrame + 2, cmd_length - 2);
+            break;
+        default:
+            // 处理其他命令
+            break;
+    }
+}
+
+4. 校验和（FCS）计算：
+
+您需要使用 CRC16（CCITT）算法来计算每个帧的校验和，并与接收到的校验和进行比对。
+
+// 计算CRC16（CCITT）校验
+unsigned short calculateCRC16(const unsigned char* data, int len) {
+    unsigned short crc = 0xFFFF;
+    for (int i = 0; i < len; i++) {
+        crc ^= data[i];
+        for (int j = 0; j < 8; j++) {
+            if (crc & 0x0001) {
+                crc >>= 1;
+                crc ^= 0x8408;  // CCITT CRC16 polynomial
+            } else {
+                crc >>= 1;
+            }
+        }
+    }
+    return crc;
+}
+
+// 校验帧的FCS
+void CanModuleImpl::verifyFCS(unsigned char* frame, int frameLen) {
+    unsigned short receivedFCS = (frame[frameLen - 2] << 8) | frame[frameLen - 1];
+    unsigned short calculatedFCS = calculateCRC16(frame, frameLen - 2); // 不包括FCS字段
+    if (receivedFCS != calculatedFCS) {
+        // FCS校验失败，丢弃帧或发送 NAK
+        qDebug() << "FCS mismatch!";
+    } else {
+        // FCS校验通过，处理数据
+        qDebug() << "FCS match!";
+    }
+}
+
+总结
+
+    帧边界：通过检测 0x7E 来判断帧的开始和结束。
+    字节填充：对0x7D进行反向填充，恢复原始数据。
+    动态解析：根据每个帧的命令字节和长度动态解析数据。
+    FCS 校验：使用 CRC16 校验和来验证数据的完整性。
+
+这样，您就能实现动态解析具有不确定长度和内容的帧，并确保数据的完整性和正确性。
+
+根据您的补充描述，这个通信协议涉及到不同的命令ID，每个命令ID会有特定的数据结构和处理逻辑。发送命令时，数据部分的前2个字节表示命令，其中包含命令的类型（读写），以及所属的团体（0x0000, 0x0100 等）。这些命令可能需要根据命令ID来解析和处理。
+
+下面是如何在当前的系统中处理这些命令ID和它们的结构的思路：
+1. 命令ID解析：
+
+每个命令ID由前两个字节组成，MSB（最高有效位）优先。命令ID包括操作类型（读或写）和命令所属的团体。具体解析时，可以从数据帧的前2个字节获取命令的类型和团体ID，然后根据这个信息来决定如何处理后续数据。
+2. 命令分组：
+
+命令ID对应不同的团体，如 0x0000 - 启动信息、0x0100 - 车辆信息组等。根据这些命令ID，我们可以定义每种命令的处理方式，包括如何解析数据字段、确认命令是否有效等。
+3. 读写操作：
+
+命令的位15和位14分别用于表示读操作（1）或写操作（0）。根据这些标志位，我们可以决定该帧是用于读取数据还是更新数据。
+4. UTF-8字符串传输：
+
+所有命令传输的字符串都采用以空字符结尾的UTF-8格式。如果命令数据中包含字符串（如车辆ID、车辆设置等），需要对这些数据做UTF-8解码和编码。
+5. 命令解析：
+
+可以根据命令ID来选择如何处理每个命令（例如，启动信息命令会有与车辆信息命令不同的数据结构和处理逻辑）。
+实现步骤：
+1. 命令头解析：
+
+我们首先需要解析前2个字节，获取命令类型（读/写）和命令所属团体（0x0000, 0x0100等）。然后，我们根据这个信息来决定如何处理数据部分。
+
+void CanModuleImpl::processCommandHeader(unsigned char* pFrame, int frameLen) {
+    if (frameLen < 2) {
+        qDebug() << "Frame is too short for command header";
+        return;
+    }
+
+    unsigned short command = (pFrame[0] << 8) | pFrame[1]; // 前两个字节
+    unsigned short group = command & 0xFF00;  // 获取团体ID（高字节）
+    unsigned short cmd = command & 0x00FF;    // 获取命令ID（低字节）
+
+    qDebug() << "Group: " << group << ", Command ID: " << cmd;
+
+    // 根据团体ID和命令ID进行后续处理
+    switch (group) {
+        case 0x0000:
+            // 启动信息
+            processStartupInfo(pFrame + 2, frameLen - 2);
+            break;
+        case 0x0100:
+            // 车辆信息组
+            processVehicleInfo(pFrame + 2, frameLen - 2);
+            break;
+        case 0x0200:
+            // 车辆设置
+            processVehicleSettings(pFrame + 2, frameLen - 2);
+            break;
+        default:
+            qDebug() << "Unknown group: " << group;
+            break;
+    }
+}
+
+2. 写/读操作判断：
+
+根据命令的位15和位14来判断是读操作还是写操作。这部分信息在命令的头部（前2个字节）中。
+
+void CanModuleImpl::processCommand(unsigned char* pFrame, int frameLen) {
+    if (frameLen < 2) {
+        qDebug() << "Frame is too short to process command.";
+        return;
+    }
+
+    unsigned short commandHeader = (pFrame[0] << 8) | pFrame[1];
+    unsigned short readWriteFlag = (commandHeader >> 14) & 0x03;  // 位15和14判断读写
+
+    // 判断读写操作
+    if (readWriteFlag == 1) {
+        // 读取操作
+        qDebug() << "Read command received";
+    } else if (readWriteFlag == 0) {
+        // 写入操作
+        qDebug() << "Write command received";
+    }
+
+    // 继续处理帧数据
+    processCommandHeader(pFrame, frameLen);
+}
+
+3. UTF-8 字符串处理：
+
+如果命令中包含字符串（如车辆信息组中的车辆ID），这些字符串应该采用UTF-8编码，并且需要正确解码和编码。
+
+void CanModuleImpl::processStringData(unsigned char* pFrame, int frameLen) {
+    std::string str(reinterpret_cast<char*>(pFrame), frameLen);  // 从字节数组构造std::string
+    QString utf8Str = QString::fromUtf8(str.c_str());  // 转换为QString（UTF-8格式）
+    
+    qDebug() << "Processed string: " << utf8Str;
+}
+
+4. 处理不同的团体命令：
+
+根据团体ID来决定如何解析数据，进行适当的处理。每个团体可能有不同的命令和数据格式。
+
+void CanModuleImpl::processStartupInfo(unsigned char* pData, int dataLen) {
+    // 解析启动信息的命令数据
+    qDebug() << "Processing startup info data...";
+    // 假设启动信息的结构是一个字符串
+    processStringData(pData, dataLen);
+}
+
+void CanModuleImpl::processVehicleInfo(unsigned char* pData, int dataLen) {
+    // 解析车辆信息
+    qDebug() << "Processing vehicle info data...";
+    // 假设车辆信息包含一个ID字符串
+    processStringData(pData, dataLen);
+}
+
+void CanModuleImpl::processVehicleSettings(unsigned char* pData, int dataLen) {
+    // 解析车辆设置
+    qDebug() << "Processing vehicle settings data...";
+    // 假设车辆设置包含多个参数
+    // 对于每个参数，进行适当处理
+}
+
+总结：
+
+    命令头解析：通过分析帧的前两个字节来获取命令ID和团体ID，确定该命令属于哪个命令组。
+    操作类型：通过命令的位15和位14判断是读操作还是写操作。
+    字符串处理：所有命令中的字符串应以UTF-8格式传输，需要正确地解码和处理。
+    命令组处理：根据不同的团体ID（如 0x0100、0x0200 等），对数据进行动态解析，调用不同的处理函数。
+
+结合您之前的描述，我将整合并优化代码，确保它能够根据您的需求解析帧、校验 FCS、处理命令 ID，并根据 CRC 校验结果发送 ACK 或 NAK 确认帧。以下是一个整合后的实现：
+整合后的代码：
+
+#include <iostream>
+#include <vector>
+#include <cstring>
+#include <QtCore/QDebug>
+
+class CanModuleImpl {
+public:
+    // 用于存储命令数据的结构
+    struct CAN_DATA_BUFFER {
+        unsigned char rear_radar[4];
+    };
+
+    // 计算 CRC16 校验
+    unsigned short calculateCRC16(unsigned char* pData, int dataLen) {
+        unsigned short crc = 0x0000;
+        for (int i = 0; i < dataLen; i++) {
+            crc ^= (pData[i] << 8);  // 高字节
+            for (int j = 0; j < 8; j++) {
+                if (crc & 0x8000) {
+                    crc = (crc << 1) ^ 0x1021;  // CRC16-CCITT 校验
+                } else {
+                    crc = crc << 1;
+                }
+            }
+        }
+        return crc;
+    }
+
+    // 校验 FCS 是否正确
+    bool validateFCS(unsigned char* pFrame, int frameLen) {
+        unsigned short expectedCRC = (pFrame[frameLen - 2] << 8) | pFrame[frameLen - 1];
+        unsigned short calculatedCRC = calculateCRC16(pFrame, frameLen - 2); // 排除 FCS 字段
+        qDebug() << "Expected CRC: " << expectedCRC << ", Calculated CRC: " << calculatedCRC;
+        
+        if (expectedCRC == calculatedCRC) {
+            return true;  // CRC 校验通过
+        } else {
+            return false;  // CRC 校验失败
+        }
+    }
+
+    // 帧同步：通过检测 SOF (0x7E) 字节来同步帧的接收
+    bool syncFrame(unsigned char* pFrame, int frameLen) {
+        int i = 0;
+        
+        // 忽略连续的 0x7E 字节
+        while (i < frameLen && pFrame[i] == 0x7E) {
+            i++;  // 跳过所有的 0x7E 字节
+        }
+        
+        if (i >= frameLen) {
+            qDebug() << "No valid data found.";
+            return false;  // 无有效数据
+        }
+
+        qDebug() << "Start receiving data after SOF.";
+        return true;
+    }
+
+    // 解析启动帧
+    void processStartupFrame(unsigned char* pFrame, int frameLen) {
+        if (frameLen < 5) {
+            qDebug() << "Frame too short.";
+            return;
+        }
+
+        unsigned char cmdIdLow = pFrame[2];
+        unsigned char cmdIdHigh = pFrame[3];
+        unsigned short cmdId = (cmdIdHigh << 8) | cmdIdLow;  // 合并命令ID的高低字节
+
+        qDebug() << "Received Command ID: " << cmdId;
+
+        // 根据命令ID来处理具体的数据
+        switch (cmdId) {
+            case 0x0000:
+                processStartupInfo(pFrame + 4, frameLen - 4);  // 跳过命令ID部分
+                break;
+            case 0x0100:
+                processVehicleInfo(pFrame + 4, frameLen - 4);  // 跳过命令ID部分
+                break;
+            default:
+                qDebug() << "Unknown command ID.";
+                break;
+        }
+    }
+
+    // 启动信息处理（仅示例，实际处理时根据数据结构进行解析）
+    void processStartupInfo(unsigned char* pData, int dataLen) {
+        qDebug() << "Processing startup info.";
+        // 这里您可以解析具体的启动数据内容
+    }
+
+    // 车辆信息处理（仅示例）
+    void processVehicleInfo(unsigned char* pData, int dataLen) {
+        qDebug() << "Processing vehicle info.";
+        // 这里解析车辆信息
+    }
+
+    // 发送 ACK 或 NAK 帧
+    void sendAckNak(bool isAck, unsigned char* cmdId, int cmdLen) {
+        unsigned char ackNakFrame[6];
+        ackNakFrame[0] = 0x7E;  // SOF
+        ackNakFrame[1] = 0x10;  // FCS高字节（暂时为假设值）
+        ackNakFrame[2] = 0x21;  // FCS低字节（暂时为假设值）
+        ackNakFrame[3] = isAck ? 0x01 : 0x00;  // 控制字节：ACK 或 NAK
+        memcpy(&ackNakFrame[4], cmdId, cmdLen);  // 添加命令ID
+        ackNakFrame[5] = 0x7E;  // EOF
+
+        qDebug() << "Sending ACK/NAK frame.";
+        // 调用发送函数，发送帧
+        sendFrame(ackNakFrame, sizeof(ackNakFrame));
+    }
+
+    // 发送帧（示例，实际实现可能依赖硬件接口）
+    void sendFrame(unsigned char* frame, int frameLen) {
+        // 这里是发送帧的实现逻辑（例如通过 CAN 总线发送）
+        for (int i = 0; i < frameLen; i++) {
+            printf("%02X ", frame[i]);
+        }
+        printf("\n");
+    }
+
+    // 接收到新数据时的处理
+    void CanImplNewDataSlot(unsigned char* pData, int dataLen) {
+        qDebug() << "Received data of length: " << dataLen;
+
+        // 帧同步
+        if (!syncFrame(pData, dataLen)) {
+            return;
+        }
+
+        // 校验 CRC
+        if (!validateFCS(pData, dataLen)) {
+            sendAckNak(false, pData, 2);  // 校验失败，发送 NAK
+            return;
+        }
+
+        // 解析命令帧
+        processStartupFrame(pData, dataLen);
+
+        // 发送 ACK 确认帧
+        sendAckNak(true, pData, 2);  // 校验通过，发送 ACK
+    }
+};
+
+int main() {
+    CanModuleImpl canModule;
+    
+    // 示例数据（此数据可根据实际情况进行替换）
+    unsigned char exampleData[] = {
+        0x7E, 0x31, 0x26, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x7E
+    };
+    int dataLen = sizeof(exampleData) / sizeof(exampleData[0]);
+
+    // 调用处理函数
+    canModule.CanImplNewDataSlot(exampleData, dataLen);
+    
+    return 0;
+}
+
+说明：
+
+    CRC 校验：
+        calculateCRC16 函数计算 CRC16 校验值，使用 CRC16-CCITT 算法。
+        validateFCS 函数根据计算的 CRC 值与接收到的 FCS 进行比对，判断数据是否正确。
+
+    帧同步：
+        syncFrame 函数会识别并忽略连续的 0x7E 字节，直到接收到有效数据。
+
+    帧处理：
+        processStartupFrame 函数根据命令ID解析帧数据，并调用对应的处理函数（如 processStartupInfo 或 processVehicleInfo）。
+        您可以根据需要扩展 processStartupInfo 和 processVehicleInfo 函数，以适应实际的帧解析需求。
+
+    ACK/NAK 发送：
+        sendAckNak 函数发送确认帧或否定帧，基于校验结果发送 ACK 或 NAK。
+
+    数据接收与处理：
+        CanImplNewDataSlot 函数是数据接收后的处理入口，首先同步帧并校验 CRC，然后解析命令，并最终发送 ACK 或 NAK。
+
+进一步扩展：
+
+    您可以根据实际的协议格式和命令 ID 来进一步扩展 processStartupInfo 和 processVehicleInfo 等函数。
