@@ -679,6 +679,10 @@ git commit -m '冲突解决'
 注意：输入git commit命令之前要git pull一下，更新到最新代码之后再提交自己的修改。不然如果别人先提交了同样的文件修改，就会跟你的提交产生冲突，你就提交不了了。需要整合冲突才能提交。方法就是先把冲突的文件从暂存区移出来，然后复制到另一个地方，然后使用git checkout命令删除当前文件的修改，更新最新代码，然后再重新把你的修改加进去（推荐使用Meld软件），重新add进去，然后commit，最后push。
 日常git status，在git  pull ，开始修改，修改完之后先git diff查看一下自己修改的地方，git add 再git pull 一下（如果冲突），先把冲突文件改名mv 文件名（冲突文件）其他命名，打开meld文件看一下两个文件哪里不一样，把其他命名那个文件的自己修改的添加到冲突文件里面，保存再git add，commit上传。平常如果编译了的话git clean -xdf 再git checkout . git status一下最后git  reset HEAD 文件（如果已经git add的话）
 
+4.find相关命令
+find . -name "lib*" -print 打印出来对应的格式
+find . -name "lib*" -delete 删除掉
+cp -r bt_release/* . 复制到对应的目录
 
 # 经验
 1. 增改翻译：先在系统.pro配置文件加上对应的ts：TRANSLATIONS = \ 
@@ -4483,6 +4487,19 @@ btsnoop.log
 8368C反馈蓝牙：
  8368-C 上的SHPE888蓝牙打印信息是ecos输出，后续测试时，请同步抓取linux + ecos两端打印信息；
 
+百瑞蓝牙模块反馈打印：
+
+logset ALOG_LEVEL v 
+logset ALOG_OUTPUT y 
+1. 在终端上执行：cp usr/local/etc/bluetooth/TL.INI media/flash/nvm
+2. vi media/flash/nvm/TL.INI
+3. 修改deg_l=3或者4，然后保存退出。
+4. 车机重新断电上电。
+5. 复现问题，复现到问题之后。
+6. 执行cp media/flash/userdata/btsnoop.log media/sda1/ (如果media/flash/userdata/btsnoop.log没有的话，那media/flash/nvm/btsnoop.log为生成btsnoop.log路径，media/sda1/这个路径为车机端u盘路径)
+7. 执行sync
+8. 将u盘中的btsnoop.log文件和抓取到车机端linux log给到我们这边。
+
 1211:
 1.1315N-11:bt通话正常，死机且自己断开蓝牙：（close）
 [10:29:56:021] [Bt_Stack][btif_hfu]name: hfu, bdaddr = D7:02:12:FF:3A:6C 
@@ -5031,37 +5048,258 @@ TD：1.1297wsc-JT8:先进入收音界面，再进入蓝牙搜索界面，点击R
 20250103:
 如果代码里面自己定义的宏文件不生效的，可以在对应的cpp里面加上#include "ProjectCfg.h"
 
+20250106:
+关于需要发蓝牙通话信息给仪表：
+outGoingSlot
+callProgressSlot
+incomingSlot
+这里前面连到infomoudle去会好点
+void TalkingWidget:: btCallStatesChangeSlot(QByteArray addr,BtCallEvent event)
+void btServicePhoneCbk::sendBtCallStatesChange(BTAddr *address, int sdValue)
+name = phonebookListModel->getTelNameByNum(number);
+
+
+rm -rf `find -iname libxxx.so`没效果
+find -iname 'libbluetooth_service.so' 递归目录
+find . -iname "*.so" > result.txt   查找该目录下的.so文件
+find . -type f -exec md5sum {} \; > md5sums.txt 重定向该目录每个文件的md5
+
+   nm -D libmylibrary.so | grep "my_function"
+
+    libmylibrary.so 替换成你的.so文件路径。
+    my_function 替换成你要查找的函数名。
+    -D 选项用于显示动态符号。如果找不到，尝试去掉 -D 或者使用 -C (demangle C++ names)。 如果函数名被修饰（例如C++函数），-C选项可以将修饰后的名称还原成可读的名称。
+
+关于删除：
+更安全的做法：先备份，后删除
+在删除之前，强烈建议先备份 .so 文件，以防万一：
+（xargs -I {} rm -rf {} 这部分命令会将 result.txt 中的每一行作为 {} 的值传递给 rm -rf {} 命令。 -I {} 选项告诉 xargs 使用 {} 作为占位符。）
+find . -iname "*.so" -exec cp -r {} {}.bak \;
+find . -iname "*.so" > result.txt
+xargs -I {} rm -rf {} < result.txt
+
+这会先创建每个 .so 文件的备份（.so.bak），然后再删除原文件。
+如果只想要删除特定名称的 .so 文件:
+如果你只想删除特定名称的 .so 文件，例如包含 "bluetooth" 的 .so 文件，可以使用以下命令：
+
+find . -iname "*bluetooth*.so" > result.txt
+xargs -I {} rm -rf {} < result.txt
+ 
+nm -D libwork_queue.so | grep AccWorkQueue  查找动态库里面的函数
+
+一次查找编译报错过程：
+在makefile里面git diff 看到有更新的地方
+ -lwork_queue 到你的 LDFLAGS，仍然出现 undefined reference to 'service_utils::AccWorkQueue::start()' 错误，说明链接器仍然找不到 AccWorkQueue::start() 函数的实现。 问题可能出在以下几个方面：
+
+    库文件路径: 虽然你使用了 -lwork_queue，但链接器可能找不到 libwork_queue.so (或 .a) 文件的实际位置。 你需要确保 libwork_queue.so 位于链接器能够搜索到的目录中。 你可以尝试以下几种方法：
+
+        使用 -L 选项指定库文件路径: 在你的 LDFLAGS 中添加 -L<path_to_work_queue_library>，其中 <path_to_work_queue_library> 是 libwork_queue.so 文件所在的目录。 例如： LDFLAGS += -L/path/to/your/libraries -lmessage_queue -lwork_queue -nostartfiles -Werror
+
+        设置环境变量 LIBRARY_PATH: 设置 LIBRARY_PATH 环境变量，让链接器搜索指定的目录。 但这通常不是推荐的做法，因为可能会导致其他问题。
+
+    库文件名称: 确保库文件的名称确实是 libwork_queue.so (或者 libwork_queue.a 如果是静态库)。 如果名称不同，需要将 -lwork_queue 更改为正确的库文件名。
+
+    编译顺序: 链接器的链接顺序可能会影响结果。 尝试调整链接库的顺序，将 -lwork_queue 放在 -lmessage_queue 之后，或者根据依赖关系调整顺序。
+
+    库文件本身的问题: libwork_queue.so 本身可能存在问题，例如：
+        AccWorkQueue::start() 函数没有被正确导出。
+        库文件损坏或不完整。
+        编译 libwork_queue.so 时使用了不同的编译器或编译选项，导致符号不兼容。 请检查 libwork_queue.so 的编译环境与你的项目是否一致。
+
+    命名空间: service_utils 命名空间可能导致问题。 确保 AccWorkQueue 类及其成员函数在 libwork_queue.so 中正确地定义在 service_utils 命名空间内，并且你的代码也正确地使用了这个命名空间。
+
+调试步骤:
+
+    检查 libwork_queue.so 是否存在并且包含 AccWorkQueue::start(): 使用 nm -D libwork_queue.so | grep AccWorkQueue 命令查看库文件中的符号。
+    打印编译命令: 查看你的编译命令，确保 -L 选项和 -lwork_queue 都正确地包含在内。
+    简化测试: 创建一个简单的测试程序，只包含 AccWorkQueue::start() 的调用，看看是否能成功链接。 这有助于隔离问题。
+
+
+git status | grep 'libwork_queue'
+这个命令会显示 git status 输出中包含 libwork_queue 的行。
+如果你只想筛选出修改过的文件，可以使用以下命令：
+git status | grep 'modified:' | grep 'libwork_queue'
+这个命令会显示 git status 输出中包含 libwork_queue 的行，并且这些行包含 modified: 关键字，表示文件被修改过。
+如果你想筛选出所有包含 libwork_queue 的文件，无论它们是修改过的还是新增的，可以使用以下命令：
+git status | grep -E 'modified:|new file:' | grep 'libwork_queue'
+这个命令会显示 git status 输出中包含 libwork_queue 的行，并且这些行包含 modified: 或 new file: 关键字，表示文件被修改过或新增。
+
+20250107:
+关于这个解析数据包的过程中：
+Frame structure：
+帧格式：
+SOF:      8 bits (0x7E)
+FCS:      16 bits (CRC over Control and Data fields)
+Control:  8 bits
+Data:     Variable length (0–n bytes)
+EOF:      8 bits (0x7E)
+
+
+SOF: 0x7E,
+FCS: 0x31, 0x26 [CRC16 结果通过控制/数据,MSB 优先]
+控制:
+0x03,
+数据:
+命令ID:
+0x00,
+0x00,
+数据:
+命令数据:
+0x00, 0x00, 0x00,
+(id 字节)
+0x00,
+(协议版本)
+0x00, 0x00, 0x00,
+(版本信息)
+0x00, 0x00, 0x00,
+(日期信息)
+0x00, 0x00, 0x00, 0x00,
+(校验和信息)
+数据文件结尾: 0x7E
+
+
+20250109:
+1.VA-650 红米rote11手机 连接 无线aa手机 ，连上之后去设备列表断开无线AA到蓝牙连接 ，去恢复出厂设置，高概率出现无法删除该设备
+[12:03:33:633] [QT] [UserUpdate] FactoryDefaultDialog ok:␍␊
+[12:03:33:638] [QT] [bluetoothmodule] btFactoryReset line: 4451 run␍␊
+[12:03:33:638] [QT] [bluetoothmodule] btSetServiceFactory line: 1655 run␍␊
+[12:03:33:645] [QT] [BlueToothModuleImpl] BTIMPL_SetServiceFactory line: 2665 run␍␊
+[12:07:48:956] root@Gemini:/#
+virtual BTResult BTSrv_factoryReset(void) = 0;
+BD_ADDR.INI          log.cfg
+0000.nfsbkp          RecordBtInfo.ini
+蓝牙复位问题，麻烦更新附件lib，我司提供两种处理方式：
+1.API调用：
+进行恢复出厂设置时，先调用BTSrv_disable，调用该接口关闭蓝牙，关闭后会收到蓝牙BTSrv_ServiceCBK case EVENT_SRV_BT_OFF，如下图所示，再去case中调用BTSrv_userReset；
+如贵司其他情况下也会调用BTSrv_disable，需要加标志位判断仅在恢复出厂设置时调用BTSrv_userReset；
+同时，不需要再调用BTResult BTSrv_factoryReset；
+2.删除蓝牙信息文件：
+进行恢复出厂设置时，使用系统命令删除文件：system("rm -rf media/flash/nvm/bt_config.xml");
+
+
+你好，彭工，是这样的，我们目前又遇到一个问题，就是车机在去恢复出厂设置时，还会有无法删除已经连接的蓝牙设备的情况
+凌阳公司之前回复说可以在使用进行恢复出厂设置时，使用系统命令删除文件：system("rm -rf media/flash/nvm/bt_config.xml");这个是SPHE888蓝牙模块存储的配对设备的地址
+但是百瑞的蓝牙模块编译的软件实际进去这个路径是没有发现有这个文件的，所以想问一下，你们百瑞蓝牙模块存储的配对设备的地址是什么路径下的什么文件 ，我们尝试在车机恢复出厂时删除这个文件对策蓝牙设备删除无法的问题
+address: 151 65 216 211 132 228␍redmi11 
+BTAddr: 97 41 d8 d3 84 e4 ==>ID: e484d3d84197
+
+root@Gemini:/tmp/sp/media/flash/nvm# cat peer_devices.txt                       
+root@Gemini:/tmp/sp/media/flash/nvm# cat RecordBtInfo.ini                       
+[BtInfo]                                                                        
+LocalBtAddr=047f0e600065                                                        
+root@Gemini:/tmp/sp/media/flash/nvm# cat BD_ADDR.INI                            
+047F0E600065root@Gemini:/tmp/sp/media/flash/nvm# 
+
+[QT] [BlueToothModuleImpl] BTIMPL_IsBtServiceEable line: 2293 run               
+[QT] [Error] [devicelistbluetooth] line: 377 IsBtServiceEable is false.
+[16:08:10:234] [QT] [BlueToothModuleImpl] BTIMPL_IsBtServiceEable line: 2293 run␍␊
+[16:08:10:234] [QT] [Error] [bluetoothmodule] line: 3874 IsBtServiceEable is false.
+
+Catch signum  = 11 [[BT_MW][BluetoothServer]]
+
+2.1315N-11概率性卡死问题
+Hi 陈工：
+2024-12-20T15:33:59.113 - E/AudioService(  697): [ linux/AudioThread.cpp run 170] ERR: create thread failed.
+2024-12-20T15:33:59.116 - W/AudioService(  697): [ linux/AudioConnection.cpp connect 295] WRN: run fail
+à麻烦确认一下，在调用SPAudioSetting.h对外头文件中的接口的时候，是否存在new了之后没有释放的问题
+根据之前的经验来讲，这里线程创建失败了，是因为AP创建了太多socket没有释放掉。
+
+1.RAII（资源获取即初始化）机制
+    C++ 中常见的做法是使用 RAII 来自动管理资源。你可以用智能指针（如 std::unique_ptr 或 std::shared_ptr），确保资源在超出作用域时自动释放： 
+2.确保 audio::SPAudioSetting::destroy() 真正释放了所有相关资源：
+    如果 destroy() 仅释放了 Volume 对象本身，而没有清理其内部资源（如 socket），仍然可能导致资源泄漏。
+
+20250113:
+ls -l /dev/ttyUSB*
+sudo chmod 666 /dev/ttyUSB0
+ g++ uart_test.cpp -o uart_test -std=c++11
+sudo ./uart_test
+
+20250115
+1315N-11:
+蓝牙自动化：
+
+item addr=[17][9a][78][56][34][32]
 
 
 
+2025-01-15T10:56:25.098 - [QT] BtPhoneActivity getUuidStateListByIndex row: 0 list size 0
+2025-01-15T10:56:25.098 - [QT] [BlueToothModuleImpl] BTIMPL_GetDeviceUuid line: 2780 run
+2025-01-15T10:56:25.098 - [Bt_Stack][bt_srv]BTSrv_getDeviceUuid
+2025-01-15T10:56:25.098 - [Bt_Stack][btdevmgr]found matched device
+2025-01-15T10:56:25.098 - [Bt_Stack][btdevmgr]there is no uuid exist in this device
+2025-01-15T10:56:25.098 - [Bt_Stack][bt_srv]get  pstUuid faild!!!
+2025-01-15T10:56:25.098 - E/[BT_MW][IBlueToothBn](  757): [onTransact:948] warring: get device uuid failed uuid_len is 125
+2025-01-15T10:56:25.098 - [QT] [Error] [BlueToothModuleImpl] line: 2789 BTIMPL_GetDeviceUuid error  1
 
 
+可疑：
+少了一次：[QT] [BlueToothModuleImpl] BTSrv_ServiceCBK :  EVENT_SRV_DISCOVERY_FINISHED
+BTSrv_setPairingConfirmation
+2025-01-15T10:56:18.414 - [QT] [basecontrol] nCmdID =  2 pCmdData =  0xb0920d28
+2025-01-15T10:56:23.718 - [QT] [BlueToothModuleImpl] BTSrv_ServiceCBK :  EVENT_SRV_PAIRING_REQUEST
+未收到 BTSrv_ConnectionCBK 
+SetBtPhoneActiveDeviceAddress
+2025-01-15T10:56:25.004 - [QT] [BlueToothModuleImpl] BTSrv_ServiceCBK :  EVENT_SRV_BOND_BONDED
+2025-01-15T10:56:25.098 - [QT] BtPhoneActivity getUuidStateListByIndex row: 0 list size 0
+0118又抓了新的打印：
+2025-01-18T12:02:25.275 - [QT] [BlueToothModuleImpl] BTSrv_ConnectionCBK :  HFPHF status DISCONNECTED
+2025-01-18T12:02:25.275 - [QT] [bluetoothmodule] checkBtAddressIsTheSameDevice line: 1986 run
+2025-01-18T12:02:25.291 - [QT] [Warning] [bluetoothmodule] line: 2587 ClearBtPhoneActiveDeviceAddress  Input address is not the same as BtPhoneActiveAddress.So return!
+2025-01-18T12:02:25.291 - W/        (  757): BTPhone not exists
+
+2025-01-21T16:08:11.616 - [Bt_Stack][btif_core]device not bonded
+m_AutoConnectAddr
+
+0121:
+2025-01-21T16:08:11.694 - [QT] BtPhoneActivity slotBtConnectStatesChange in profile: 0 state: 0
+2025-01-21T16:08:11.694 - [QT] BtPhoneActivity btCheckConnectState in profile: 0 state: 0
+2025-01-21T16:08:11.694 - [QT] BtPhoneActivity BtDiscoverListWidget [btConnectStateChangeSlot in] profile: 0 state: 0
+
+2025-01-21T16:08:14.570 - [Bt_Stack][btconn]item addr=[17][9a][78][56][34][32], profile=0, retryCounter=0
+ Remote device state:  1
+2025-01-21T16:08:14.445 - I/[BT_MW][SPHE888_BlueTooth](  758): [btSrv_getDeviceState:168] pstBtAddr(17:9a:78:56:34:32)
+2025-01-21T16:08:14.554 - [QT] BtPhoneActivity Auto Connect Start.
+2025-01-21T16:08:14.554 - [QT] BtPhoneActivity  m_nConnectedTotal:  0  m_AutoConnectAddr:  0x337dec  conDevInfo:  0xc
+1315B-11成功：
+[QT] [BlueToothModuleImpl] BTSrv_ServiceCBK :  EVENT_SRV_AUTOCONN_STOP
+
+[QT] [BlueToothModuleImpl] BTSrv_ConnectionCBK :  A2DPSNK status CONNECTING
 
 
+2025-01-15T12:10:01.983 - [QT] [basecontrol] nCmdID =  2 pCmdData =  0xb0923d28
+2025-01-15T12:10:06.462 - [QT] [BlueToothModuleImpl] BTIMPL_GetDeviceState line: 2393 run
+2025-01-15T12:10:06.462 - [BRT][sdk][service]----------->BTSrv_getDeviceState,bd_addr[323456789a17]
+2025-01-15T12:10:07.306 - [QT] BtPhoneActivity getUuidStateListByIndex row: 2 list size 2
+2025-01-15T12:10:07.306 - [QT] [BlueToothModuleImpl] BTIMPL_GetDeviceUuid line: 2803 run
+2025-01-15T12:10:07.306 - [BRT][sdk][service]----------->BTSrv_getDeviceUuid,bd_addr[323456789a17]
+2025-01-15T12:10:07.384 - [QT] BtPhoneActivity cleanBtnWidget 1290 discoverListModel->rowCount:  4 btnList.count:  3
+
+2025-01-15T12:10:09.198 - [QT] [BlueToothModuleImpl] BTSrv_ServiceCBK :  EVENT_SRV_PAIRING_REQUEST
+
+2025-01-15T12:10:09.307 - [QT] [wificontrolP] BTSrv_ServiceCBK  ifName: wlan0  accName: "Gemini000000"  event: 264
+2025-01-15T12:10:09.307 - [QT] [BlueToothModuleImpl] BTSrv_ServiceCBK :  EVENT_SRV_BOND_BONDED
+2025-01-15T12:10:09.557 - [QT] [BlueToothModuleImpl] BTSrv_ConnectionCBK :  A2DPSNK status CONNECTING
+
+20250120：
+isp.sh 改app大小
 
 
+20250121：
+自测单独连接蓝牙 
+bond=b3:81:b6:6b:80:e0:
+[QT] [BlueToothModuleImpl]  address: 179 129 182 107 128 224
 
+BtDiscoverListWidget::handleBtServiceEventSlot line: 1067 event: 5
+Local connection status for tempAddr:  0xbefff024
 
+deviceInfo->addr.address:  0x4216c0
+BtPairedListWidget::handleBtServiceEventSlot line: 1206 event: 5
 
+getIndexByAddr tempAddr.address:  0xbefff02c
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+20250124
+1315N11:蓝牙whatsapp来电，接听、通话、挂断，1.车机点击挂断通话，手机还在通话中 2.来电 接听，远端挂断电话，车机显示通话中 3.来电，没有接听键（100%）
 
 
 
