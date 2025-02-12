@@ -502,7 +502,7 @@ git rebase --abort 退出rebase 操作
 git stash（当当前分支工作区有代码还没完成，但你想要切换分支，就可以使用它，就可以实现现场的保护，把没完成的工作区的代码暂存起来）
 git stash list （列出所有的现场信息，也就是你切换之前保存的信息）
 git stash pop （现场恢复）
-
+git log --grep "自动化" (查找自动化的字眼的代码)
 git pull                    更新最新的代码状态
 git status|less             查看当前修改代码状态
 git checkout 文件名          删除当前文件的修改
@@ -524,6 +524,13 @@ git reset --hard HEAD^      撤销执行commit，连add也撤销（还没有执�
 git config user.name 'name'           修改git author用户名字
 git config user.email email-address   修改git author邮件地址
 git diff  --name-only  . |grep "cfg"    查看修改的文件里面包含cfg名字的
+
+
+远程仓库的 HEAD 指向无效引用：
+如之前所提到的，远程仓库的 HEAD 可能指向一个不存在的分支。在您使用 git init 和手动添加远程时，您绕过了这一点，因为 Git 没有尝试检出远程 HEAD。但是，git clone 会尝试检查出远程 HEAD，这可能导致问题。
+解决方法：如果您要使用 git clone，可以尝试在 git clone 后立即指定分支：
+git clone --single-branch --branch MaxmadeDevelop git@192.168.10.11:CAN-Dev-Project
+
 
 
 git reset：回退版本，可指定某一次提交的版本。git reset [--soft | --mixed | --hard] commitId。
@@ -5280,7 +5287,9 @@ m_AutoConnectAddr
 2025-01-15T12:10:09.307 - [QT] [wificontrolP] BTSrv_ServiceCBK  ifName: wlan0  accName: "Gemini000000"  event: 264
 2025-01-15T12:10:09.307 - [QT] [BlueToothModuleImpl] BTSrv_ServiceCBK :  EVENT_SRV_BOND_BONDED
 2025-01-15T12:10:09.557 - [QT] [BlueToothModuleImpl] BTSrv_ConnectionCBK :  A2DPSNK status CONNECTING
-
+该问题已解决，是888蓝牙模块连接速度的问题，之前配对连接太频繁导致蓝牙出问题，
+-            AutoTest_createConnectBtTimeOutTimer(1000);
++            AutoTest_createConnectBtTimeOutTimer(5000);
 20250120：
 isp.sh 改app大小
 
@@ -5300,6 +5309,237 @@ getIndexByAddr tempAddr.address:  0xbefff02c
 
 20250124
 1315N11:蓝牙whatsapp来电，接听、通话、挂断，1.车机点击挂断通话，手机还在通话中 2.来电 接听，远端挂断电话，车机显示通话中 3.来电，没有接听键（100%）
+找寻过程
+[14:12:45:301] root@Gemini:/#
+感觉少接收事件
+[14:12:26:888] [QT] phoneview/talking/talkingwidget.cpp [Debug] btCallStatesChangeSlot [--IN--] //为啥第一个不是outgoing
+[14:12:26:878] [QT] [BlueToothModuleImpl] BTPhoneCBK :  EVENT_PHONE_BTCALL_STATE_CHANGE  value 4105 //接打电话的事件
+[14:11:15:441] [QT] [Error] [BlueToothModuleImpl] line: 3018 BTPhoneIMPL_getHoldCallCallNum error  1
+
+跟手机有关，需要跟凌阳讨论
+
+20250206:
+USB音频与BT MUSIC之间来回反复切换，蓝牙自动断开、蓝牙设备消失（100%）
+[11:14:23:541] /FPSession  error: 2331␍␊
+[11:14:23:541] /FPSession  prepared␍␊
+[11:14:23:541] D/FPSession setState(859):emit state 4␍␊
+[11:14:23:541] V/FPMetaSession updateAVMetadata(601) called␍
+[11:14:23:833] [ playback ][ FFmpegMetaData.cpp openThumbnailDecoderContexfind video stream failed(-1381258232)␍␊
+[11:14:23:833] [ playback ][ FFmpegMetaData.cpp thumbnail 751] WRN: open thumbnail decoder failed
+[11:14:25:558] [Bt_Stack][gsl_queue][trackQueue] queue normal space has full!, current/max=60/60␍␊
+[11:14:25:558] Msg:[BTAUDIO_TRACK_MSG_DATA_IN] Send Fail !! ret=7␍␊
+[11:14:25:777] [bt_audio_mw_adapter_audioservice/track/ImplAudioPlayerAdapter.cpp write:186] track is not started.So return.
+[11:14:25:829] [QT] [BlueToothModuleImpl] BTAudioCBK : EVENT_AUDIO_AVDTP_STATUS_INDK_TTYS: free_irq(103)␍␊
+[11:14:25:840] [QT] [BlueToothModuleImpl] BTSrv_ServiceCBK :  EVENT_SRV_BT_OFF␍␊
+[11:14:25:841] [QT] [bluetoothmodule] ruleTriggerHfpDisConnect line: 4089 run␍
+
+20250208：
+（苹果11MAX\ios18.0.1）蓝牙连接状态，连接CP，CP来去电通话，结束电话，断开CP，蓝牙自动连接上后，播放蓝牙音乐，蓝牙音乐音频输出失真
+[11:27:48:338] [QT] [CarplayModuleImpl] --------- detach 2968 2 //拔出cp
+[11:27:48:432] [QT] [BlueToothModuleImpl] BTSrv_ConnectionCBK :  A2DPSNK status CONNECTING //我感觉应该是先连上hfp才对吧
+[11:27:48:440] [QT] [Audiocontrol] tune BT mic
+
+[11:28:03:735] [QT] [BlueToothModuleImpl] BTSrv_ConnectionCBK :  A2DPSNK status CONNECTED//这个时候才连上a2dp
+
+
+接听电话时：
+[11:27:36:989] [QT] [CarplayModuleImpl] --------- setPhoneCallState2 1559 true
+[11:27:37:000] [QT] [CarplayModuleImpl] m_clearEqSetting line: 2398 run
+[11:27:37:000] [QT] [Audiocontrol] setFadeBalance 0 0
+[11:27:37:000] [QT] [Audiocontrol] gainX 100 gainY 100
+[11:27:37:000] [QT] [Audiocontrol] setFadeBalance 1254 @@@ ???
+[11:27:37:007] dma11 staus 18000000
+[11:27:37:014] [QT] [Audiocontrol] setFadeBalance 1281 @@@ ???
+[11:27:37:014] [QT] [Audiocontrol] setFadeBalance 1308 @@@ ???
+[11:27:37:017] [QT] [Audiocontrol] setFadeBalance 1318 @@@ ???
+[11:27:37:017] [QT] [Audiocontrol] setFadeBalance 1328 @@@ ???
+[11:27:37:019] [QT] [Audiocontrol] setFadeBalance 1340 @@@ ???
+[11:27:37:019] [QT] [Audiocontrol] LFChannel 1 100
+[11:27:37:019] [QT] [Audiocontrol] RFChannel 2 100
+[11:27:37:019] [QT] [Audiocontrol] LSChannel 4 100
+[11:27:37:019] [QT] [Audiocontrol] RSChannel 8 100
+[11:27:37:032] [QT] [Audiocontrol] setEQByEqMode 3358 eq mode =  0
+[11:27:37:032] [QT] [Audiocontrol] 0 eq freq val is: (50, 200, 400, 800, 1000, 3000, 7000, 15000)
+[11:27:37:034] [QT] [Audiocontrol] 0 eq val is: (0, -3, -4, -3, 1, 3, 5, 0)
+[11:27:37:034] [QT] [Audiocontrol] 0 eq QGain val is: (3, 3, 3, 3, 3, 3, 3, 3)
+[11:27:37:046] [QT] [Audiocontrol] set eq channel 65535
+[11:27:37:055] [QT] [Warning] [CarplayModuleImpl] line: 474 phoneEntity changed  to Controller
+
+结束电话时：
+[11:27:45:413] [QT] [CarplayModuleImpl] --------- setPhoneCallState2 1559 false
+[11:27:45:413] [QT] [CarplayModuleImpl] m_resumeExeEqSetting line: 2424 run
+[11:27:45:416] Ack id 26 send id 2b
+[11:27:45:419] [QT] [Audiocontrol] setFadeBalance 0 0
+[11:27:45:419] [QT] [Audiocontrol] gainX 100 gainY 100
+[11:27:45:419] [QT] [Audiocontrol] setFadeBalance 1254 @@@ ???
+[11:27:45:422] [QT] [Audiocontrol] setFadeBalance 1281 @@@ ???
+[11:27:45:422] [QT] [Audiocontrol] setFadeBalance 1308 @@@ ???
+[11:27:45:424] [QT] [Audiocontrol] setFadeBalance 1318 @@@ ???
+[11:27:45:427] [QT] [Audiocontrol] setFadeBalance 1328 @@@ ???
+[11:27:45:427] [QT] [Audiocontrol] setFadeBalance 1340 @@@ ???
+[11:27:45:427] [QT] [Audiocontrol] LFChannel 1 100
+[11:27:45:427] [QT] [Audiocontrol] RFChannel 2 100
+[11:27:45:427] [QT] [Audiocontrol] LSChannel 4 100
+[11:27:45:427] [QT] [Audiocontrol] RSChannel 8 100
+[11:27:45:438] [QT] [Audiocontrol] read balance mode: 4
+[11:27:45:443] [QT] [Audiocontrol] read fade and blance: 0 0
+[11:27:45:460] [QT] [CarplayModuleImpl] --------- creatSubwooferTimer 3080
+[11:27:45:460] [QT] [Warning] [CarplayModuleImpl] line: 512 phoneEntity changed abnormally to unknown
+
+[11:27:37:060] [QT] [Warning] [CarplayModuleImpl] line: 653 modesChanged elapsed: 120 ms
+[11:27:37:060] E/AppleCarPlay(  766): <CarPlayClient>00:00:52.897 [_AirPlaySessionModesChanged] delegate->modesChanged used[122ms] > limit[100ms]
+[11:27:37:060] modesChanged 624 1 1
+[11:27:45:578] [QT] [ActivityManagerImpl] sltAudioPlayTrigger Send src: "S+CarPlayMedia_APP" id: 53
+[11:27:45:581] Ack id 29 send id 2c
+[11:27:45:585] W/AudioService(  766): [S+CarPlayMedia src/ClientSink.cpp ClientSink 114] WRN: MainAudioTrack:realtime
+[11:27:45:641] W/CarPlayAudio(  766): baseProcessedSamples 0
+后面我用900蓝牙模块抓打印：
+[12:01:19:224] [QT] [USBcontrol] detach 286
+[12:02:53:797] [QT] [CarplayModuleImpl] --------- detach 2967 1
+[12:02:53:884] [QT] [Audiocontrol] tune BT mic
+[21:13:11:875] I/AppleCarPlay(  766): <CarPlayClient>00:01:55.072 [_AirPlaySessionModesChanged] delegate->modesChanged used[64ms]
+[21:13:18:637] [QT] [ActivityManagerImpl] sltAudioPlayTrigger Send src: "S+CarPlayMedia_APP" id: 53␍␊
+[21:13:18:637] I/AppleCarPlay(  766): <AirPlay>00:02:01.830 [_requestProcessSetupPlist] Setup start␍␊
+[21:13:18:637] I/AppleCarPlay(  766): <AirPlay>00:02:01.830 [_MainAltAudioSetup] Main Get 'bufferMs' value(32ms)
+[21:13:18:637] I/AppleCarPlay(  766): <CarPlayClient>00:02:01.832 [_initAudio] _initAudio
+[21:13:19:053] [QT] [Audiocontrol] AudioControl::refreshMainTrackStepVolume
+
+
+
+
+20250208:
+whatsapp死机
+2025-02-08T14:32:14.221 - [QT] [Platformcontrol] setHardMute unmute
+ [QT] [CarplayModuleImpl] --------- modesChanged 598
+2025-02-08T14:33:31.481 - [QT] [CarplayModuleImpl] --------- takeReverseEndFlag 1185
+2025-02-08T14:33:31.482 - [QT] [CarplayModuleImpl] --------- speechEntityChangedByiPhone 560 0
+2025-02-08T14:33:31.483 - [QT] [Warning] [CarplayModuleImpl] line: 572 speechEntity changed abnormally to unknown
+2025-02-08T14:33:31.486 - [QT] [CarplayModuleImpl] --------- speechModeChangedByiPhone 518 -1
+2025-02-08T14:33:31.519 - W/CarPlayAudio(  766): baseProcessedSamples 0
+2025-02-08T14:33:31.948 - [QT] [Audiocontrol] get APIVol SrcName =  "S+CarPlayMedia_APP" nUserVol =  10
+2025-02-08T14:33:31.949 - [QT] [Audiocontrol] main S+CarPlayMedia "S+CarPlayMedia_APP" changed to  10 25 25
+2025-02-08T14:33:31.952 - ================>>>set hard mute false
+2025-02-08T14:33:31.952 - [QT] [Platformcontrol] setHardMute unmute
+2025-02-08T14:33:32.067 - NOTICE:: Dump backtrace to DFB_CRASH_OUTPUT=/media/flash/nvm/dfb_crash.dump 
+2025-02-08T14:33:32.072 - ::print stack trace begin:: 
+2025-02-08T14:33:32.073 - #3  0x41169cdc [/usr/local/qt/lib/libQt5Core.so.5(_ZN6QTimerC1EP7QObject+0x3b) [0x41169cdc]]
+2025-02-08T14:33:32.074 - #2  0x41805a00 [/lib/libc.so.6() [0x41805a00]]
+2025-02-08T14:33:32.074 - #1  0xb6efa43a [/usr/local/lib/libdirect-1.6.so.0(+0xa43a) [0xb6efa43a]]
+2025-02-08T14:33:32.078 - #0  0xb6efa244 [/usr/local/lib/libdirect-1.6.so.0(+0xa244) [0xb6efa244]]
+2025-02-08T14:33:32.078 - ::print stack trace end   ::
+2025-02-08T14:33:32.104 - (!) [Main Thread       53.138,613] (  696) Direct/Signals:                --> Caught signal 11 (at 0x8, invalid address) SIGSEGV, SEGV_MAPERR<--
+
+20250210:
+问题6671_播放蓝牙音乐，acc off-on，车机卡死在蓝牙音乐界面:
+[2025-02-08 17:40:28] 11111111111111111111111111111111111111111111111111111111111111111
+[2025-02-08 17:39:25] E/[BT_MW][BlueToothServerToApplicationEventHandler](  921): [BTServiceCbk:27] bluetooth is reEnable by bluetooth server die.Don't send to Application client.So break.
+[2025-02-08 17:39:25] [QT] [BlueToothModuleImpl] BTIMPL_IsBtServiceEable line: 2331 run
+[2025-02-08 17:39:25] [QT] [Error] [bluetoothmodule] line: 3242 IsBtServiceEable is false.
+[2025-02-08 17:39:25] Catch signum  = 6 [[BT_MW][BluetoothServer]]
+[2025-02-08 17:39:25] Catch signum  = 11 [[BT_MW][BluetoothServer]]
+[2025-02-08 17:39:25] [QT] [BlueToothModuleImpl] BTSrv_ServiceCBK :  EVENT_SRV_BT_OFF
+
+上一次正常：
+[2025-02-08 17:38:37] [Bt_Stack][btif_dm][XRedmi123456789876543212345678]:27:79:4D:04:46:88 
+[2025-02-08 17:38:37] [Bt_Stack][btif_dm]upstreams=BTIF_UPEVT_REMOTE_PROPERTY
+[2025-02-08 17:38:37] [Bt_Stack][bt_srv]btif_cbk::remote_pty
+[2025-02-08 17:38:37] [Bt_Stack][btdevmgr]found matched device
+[2025-02-08 17:38:37] [Bt_Stack][bt_srv]pty type=1
+[2025-02-08 17:38:37] [Bt_Stack][bt_srv]pty type=10
+[2025-02-08 17:38:37] [Bt_Stack][bt_srv]pty type=4
+[2025-02-08 17:38:37] [Bt_Stack][bt_gsl]BT_GL_QueueCreate
+[2025-02-08 17:38:37] [Bt_Stack][gl_task]pthread btif_HfuTask, StackSize =4096
+[2025-02-08 17:38:37] [Bt_Stack][gl_task]pthread create : threadid =-1238576048
+[2025-02-08 17:38:37] [Bt_Stack][bt_gsl]BT Task Created: id=0xb6eb50ac, name=btif_HfuTask
+[2025-02-08 17:38:37] [Bt_Stack][bt_phone_mgr]init_phone
+[2025-02-08 17:38:37] [Bt_Stack][bt_srv]pty type=5
+[2025-02-08 17:38:37] [Bt_Stack][bt_srv]pty type=3
+[2025-02-08 17:38:37] [Bt_Stack][bt_srv]pty type=14
+[2025-02-08 17:38:37] [Bt_Stack][btcbk]msg=0x0200
+[2025-02-08 17:38:37] [Bt_Stack][btcbk]doSrvCallback msg:519
+[2025-02-08 17:38:37] [QT] [wificontrolP] BTSrv_ServiceCBK  ifName: wlan0  accName: ""  event: 268
+
+
+异常时：
+[2025-02-08 17:39:25] [Bt_Stack][btif_dm][XRedmi123456789876543212345678]:27:79:4D:04:46:88 
+[2025-02-08 17:39:25] [Bt_Stack][bt_gsl]BT_GL_QueueCreate
+[2025-02-08 17:39:25] [Bt_Stack][gl_task]pthread btif_HfuTask, StackSize =4096
+[2025-02-08 17:39:25] [Bt_Stack][gl_task]pthread create : threadid =-1238576048
+[2025-02-08 17:39:25] [Bt_Stack][bt_gsl]BT Task Created: id=0xb6eb50ac, name=btif_HfuTask
+[2025-02-08 17:39:25] [Bt_Stack][bt_phone_mgr]init_phone
+[2025-02-08 17:39:25] [Bt_Stack][btif_dm]upstreams=BTIF_UPEVT_REMOTE_PROPERTY
+[2025-02-08 17:39:25] [Bt_Stack][bt_srv]btif_cbk::remote_pty
+[2025-02-08 17:39:25] [Bt_Stack][btdevmgr]found matched device
+[2025-02-08 17:39:25] [Bt_Stack][bt_srv]pty type=1
+[2025-02-08 17:39:25] [Bt_Stack][bt_srv]pty type=10
+[2025-02-08 17:39:25] [Bt_Stack][bt_srv]pty type=4
+[2025-02-08 17:39:25] [Bt_Stack][bt_srv]pty type=5
+[2025-02-08 17:39:25] [Bt_Stack][bt_srv]pty type=3
+[2025-02-08 17:39:25] Catch signum  = 11 [[BT_MW][BluetoothServer]]
+[2025-02-08 17:39:25] info.si_pid   = 8
+[2025-02-08 17:39:25] info.si_uid   = 0
+[2025-02-08 17:39:25] info.si_signo = 11
+[2025-02-08 17:39:25] info.si_errno = 0
+[2025-02-08 17:39:25] info.si_code  = 1
+[2025-02-08 17:39:25] info.si_addr  = 0x8
+[2025-02-08 17:39:25] 
+[2025-02-08 17:39:25] ---------backtrace-------------
+[2025-02-08 17:39:25] [Bt_Stack][bt_gsl]BT_GL_QueueCreate
+[2025-02-08 17:39:25] [Bt_Stack][gl_task]pthread btif_HfgTask, StackSize =4096
+[2025-02-08 17:39:25] /usr/local/bin/bluetooth_server[0x9942]
+[2025-02-08 17:39:25] [Bt_Stack][gl_task]pthread create : threadid =-1238592432
+[2025-02-08 17:39:25] [Bt_Stack][bt_gsl]BT Task Created: id=0xb6eb5114, name=btif_HfgTask
+[2025-02-08 17:39:25] [Bt_Stack][gl_task]get thread tid = 918
+[2025-02-08 17:39:25] [Bt_Stack][gl_task]get thread tid = 919
+[2025-02-08 17:39:25] [Bt_Stack][btif_hfg]run _btif_hfg_task
+[2025-02-08 17:39:25] /lib/libc.so.6[0x41805a00]
+[2025-02-08 17:39:25] /lib/libc.so.6(memcpy+0xc8)[0x41835c08]
+[2025-02-08 17:39:25] [Bt_Stack][btaudmgr]BTAudioMgr_init
+[2025-02-08 17:39:25] [Bt_Stack][BTIF_AVSNK]init
+[2025-02-08 17:39:25] [Bt_Stack][BTIF_AV]BTIF_AV_hal_init,MyRole[3]
+[2025-02-08 17:39:25] [Bt_Stack][BTIF_RCT]## init ##
+[2025-02-08 17:39:25] [Bt_Stack][BTIF_RC_CT_CORE]BTIF_RC_CT_hal_init
+[2025-02-08 17:39:25] [Bt_Stack][btspp_mgr]BTSppMgr_init
+[2025-02-08 17:39:25] [Bt_Stack][BTIF_SPP]BTIF_SPP_init
+[2025-02-08 17:39:25] [Bt_Stack][btHidMgr]BTHidMgr_init
+[2025-02-08 17:39:25] [Bt_Stack][BTIF_HID]btif_hid_get_interface
+[2025-02-08 17:39:25] [Bt_Stack][BTIF_HID]_btif_hid_init
+[2025-02-08 17:39:25] [Bt_Stack][BTIF_HID]BTIF_HID_init
+[2025-02-08 17:39:25] [Bt_Stack][btHidMgr]init_hid
+[2025-02-08 17:39:25] [Bt_Stack][btrfcsrv_mgr]BTRfcSrvMgr_init
+[2025-02-08 17:39:25] [Bt_Stack][BTIF_RFCSRV]BTIF_RfcSrv_init
+[2025-02-08 17:39:25] Catch signum  = 6 [[BT_MW][BluetoothServer]]
+[2025-02-08 17:39:25] info.si_pid   = 757
+[2025-02-08 17:39:25] info.si_uid   = 0
+[2025-02-08 17:39:25] info.si_signo = 6
+[2025-02-08 17:39:25] info.si_errno = 0
+[2025-02-08 17:39:25] info.si_code  = -6
+[2025-02-08 17:39:25] info.si_addr  = 0x2f5
+[2025-02-08 17:39:25] 
+[2025-02-08 17:39:25] ---------backtrace-------------
+[2025-02-08 17:39:25] /usr/local/bin/bluetooth_server[0x9942]
+[2025-02-08 17:39:25] /lib/libc.so.6[0x41805a00]
+[2025-02-08 17:39:25] /lib/libc.so.6[0x417f8d46]
+[2025-02-08 17:39:25] /lib/libc.so.6(gsignal+0x37)[0x41804e94]
+[2025-02-08 17:39:25] /lib/libc.so.6(abort+0xd9)[0x41807166]
+[2025-02-08 17:39:25] /lib/libc.so.6[0x41825dea]
+[2025-02-08 17:39:25] /lib/libc.so.6[0x4182c2b8]
+[2025-02-08 17:39:25] /lib/libc.so.6[0x4182caf8]
+[2025-02-08 17:39:25] /lib/libc.so.6[0x41808034]
+[2025-02-08 17:39:25] /lib/libc.so.6(exit+0xb)[0x41808068]
+[2025-02-08 17:39:25] /usr/local/bin/bluetooth_server[0x99e0]
+[2025-02-08 17:39:25] /lib/libc.so.6[0x41805a00]
+[2025-02-08 17:39:25] /lib/libc.so.6(memcpy+0xc8)[0x41835c08]
+[2025-02-08 17:39:25] [QT] [wificontrolP] BTSrv_ServiceCBK  ifName: wlan0  accName: ""  event: 260
+[2025-02-08 17:39:25] [QT] [BlueToothModuleImpl] BTSrv_ServiceCBK :  EVENT_SRV_BT_OFF
+
+
+
+
+
+
+
+
 
 
 
@@ -5307,78 +5547,7 @@ getIndexByAddr tempAddr.address:  0xbefff02c
 
 
 # 需求
-展望：
-*  学会makefile，编写新项目的快速脚本
-*   怎么给人带来价值
-*   读懂各种与can，dab模块通信的协议，如何处理mcu发过来的数据
-*   物联网，处理语音（信号与解调）
-*  与车载行业有关的can诊断通讯（uds），中控驱动屏幕，与电机有关的无刷电机（FOC算法）
-* 搞一个与后续有关的合订本APP，
-一、需求转换或者叫理解需求；
 
-二、分配时间；
-
-三、开发质量的问题；
-
-
-
-1. pcQT完全重装（注册表），解决QT打包dll污染问题 
-（该问题已经通过拷贝王云杰电脑的qt5.99成功解决了）
-2. -65生产软件对策
-1297w，1307W（两个加了宏，需要重新编译，但是其实速度已经是10s左右了，不算卡，实际不知道是否需要；2267W要重新编译，去了过滤事件的宏，对策acc起来识别不了大灯的情况）
-3. Y-39-55完善CMMI文档
-（接口那个文档暂时还没写）
-4. 接过振昊空调CAN协议的的任务
-
-5. 广汽项目的CAN模拟器(可以模仿前人脚步)
-
-6. 缺少隐藏选项开关（ui宏前面不要带空格，脚本无法搜索替换，导致遗留部分流程代码）
-7. 更换频宽和国家码
-8. CPPCHECK和GOOGLE TEST框架结合起来自动测试单元测试：
-你可以结合CPPcheck和单元测试框架来进行C++代码的自动化单元测试和静态代码分析。下面是一个示例的C++代码自动化单元测试脚本，其中包括对代码的静态分析：
-
-
-#include <gtest/gtest.h>
-#include <cppcheck/cppcheck.h>
-
-TEST(MyTest, AdditionTest) {
-    int result = 2 + 2;
-    EXPECT_EQ(result, 4);
-}
-
-TEST(MyTest, SubtractionTest) {
-    int result = 5 - 3;
-    EXPECT_EQ(result, 2);
-}
-
-TEST(MyTest, StaticAnalysis) {
-    const char* cppFiles[] = {"file1.cpp", "file2.cpp"};
-
-    for (const char* file : cppFiles) {
-        std::string errorMessage;
-        if (!CppCheck::check(file, errorMessage)) {
-            FAIL() << "Static analysis failed for file: " << file << "
-"
-                   << errorMessage;
-        }
-    }
-}
-
-int main(int argc, char** argv) {
-    testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}
-
-在上述示例中，我们在MyTest测试套件中增加了一个测试用例StaticAnalysis，用于进行静态代码分析。在该测试用例中，我们遍历了需要进行静态分析的C++源文件，然后使用CPPcheck进行静态分析。
-
-在StaticAnalysis测试用例中，如果CPPcheck检测到错误，我们使用FAIL()宏来标记测试失败，并输出错误信息。这样，如果代码中有静态分析错误，测试框架会将其报告为测试失败。
-
-你可以将以上代码与CPPcheck和Google Test框架一起编译和运行，以进行C++代码的自动化单元测试和静态代码分析。请确保已正确安装和配置CPPcheck，并将其可执行文件路径添加到系统的PATH环境变量中。
-
-同时，你也可以根据需要自定义CPPcheck的参数和规则，以满足对代码进行更详细的静态分析的需求。
-
-
-# work:
 * 1295WS-65HS的项目移植
 主界面，设置与未TD同步，GPStracker,smartlock,改分辨率
 
@@ -5480,6 +5649,78 @@ RDS功能在-65上都没做
 1.有时候噪音很大，像鞭炮声音一样听不清声音
 2.经常会有敲击桌子的噪音，这个与麦克风增益有关，调大就会更大
 3.双方讲话会卡顿，不完整
+
+
+1. pcQT完全重装（注册表），解决QT打包dll污染问题 
+（该问题已经通过拷贝王云杰电脑的qt5.99成功解决了）
+2. -65生产软件对策
+1297w，1307W（两个加了宏，需要重新编译，但是其实速度已经是10s左右了，不算卡，实际不知道是否需要；2267W要重新编译，去了过滤事件的宏，对策acc起来识别不了大灯的情况）
+3. Y-39-55完善CMMI文档
+（接口那个文档暂时还没写）
+4. 接过振昊空调CAN协议的的任务
+
+5. 广汽项目的CAN模拟器(可以模仿前人脚步)
+
+6. 缺少隐藏选项开关（ui宏前面不要带空格，脚本无法搜索替换，导致遗留部分流程代码）
+7. 更换频宽和国家码
+8. CPPCHECK和GOOGLE TEST框架结合起来自动测试单元测试：
+你可以结合CPPcheck和单元测试框架来进行C++代码的自动化单元测试和静态代码分析。下面是一个示例的C++代码自动化单元测试脚本，其中包括对代码的静态分析：
+
+
+#include <gtest/gtest.h>
+#include <cppcheck/cppcheck.h>
+
+TEST(MyTest, AdditionTest) {
+    int result = 2 + 2;
+    EXPECT_EQ(result, 4);
+}
+
+TEST(MyTest, SubtractionTest) {
+    int result = 5 - 3;
+    EXPECT_EQ(result, 2);
+}
+
+TEST(MyTest, StaticAnalysis) {
+    const char* cppFiles[] = {"file1.cpp", "file2.cpp"};
+
+    for (const char* file : cppFiles) {
+        std::string errorMessage;
+        if (!CppCheck::check(file, errorMessage)) {
+            FAIL() << "Static analysis failed for file: " << file << "
+"
+                   << errorMessage;
+        }
+    }
+}
+
+int main(int argc, char** argv) {
+    testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}
+
+在上述示例中，我们在MyTest测试套件中增加了一个测试用例StaticAnalysis，用于进行静态代码分析。在该测试用例中，我们遍历了需要进行静态分析的C++源文件，然后使用CPPcheck进行静态分析。
+
+在StaticAnalysis测试用例中，如果CPPcheck检测到错误，我们使用FAIL()宏来标记测试失败，并输出错误信息。这样，如果代码中有静态分析错误，测试框架会将其报告为测试失败。
+
+你可以将以上代码与CPPcheck和Google Test框架一起编译和运行，以进行C++代码的自动化单元测试和静态代码分析。请确保已正确安装和配置CPPcheck，并将其可执行文件路径添加到系统的PATH环境变量中。
+
+同时，你也可以根据需要自定义CPPcheck的参数和规则，以满足对代码进行更详细的静态分析的需求。
+
+
+# work:
+展望：
+*  学会makefile，编写新项目的快速脚本
+*   怎么给人带来价值
+*   读懂各种与can，dab模块通信的协议，如何处理mcu发过来的数据
+*   物联网，处理语音（信号与解调）
+*  与车载行业有关的can诊断通讯（uds），中控驱动屏幕，与电机有关的无刷电机（FOC算法）
+* 搞一个与后续有关的合订本APP，
+一、需求转换或者叫理解需求；
+
+二、分配时间；
+
+三、开发质量的问题；
+
 
 
 
