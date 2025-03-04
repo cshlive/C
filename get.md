@@ -525,6 +525,58 @@ git config user.name 'name'           修改git author用户名字
 git config user.email email-address   修改git author邮件地址
 git diff  --name-only  . |grep "cfg"    查看修改的文件里面包含cfg名字的
 
+二分法查找问题：
+``````
+# 开始二分查找
+git bisect start
+
+# 标记当前提交为“坏”提交
+git bisect bad
+
+# 标记一个已知的“好”提交（例如一个月前的提交）
+git bisect good abc1234
+
+# Git 会自动选择中间的提交，并切换到该提交
+# 测试当前提交是否包含问题
+
+# 如果当前提交没有问题
+git bisect good
+
+# 如果当前提交有问题
+git bisect bad
+
+# 重复上述步骤，直到找到引入问题的提交
+
+# 完成查找后，退出 bisect 模式
+git bisect reset
+
+4. 快速命令
+如果你已经知道“好”和“坏”的提交，可以直接启动 git bisect：
+bash复制
+
+git bisect start <bad-commit> <good-commit>
+
+5. 自动化测试
+如果可以编写自动化测试脚本，git bisect 可以与脚本结合，自动运行测试并标记“好”或“坏”。例如：
+bash复制
+
+git bisect start
+git bisect bad
+git bisect good abc1234
+git bisect run ./test_script.sh
+
+./test_script.sh 是一个返回 0（表示“好”）或非 0（表示“坏”）的脚本。
+6. 注意事项
+
+    确保在开始 git bisect 之前，工作目录是干净的（没有未提交的更改）。
+    如果不确定某个提交的状态，可以跳过它：
+    bash复制
+
+    git bisect skip
+
+    如果中途需要退出，可以随时运行 git bisect reset。
+
+``````
 
 远程仓库的 HEAD 指向无效引用：
 如之前所提到的，远程仓库的 HEAD 可能指向一个不存在的分支。在您使用 git init 和手动添加远程时，您绕过了这一点，因为 Git 没有尝试检出远程 HEAD。但是，git clone 会尝试检查出远程 HEAD，这可能导致问题。
@@ -5093,6 +5145,26 @@ find . -iname "*bluetooth*.so" > result.txt
 xargs -I {} rm -rf {} < result.txt
  
 nm -D libwork_queue.so | grep AccWorkQueue  查找动态库里面的函数
+删除文件：
+方法 1：使用 xargs 删除文件
+
+find -iname 'libvideofunction.so' | xargs rm -f
+
+    find -iname 'libvideofunction.so'：查找所有名为 libvideofunction.so 的文件。
+    xargs rm -f：将查找到的文件路径传递给 rm 命令进行删除。
+
+方法 2：手动删除
+如果你只想删除特定的文件，可以根据以下路径手动删除：
+rm -f ./linux/sdk/out/appsdkfs/lib/libvideofunction.so
+rm -f ./linux/sdk/out/system/lib/libvideofunction.so
+rm -f ./linux/sdk/out/.systemout/lib/libvideofunction.so
+rm -f ./application/sdk/lib/libvideofunction.so
+
+方法 3：带 -exec 的 find
+find -iname 'libvideofunction.so' -exec rm -f {} \;
+
+    -exec rm -f {} \;：对每个查找到的文件执行 rm -f 删除操作
+
 
 一次查找编译报错过程：
 在makefile里面git diff 看到有更新的地方
@@ -5534,15 +5606,307 @@ whatsapp死机
 [2025-02-08 17:39:25] [QT] [BlueToothModuleImpl] BTSrv_ServiceCBK :  EVENT_SRV_BT_OFF
 
 20250212:
-关于GPS速度来控制parking，可以参考8368P项目的D_PARKING_CONTROL_BY_GPS_SPEED
+关于GPS速度来控制parking，可以参考8368P项目的D_PARKING_CONTROL_BY_GPS_SPEED或者D_PARKING_MODE_SELECT
+TD:
+``````
+signal1<int> initBrightnessSig;
+initBrightnessSig.emit(brightNess);
+connectex(bc, bc->refreshBatteryIcon, this, &SetupWidget::updateBatteryValue);
+void updateBatteryValue();
+connectex(m_pCGNSS_CTRL, m_pCGNSS_CTRL->UpdateGPRMC, this, &AndroidAutoModuleImpl::UpdateGPRMC);
+ if (m_pOwner)
+                    {
+                        m_pOwner->nmeaSpeedChanged(speed * 1.852);
+                    }
+``````
 
 
 
+20250214:
+无线AA播放音乐有时候会卡顿：
+[16:25:47:850] W/aud     (  854): AUD_ShowFifoMsg | 10144: Dec1::D(0x38000) B(0x37e00), Dec2::D(0x0) B(0x0)␍␊
+[16:25:47:859] I/aud     (  854): [aud]output fifo(0x7) underflow
+
+20250215:
+2229蓝牙来电和接听时的打印：
+苹果手机连接车机
+[14:31:18:302] root@Gemini:/
+[14:31:08:776] D/[QT]    (  936): [bluetoothmodule][bluetoothmoduleimpl/bluetoothmoduleimpl.cpp  BTPhoneCBK ][line is 1130] Call state change:  EVENT_CALL_INCOMING
+[14:31:09:996] D/[QT]    (  936): [Audiocontrol] changeCurTrackVolume  get audio ctrl instance succeed
+[14:31:22:296] D/[BT_MW][IBlueToothCallbackBn](  936): [onTransact:536] Call state change: EVENT_CALL_PROGRESS
+[14:31:08:898] D/[QT]    (  936): [Audiocontrol] Current output source is: S+none
+void AudioControlProxy::setBtSourceToBtRingToneTrack()
+
+  处理本问题，需要了解AudioService中tracks_property.xml的设定：
+<track>
+<tag value="main" />
+<name value="S+BtPcmPhone" />
+<streamType value="phone" />
+<duck value="true" />
+</track>
+<track>
+<tag value="main" />
+<name value="BT_RINGTONE_Track" />
+<streamType value="ringtone" />
+<duck value="true" />
+</track>
+         S+BtPcmPhone：当播放为手机铃声时使用；BT_RINGTONE_Track：当播放为车机本地铃声时使用；
+         所以两个对应的 <streamType value> 就有区别，一个为phone，一个为ringtone；
+         Q1：什么时候上S+BtPcmPhone和BT_RINGTONE_Track呢
+à不做处理的情况下，由手机决定，大部分手机都会播放的手机铃声，所以在来电时上的为S+BtPcmPhone，对应调节音量就是phone；少数手机会播放本地铃声，目前在我们公司我们只发现了一台手机是这样，并且机主也不清楚是如何进行设置；
+Q2：能将S+BtPcmPhone对应的streamType修改为ringtone吗
+à不建议，因为电话接通之后调节的音量也显示为ringtone
+         Q3：S+BtPcmPhone不能区分来电铃声和通话吗
+à播放手机铃声情况下，来电铃声和通话走的是同一通道，要区分的话，逻辑和修改范围比较大（AP、SDK、顾凯底层都需要更新）所以除非必要，我们是不建议对此进行修改；
+         Q4：没有其他办法设置来电铃声为ringtone 吗
+à还有一种方法，修改AP和蓝牙配置文件，每次来电时，都播放车机本地铃声，也就是走BT_RINGTONE_Track，这样子调节的音量就为ringtone，公版对应修改如附件所示，可以参照修改后进行测试；
+         Q5：苹果手机连接蓝牙时,蓝牙音乐播放中时，远端手机来电，调节铃声，发现调节的类型为media，无法调节铃声大小
+à公版用 获取到的音量类型为:BT_RINGTONE_Track的手机测试数次，来电时调节的音量都为ringtone，具体现象如附件所示，可以检查一下贵司对应的代码逻辑是否与公版相同
 
 
+20250217：
+SPH模模块头文件蓝牙增益值一样，但是888分支和900分支的蓝牙通话音量有差异，888模块代码库明显远端听到的声音小很多
+900：
+commit f72ff2619adc92f27508e926a71814fefa2be9b3
+Author: liuhz <liuhz@maxmade.com>
+Date:   Thu May 25 11:58:49 2023 +0800
+
+     对策在设置Time Alignment里面任意数值调到超过10以上，USB上下曲有popo声
+md5sum '/home/chenshihao/Clean/8368-U-QT/ecos/lib/libdsp_car.a' 
+840f3e4ed061e99b35b5864215f09ded  /home/chenshihao/Clean/8368-U-QT/ecos/lib/libdsp_car.a
+在900表现正常
+[dsp]DownloadCode:w:dwSvnRevision          :1326
+
+commit 5383116f6f3fe3a74b6f5ae632e73e24b93caeec
+Author: Tam <tam.maxmade@gmail.com>
+Date:   Fri Nov 8 11:30:54 2024 +0800
+
+    更新11.07邮件蓝牙lib
+    
+    手动整合Z-N538_AA_Certification分支关于Audio更新的修改, 目前还缺aa lib未更新
+
+md5sum '/home/chenshihao/8368-U-QT/ecos/lib/libdsp_car.a' 
+a332ca7fd2542338fbf0b673cdc6cb96  /home/chenshihao/8368-U-QT/ecos/lib/libdsp_car.a
+
+20250218:
+1345DN车机卡死：
+2025-02-17T19:33:47.322 - Catch signum  = 11 [[BT_MW][BluetoothServer]]
+2025-02-17T19:33:47.322 - info.si_pid   = -5
+2025-02-17T19:33:47.323 - info.si_uid   = -1226131420
+2025-02-17T19:33:47.323 - info.si_signo = 11
+2025-02-17T19:33:47.323 - info.si_errno = 0
+2025-02-17T19:33:47.323 - info.si_code  = 1
+2025-02-17T19:33:47.324 - info.si_addr  = 0xfffffffb
+2025-02-17T19:33:47.327 - 
+2025-02-17T19:33:47.327 - ---------backtrace-------------
+2025-02-17T19:33:47.328 - ================>>>set hard mute false
+2025-02-17T19:33:47.340 - /usr/local/bin/bluetooth_server[0x9942]
+2025-02-17T19:33:47.341 - /lib/libc.so.6[0x41805a00]
+2025-02-17T19:33:47.342 - /usr/local/lib/libbt-ipc.so(IMPL_HCI_UartTxPdu+0x78)[0xb6d8ff60]
+2025-02-17T19:33:47.351 - Catch signum  = 11 [[BT_MW][BluetoothServer]]
+2025-02-17T19:33:47.361 - info.si_pid   38?729sil  niat0x25?5/u?liifbt-so(RDABT_Execute+0x1d0)[0xb6d93b0c]
+2025-02-17T19:33:47.361 - /usr/local/lib/libbt-ipc.so(+0x1235a8)[0xb6d1d5a8]
+2025-02-17T19:33:47.361 - /usr/local/lib/libbt-ipc.so(+0x127bdc)[0xb6d21bdc]
+2025-02-17T19:33:47.361 - /usr/local/lib/libbt_gsl.so(+0x2848)[0xb6f40848]
+2025-02-17T19:33:47.361 - /lib/libpthread.so.0[0x41bd6278]
+2025-02-17T19:33:47.361 - /usr/local/bin/bluetooth_server[0x9942]
+2025-02-17T19:33:47.361 - /lib/libc.so.6[0x41805a00]
+2025-02-17T19:33:47.361 - /lib/libc.so.6[0x418125ac]
+2025-02-17T19:33:47.361 - /lib/libc.so.6(_IO_vfprintf+0x73)[0x4180f6fc]
+2025-02-17T19:33:47.361 - /lib/libc.so.6(_IO_fprintf+0xf)[0x41814d58]
+2025-02-17T19:33:47.361 - /usr/local/bin/bluetooth_server[0x98de]
+2025-02-17T19:33:47.361 - /lib/libc.so.6[0x41805a00]
+2025-02-17T19:33:47.361 - /lib/libc.so.6[0x417f8d46]
+2025-02-17T19:33:47.361 - /lib/libc.so.6(gsignal+0x37)[0x41804e94]
+2025-02-17T19:33:47.361 - /lib/libc.so.6(abort+0xd9)[0x41807166]
+2025-02-17T19:33:47.361 - /lib/libc.so.6[0x41825dea]
+2025-02-17T19:33:47.361 - /lib/libc.so.6[0x4182c2b8]
+2025-02-17T19:33:47.362 - /lib/libc.so.6[0x4182c808]
+2025-02-17T19:33:47.362 - /usr/local/lib/libbt_gsl.so(BT_GL_Free+0x5)[0xb6f41166]
+2025-02-17T19:33:47.363 - = (unsigned long)(nb)' failed.
+2025-02-17T19:33:47.364 - Catch signum  = 6 [[BT_MW][BluetoothServer]]
+2025-02-17T19:33:47.364 - info.si_pid   = 758
+2025-02-17T19:33:47.364 - info.si_uid   = 0
+2025-02-17T19:33:47.365 - info.si_signo = 6
+2025-02-17T19:33:47.365 - info.si_errno = 0
+2025-02-17T19:33:47.365 - info.si_code  = -6
+2025-02-17T19:33:47.365 - info.si_addr  = 0x2f6
+2025-02-17T19:33:47.365 - 
+2025-02-17T19:33:47.366 - ---------backtrace-------------
+2025-02-17T19:33:47.366 - /usr/local/lib/libbt-ipc.so(+0x58560)[0xb6c52560]
+2025-02-17T19:33:47.367 - /usr/local/lib/libbt-ipc.so(+0x586c8)[0xb6c526c8]
+2025-02-17T19:33:47.367 - /usr/local/lib/libbt_gsl.so(+0x2848)[0xb6f40848]
+2025-02-17T19:33:47.368 - /lib/libpthread.so.0[0x41bd6278]
+2025-02-17T19:33:47.374 - H?x417f8S+Kib.so(gsig+3?)[0x04e94]
+2025-02-17T19:33:47.375 - /lib/libc.so.6(abort+0xd9)[0x41807166]
+2025-02-17T19:33:47.375 - /lib/libc.so.6[0x4182bb40]
+2025-02-17T19:33:47.375 - /lib/libc.so.6[0x4182d426]
+2025-02-17T19:33:47.376 - /lib/libc.so.6(__libc_malloc+0x5b)[0x4182ec1c]
+2025-02-17T19:33:47.376 - /usr/lib/libstdc++.so.6(_Znwj+0x13)[0x4190d74c]
+2025-02-17T19:33:47.379 - /usr/lib/libstdc++.so.6(_Znwj+0x13)[0x4190d74c]
+2025-02-17T19:33:47.379 - /usr/lib/libstdc++.so.6(_Znwj+0x13)[0x4190d74c]
+2025-02-17T19:33:47.380 - /usr/lib/libstdc++.so.6(_Znwj+0x13)[0x4190d74c]
+2025-02-17T19:33:47.380 - /usr/lib/libstdc++.so.6(_Znwj+0x13)[0x4190d74c]
+2025-02-17T19:33:47.381 - /usr/lib/libstdc++.so.6(_Znwj+0x13)[0x4190d74c]
+2025-02-17T19:33:47.381 - /usr/lib/libstdc++.so.6(_Znwj+0x13)[0x4190d74c]
+2025-02-17T19:33:47.382 - /usr/lib/libstdc++.so.6(_Znwj+0x13)[0x4190d74c]
+2025-02-17T19:33:47.383 - /usr/lib/libstdc++.so.6(_Znwj+0x13)[0x4190d74c]
+2025-02-17T19:33:47.383 - /usr/lib/libstdc++.so.6(_Znwj+0x13)[0x4190d74c]
+2025-02-17T19:33:47.384 - /usr/lib/libstdc++.so.6(_Znwj+0x13)[0x4190d74c]
+2025-02-17T19:33:47.384 - /usr/lib/libstdc++.so.6(_Znwj+0x13)[0x4190d74c]
+2025-02-17T19:33:47.391 -  Ack id b6 send id 10
+2025-02-17T19:33:47.419 - Catch signum  = 6 [[BT_MW][BluetoothServer]]
+2025-02-17T19:33:47.419 - info.si_pid   = 758
+2025-02-17T19:33:47.419 - info.si_uid   = 0
+2025-02-17T19:33:47.420 - info.si_signo = 6
+2025-02-17T19:33:47.420 - info.si_errno = 0
+2025-02-17T19:33:47.420 - info.si_code  = -6
+2025-02-17T19:33:47.420 - info.si_addr  = 0x2f6
+2025-02-17T19:33:47.420 - 
+2025-02-17T19:33:47.421 - ---------backtrace-------------
+2025-02-17T19:33:47.424 - /usr/local/bin/bluetooth_server[0x9942]
+2025-02-17T19:33:47.424 - /lib/libc.so.6[0x41805a00]
+2025-02-17T19:33:47.424 - /lib/libc.so.6[0x417f8d46]
+2025-02-17T19:33:47.425 - /lib/libc.so.6(gsignal+0x37)[0x41804e94]
+2025-02-17T19:33:47.425 - /lib/libc.so.6(abort+0xd9)[0x41807166]
+2025-02-17T19:33:47.426 - /lib/libc.so.6[0x41825dea]
+2025-02-17T19:33:47.426 - /lib/libc.so.6[0x4182c2b8]
+2025-02-17T19:33:47.426 - /lib/libc.so.6[0x4182caf8]
+2025-02-17T19:33:47.426 - /lib/libc.so.6[0x41808034]
+2025-02-17T19:33:47.427 - /lib/libc.so.6(exit+0xb)[0x41808068]
+2025-02-17T19:33:47.427 - /usr/local/bin/bluetooth_server[0x99e0]
+2025-02-17T19:33:47.428 - /lib/libc.so.6[0x41805a00]
+2025-02-17T19:33:47.428 - /lib/libc.so.6[0x417f8d46]
+2025-02-17T19:33:47.429 - /lib/libc.so.6(gsignal+0x37)[0x41804e94]
+2025-02-17T19:33:47.429 - /lib/libc.so.6(abort+0xd9)[0x41807166]
+2025-02-17T19:33:47.430 - /lib/libc.so.6[0x4182bb40]
+2025-02-17T19:33:47.430 - /lib/libc.so.6[0x4182d426]
+2025-02-17T19:33:47.430 - /lib/libc.so.6(__libc_malloc+0x5b)[0x4182ec1c]
+2025-02-17T19:33:47.431 - /usr/lib/libstdc++.so.6(_Znwj+0x13)[0x4190d74c]
+
+20250219:
+关于8368PU盘转存打印：
+defconfig里面把：
+CONFIG_GLB_GMNCFG_LOG_TO_USB=y，打开
+不确定头文件是否有效：
+D_AUTO_SAVE_LOG_SERVICE_TO_USB
+还要在按钮触发的位置
+ #if defined(CONFIG_GLB_GMNCFG_LOG_TO_USB)
+        printf("\n\n ZZZZ_SYNC_CP_BEG");
+        system("sync");
+        system("cp -rf /media/flash/nvm/log_service/ /mnt/$(ls /media/ | grep sd)");
+        system("sync");
+        printf("\n\n ZZZZ_SYNC_CP_END");
+        usleep(3000000);
+#endif
+定位打印：
+FactoryDefaultDialog ok:
+ZZZZ_SYNC_CP_BEG
+sync
+
+20250220:
+解压所有文件：
+find . -type f -name "*.gz" -exec sh -c 'gzip -d -c "{}" > "${0%.gz}"' {} \;
+
+无线aa播放音乐卡顿：
+D/[QT]    (  942): deviceReady(420) Error:[0xa0a1d0]read:708 return:0 atEnd:1 pos:24576
+D/[QT]    (  942): close(281) Error:##(this:0xa0a1d0)(0x7fec0080e0)timer is activated, waiting...
+D/[QT]    (  942): close(287) Error:(this:0xa0a1d0)(0x7fec0080e0)timer is deactivated!
+I/AudioService(  854): [dumpInfo][555][ServiceTrack.cpp][QtOutput]samplerate:22050 avgRate:34909.090 underflow count:0
+I/AudioService(  854): [stop][277][ServiceTrack.cpp]QtOutput stop
+D/[AAS][AndroidAutoBTService]( 1276): data available:len[11]
+D/UeventObserver( 1099): event [0x00000001]
+D/UeventObserver( 1099): mNotifiers.size[3] 
+D/VolumeDetector( 1099): No applicable parameter value found, DEVTYPE or DEVNAME
+D/UeventObserver( 1099): event [0x00000001]
+E/UeventObserver( 1099): event[1] receive fail[Input/output error], drop it
+ 
+ AV-2229W-65C:
+ ACC OFF至掉电后，ACC起来进入快速倒车，连接CP后断开倒车线，CP一直显示黑屏:
+
+[15:13:15:202] D/[QT]    (  970): ============>>>setCurActivityInfo  "carplay"␍␊
+[15:13:15:202] D/[QT]    (  970): [AuxInModule] activityStartSlot 284␍␊
+[15:13:15:202] D/[QT]    (  970): [AuxInModule] activityStartSlot 295␍␊
+[15:13:15:209] E/AdasCamV4L2ImplOP(  856): [Adas_Cam_StartStreaming:324] Unable to start capture: Operation not permitted
+
+20250222:
+关于在TD使用infomoudle的寻找：
+
+#include "infobase.h"
+shared_ptr<ModuleProperty> mModuleProperty;
+connectex(infoModule)
+
+怎么在TD defconfig 加宏 寻找：
+以grep "CONFIG_GLB_GMNCFG_GEMINI_COMMON_LOG_DEBUG_ENABLE" -rn ./
+./.config:93:ifeq ($(CONFIG_GLB_GMNCFG_ANDROID_AUTO)_set, y_set)
+./reference_td2/tdLauncher/sys_config.mk:46:ifeq ($(DISABLE_ANDROID_AUTO),0)
+./reference_td2/tdLauncher/middleware/plugins/module/Makefile:44:ifeq ($(DISABLE_ANDROID_AUTO),0)
+
+grep -rn "EQ" --include=app_config .   很多名为 app_config 的文件，并且想在这些文件中搜索包含 EQ 的内容
 
 
+0227：
+2229cp卡屏
+void PlatformControl::AppReady2CtrlReverse(bool isForce)，当带参数是true时是强制换手操作
+void AuxinModuleImpl::onEnterReverseGear()
+void AuxinModule::AppReadyToCtrlReverseSlot(int val)
 
+
+[21:16:41:337] D/[QT]    (  938): [ModuleManager] initList is:␍␊
+[21:16:41:337] D/[QT]    (  938):  ("info", "devicemodule", "setupmodule")␍␊
+
+[21:16:36:519] D/[QT]    (  938): [ModuleManager] "setupmodule" startup successful!␍
+
+[21:16:42:703] D/[QT]    (  938): [ModuleManager] initList is:␍␊
+[21:16:42:703] D/[QT]    (  938):  ("info", "bluetooth", "auxin", "carplay", "androidauto", "can", "devicemodule", "mediaplay", "radio", "setupmodule")
+
+[21:16:37:502] D/[QT]    (  938): [CarplayModule] connectSlots line: 98 
+
+[21:16:37:407] D/[QT]    (  938): [AuxinModuleImpl] fast reversing␍␊
+
+[21:16:37:728] D/[QT]    (  938): [InfoModuleImpl] "carplay" connect sigs.␍␊
+[21:16:37:728] D/[QT]    (  938): [ModuleManager] "carplay" startup successful!␍␊
+
+[21:16:43:046] D/[QT]    (  938): [AuxinModuleImpl] fast reversing␍␊
+[21:16:44:345] D/[QT]    (  938): [ModuleManager] ModuleManagerImpl::startupNextModule CompleteModuleStartup22!␍␊
+
+--- a/application/reference_ui/spLauncher/commons/comviews/base/basecontrol.cpp
++++ b/application/reference_ui/spLauncher/commons/comviews/base/basecontrol.cpp
+@@ -2322,7 +2322,23 @@ void BaseControl::shutdownSlot()
+         ShutdownTime = NULL;
+     }
+     //BaseControl::getInstance()->setFactoryDefault();//B+ restart
++#if 1
++    QLOGD("FactoryDefaultDialog ok:");
++    #if defined(CONFIG_GLB_GMNCFG_LOG_TO_USB)
++    printf("\n\n ZZZZ_SYNC_CP_BEG");
++    system("sync");
++    system("cp -rf /media/flash/nvm/log_service/ /mnt/$(ls /media/ | grep sd)");
++    system("sync");
++    printf("\n\n ZZZZ_SYNC_CP_END");
++    usleep(3000000);
++    #endif
++    QSharedPointer<ModuleManager> mm = ModuleManager::self();
++    mm->powerOff();//各module
++    BaseControl::getInstance()->setFactoryDefault();//mcu
++    system("poweroff &");
++#else
+     MainAppProtocolComm::GetInstance()->AccReset();//acc restart
++#endif
+ }
+  
+[ModuleManager] ModuleManagerImpl::startupNextModule CompleteModuleStartup22!
+20250304:
+AA断音：
+连上AA，在AA播放音乐之前输入：只用一次
+as_spaudiosetting -d dumpcfg 1 2  S+AndroidAuto  /tmp/aa.pcm  
+rm /tmp/aa.pcm
+复现到问题后
+可以先 cd /media   按一下tab确定是挂载的是sda1还是sdb1
+cp /tmp/aa.pcm /media/sda1
+
+打开音频分析：
+audacity
 
 
 
