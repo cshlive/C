@@ -224,6 +224,9 @@ tar
     unzip file.zip 解压zip
 unzip -O CP936  +file.zip (防止解压出现乱码)
 
+tar -tf 查看要解压的内容
+tar -xvf 解压对应文件夹
+
 总结
 
     *.tar 用 tar –xvf 解压
@@ -5904,9 +5907,146 @@ rm /tmp/aa.pcm
 复现到问题后
 可以先 cd /media   按一下tab确定是挂载的是sda1还是sdb1
 cp /tmp/aa.pcm /media/sda1
-
-打开音频分析：
+sync
+打开音频分析看波形图：
 audacity
+
+1-start the radio,and save the log
+2- Wait Android Auto wireless connection
+3- When start playback music send: as_spaudiosetting -d dumpcfg 1 2  S+AndroidAuto  /tmp/aa.pcm
+4- Pause Music and connect pendrive
+5.send: rm /tmp/aa.pcm
+6- Play sound 1khz
+7- Wait a problem and Pause Music
+8-send: cp /tmp/aa.pcm /media/sda1
+9- Send: sync 
+10-disconnect the pendrive ,send the log and video,and file in pendrive
+
+
+我来总结一下，
+1.客户用晚上最新的软件测试有线AA，正常;
+2打印显示是not aac 客户用的是YouTubemusic
+3.我们自己检查使用vlc开机重连AA是会有概率断音，但是使用YouTubemusic spotify 网易云 不会有
+音频数据量不足
+客户那边有另外一个设备 
+mac地址是 ：
+66:13:1a:ea:2a:70
+
+
+[SVCMON][I] _svc_mon_get_svc_node(276) add svc_node_t name:aaserver path:/tmp/svc_mon/aaserver.mon
+[30;36m[ZEP][HeadersDecodedCb:587](): [0mHeaders: Width 1920 Height 1088 stride 0
+[30;36m[ZEP][HeadersDecodedCb:588](): [0mHeaders: Cropping params(real): (0, 0) 1920x1080
+[30;36m[ZEP][HeadersDecodedCb:592](): [0mHeaders: Pictures in DPB = 2
+[ZEP_WS][registry_handle_global:326](): bind wl_compositor
+[ZEP_WS][registry_handle_global:333](): bind zwp_linux_dmabuf_v1
+[ZEP_WS][registry_handle_global:329](): bind xdg_wm_base
+[ZEP_WS][dmabuf_format:309](): dmabuf listen[   26.499351] RTW: rtw_ap_rx_data_validate_hdr(wlan0) issue_deauth to 66:13:1a:ea:2a:70 with reason(7), unknown TA
+[   26.500545] RTW: issue_deauth reason(7) to 66:13:1a:ea:2a:70
+[   26.501227] RTW: rtw_mgmt_xmitframe_coalesce(wlan0) unicast sta == NULL
+[   26.502045] RTW: mgmt_xmitframe_enqueue_for_sleeping_sta, psta==NUL don't need enqueue, pattrib->ra:66:13:1a:ea:2a:70
+[   26.503596] RTW: rtw_ap_rx_data_validate_hdr(wlan0) issue_deauth to 66:13:1a:ea:2a:70 with reason(7), unknown TA
+
+playbackStopCallback time [42089173]
+AudioSessionStopWorkItem time start [42089283]
+W/aud     (  859): AUD_ShowFifoMsg | 10144: Dec1::D(0x32000) B(0x31e00), Dec2::D(0x0) B(0x0)
+I/aud     (  859): [aud]output fifo(0x7) underflow
+AudioSessionStopWorkItem time stop [42196575]
+AudioSessionStopWorkItem not skip
+W/aud     (  859): AUD_ShowFifoMsg | 10144: Dec1::D(0x32000) B(0x31e00), Dec2::D(0x0) B(0x0)
+I/AudioService(  859): [writeDone][1031][DrvMainAudioBuddy.cpp][S+AndroidAuto] write done
+V/dsp     (  859): DSP_SetRiscParam: offset:0x5d, value:0x1
+V/dsp     (  859): DSP_SendCmd: cmd:0x0503005d, param:0x00000001
+V/dsp     (  859): DSP_EndBsBuf: id:1, 1
+I/aud     (  859): AUD_Set_BsBufEnd: mediaType(1)
+I/AudioService(  859): [controlPriv][3333][SpAudSysController.cpp]source id:1 ID_CMD_BS_ENDING_NOTIFY success
+V/dsp     (  859): DSP_SetRiscParam: offset:0x5d, value:0x0
+I/AudioService(  859): [queryPlayEndedAndNotify][667][DrvMainAudioBuddy.cpp]source id:1 play ended
+V/dsp     (  859): DSP_SetRiscParam: offset:0x5d, value:0x0
+V/dsp     (  859): DSP_SendCmd: cmd:0x0503005d, param:0x00000000
+V/dsp     (  859): DSP_EndBsBuf: id:1, 0
+I/aud     (  859): AUD_Reset_BsBufEnd: clean bs buf end flag for mediaType(1)
+I/AudioService(  859): [controlPriv][3363][SpAudSysController.cpp]soure id:1 ID_CMD_BS_ENDING_FLAG_CLEAN success
+
+自测：
+[   38.321829] RTW: +OnAuth from 30:57:14:41:07:6f
+D/[QT]    (  937): [AndroidAutoModuleImpl] AA MD address-- 24:95:2F:5C:5F:5F
+
+20250319:
+连接有线CP，车机黑屏三分钟后自动重启
+Launcher  program was hang
+2025-03-19T11:28:08.139 - Try to reboot CPU
+
+D/[QT]    (  938): [MAPPC_D] loop 101 MAINAPP:RX CMD: 1 13078 16711n~ ||~U{zzIDB<?|~?/STD     (  938): free(): invalid pointer
+2025-03-19T11:27:56.132 - D/STD     (  938): Segmentation Fault!(Launchar)
+
+2025-03-19T11:25:37.605 - D/STD     (  938): corrupted size vs. prev_size
+2025-03-19T11:25:37.606 - D/STD     (  938): Segmentation Fault!(Launchar)
+2025-03-19T11:25:37.606 - D/STD     (  938): info.si_signo = 6
+2025-03-19T11:25:37.606 - D/STD     (  938): info.si_errno = 0
+2025-03-19T11:25:37.609 - D/STD     (  938): info.si_code  = -6 ((null))
+2025-03-19T11:25:37.609 - D/STD     (  938): info.si_addr  = 0x3aa
+2025-03-19T11:25:37.612 - D/STD     (  938): Stack trace (non-dedicated):
+
+
+2025-03-19T11:25:34.758 - I/AudioService(  857 [dumpInfo][5?~|?? /AudioService(  857): [stop][277][ServiceTrack.cpp]QtOutput stop
+
+
+
+2.拔掉cp，回到蓝牙通话，闪警示画面：
+: phoneview/talking/talkingwidget.cpp [Debug] btCallStatesChangeSlot [--IN--]␍␊
+[14:46:21:467] D/STD     (  935): Segmentation Fault!(Launchar)␍␊
+[14:46:21:467] D/[QT]    (  935): BtPhoneActivity btCallStatesChangeSlot event: 260␍␊
+[14:46:21:473] D/STD     (  935): info.si_signo = 11␍␊
+[14:46:21:473] E/[QT]    (  935): BtPhoneActivity line: 1049 btCallStatesChangeSlot bt device address is not all 0.␍␊
+[14:46:21:473] D/STD     (  935): info.si_errno = 0␍␊
+[14:46:21:473] D/STD     (  935): info.si_code  = 1 (SEGV_MAPERR)␍␊
+[14:46:21:473] D/STD     (  935): info.si_addr  = 0x8␍␊
+[14:46:21:473] D/STD     (  935): Stack trace (non-dedicated):␍␊
+
+
+
+D/STD     (  935): free(): invalid pointer␍␊
+[15:19:31:549] D/STD     (  935): Segmentation Fault!(Launchar)␍␊
+[15:19:31:552] D/STD     (  935): info.si_signo = 6␍␊
+[15:19:31:552] D/STD     (  935): info.si_errno = 0␍␊
+[15:19:31:552] D/STD     (  935): info.si_code  = -6 ((null))␍␊
+[15:19:31:552] D/STD     (  935): info.si_addr  = 0x3a7
+
+cp /media/flash/nvm/goc/btsnoop_hci.log /media/sda1/
+怎么查看btsnoop_hci.log：
+sudo btmon -r btsnoop_hci.log 使用蓝牙监控工具
+
+20250326：
+0324cp通话中拔掉有线cp转bt通话，只有第一次升级第一次触发
+D/[QT]    (  935): [bluetoothmodule][bluetoothmoduleimpl/bluetoothmoduleimpl.cpp  BTPhoneIMPL_getProgressingCallNum ][line is 3414] BTPhoneIMPL_getProgressingCallNum   15702080021␍␊
+[17:33:35:375] D/[QT]    (  935): BtPhoneActivity 1162  get callNum  "15702080021"␍␊
+[17:33:35:375] D/[QT]    (  935): BtPhoneActivity getTelNameByNum in␍␊
+[17:33:35:375] D/[QT]    (  935): BtPhoneActivity the tel num is "15702080021" -1␍␊
+[17:33:35:375] D/[QT]    (  935): BtPhoneActivity getTelNameByNum in␍␊
+[17:33:35:375] D/[QT]    (  935): BtPhoneActivity the tel num is "15702080021" -1␍␊
+[17:33:35:375] D/[QT]    (  935): BtPhoneActivity callProgressingSlot number: "15702080021"␍␊
+[17:33:35:379] D/[QT]    (  935): BtPhoneActivity callProgressingSlot name: ""␍␊
+[17:33:35:379] D/[QT]    (  935): BtPhoneActivity BtDiscoverListWidget::hideEvent in  LINE: 286␍␊
+[17:33:35:379] D/[QT]    (  935): BtPhoneActivity PairWidget::hideEvent in  LINE: 72␍␊
+[17:33:35:379] D/STD     (  935): Segmentation Fault!(Launchar)␍␊
+[17:33:35:379] D/STD     (  935): info.si_signo = 11␍␊
+[17:33:35:379] D/STD     (  935): info.si_errno = 0␍␊
+[17:33:35:384] D/STD     (  935): info.si_code  = 1 (SEGV_MAPERR)␍␊
+[17:33:35:384] D/STD     (  935): info.si_addr  = 0x10␍␊
+[17:33:35:384] D/STD     (  935): Stack trace (non-dedicated):␍␊
+
+ V/dsp     (  855): DSP_SetRiscAppParam: offset:0x6e, value:0x1f40␍␊
+[17:33:35:735] I/aud     (  855): Handsfree_Check_GeneralParam_Header: Can't load General AEC param space due to header invalid! ␍␊
+[17:33:35:735] I/aud     (  855): AUD_Set_Handsfree_Fs: Set AEC quality from param bin (version 2.0), index: 0 !!
+
+
+
+
+
+
+
+
+
 
 
 
@@ -6073,6 +6213,33 @@ int main(int argc, char** argv) {
 
 
 # work:
+总结：
+在凌阳8368P，U等芯片进行开发
+ARM cortex-A55芯片1.2GHZ 
+使用qt的框架，做一些应用业务的开发，主要是业务逻辑，实现客户的需求
+做一些定制的需求，比如各种项目的一些基础配置，蓝牙模块，有线无线cpaa功能
+利用接口或者解析的数据做一些处理
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 展望：
 *  学会makefile，编写新项目的快速脚本
 *   怎么给人带来价值
