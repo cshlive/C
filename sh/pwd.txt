@@ -1,0 +1,23 @@
+git clone -b maxmade/8368-U-AV-1318 soft1@192.168.30.5:~SPHE8368-U/MAXMADE_BRANCH/8368-UCarSDKMAXMADE
+
+git clone -b 8368-U_MJ2.0_CA_NL git@192.168.30.5:8368-U-20200422
+#8388 AA分支
+git clone -b AA20201031 git@192.168.30.5:~/Direct8388GitServer AA20201031
+
+#8368U AA分支
+git clone -b WirelessAA20210304 git@192.168.30.5:~/8368-U-20200422 WirelessAA20210304
+
+#8388 主分支
+git clone git@192.168.30.5:Direct8388GitServer
+
+#8368-U 分支
+git clone -b 8368-U_MJ2.0_CA_NL git@192.168.30.5:8368-U-20200422
+
+#8368-U QT
+git clone -b 8368-U-QT git@192.168.30.5:8368-U-QT
+
+#8368-U demo code
+git clone soft1@192.168.30.5:~/SPHE8368-U/8368-UCarSDK_CA_NL/8368-UCarSDK_CA_NL 
+
+5.下载8368P项目代码
+git clone -b MaxmadeDevelop git@192.168.30.5:~/8368-PCarSDK
