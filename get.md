@@ -6040,16 +6040,19 @@ D/[QT]    (  935): [bluetoothmodule][bluetoothmoduleimpl/bluetoothmoduleimpl.cpp
 [17:33:35:735] I/aud     (  855): AUD_Set_Handsfree_Fs: Set AEC quality from param bin (version 2.0), index: 0 !!
 
 
+三方通话：
+13197417687 -> 19154958494(incoming) ->远端结束13197417687 ，13197417687再打过来，两个都显示相同
 
+[16:34:45:227] D/[QT]    (  938): BtPhoneActivity btCallStatesChangeSlot LINE 1114
 
-
-
-
-
-
-
-
-
+时序:
+[09:40:26:213] D/[QT]    (  935): BtPhoneActivity get callNum "15702080021" curCall: "" holeCall: ""␍
+[09:41:01:781] D/[QT]    (  935): BtPhoneActivity 1157  get callNum  "13197417687" curCall: "15702080021"
+[09:41:01:830] D/[QT]    (  935): BtPhoneActivity get callNum "13197417687" curCall: "15702080021" holeCall: ""
+[09:41:06:900] D/[QT]    (  935): BtPhoneActivity get callNum "13197417687" curCall: "13197417687" holeCall: "15702080021"
+[09:41:15:201] D/[QT]    (  935): BtPhoneActivity 1157  get callNum  "15702080021" curCall: "13197417687"
+[09:41:15:307] D/[QT]    (  935): BtPhoneActivity get callNum "15702080021" curCall: "13197417687" holeCall: ""
+关键：TalkingWidget::setCallInfoLable(QString number,QString name,bool isFristCall)
 
 # 需求
 
