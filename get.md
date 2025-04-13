@@ -5904,7 +5904,21 @@ rm /tmp/aa.pcm
 复现到问题后
 可以先 cd /media   按一下tab确定是挂载的是sda1还是sdb1
 cp /tmp/aa.pcm /media/sda1
+等待一下时间：
+sync
 
+step1:
+as_spaudiosetting -d dumpcfg 1 2  S+AndroidAuto  /tmp/aa.pcm
+step2：
+rm /tmp/aa.pcm
+step3：
+paly 1khz music Until the second music jam, don't interrupt the music in the middle.
+step4：
+cp /tmp/aa.pcm /media/sda1
+step5：
+sync   
+step6：
+Send the new aa.pcm file inside the USB flash drive
 打开音频分析：
 audacity
 
@@ -6086,7 +6100,7 @@ int main(int argc, char** argv) {
 
 三、开发质量的问题；
 
-
+五险一金参数，技术方案：自研还是外包，或者是供应商方案 开发还是集成，对接客户是国内还是国外，竞争实力优势以及前景，具体工作是什么内容涉及的技术方案是侧重什么方向，
 
 
 

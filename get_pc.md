@@ -22,103 +22,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-# 日常知识
-
-* linux系统负载：
-uptime 系统平均负载
-nproc 输出有多少颗核心可以用（逻辑核心）
-
-怎么通过进程id找到线程id
-使用 ps -Lp <进程ID> 命令查找进程ID对应的线程ID。其中，-L 选项表示显示线程ID，-p 选项后跟进程ID。
-使用 top -H -p <进程ID> 命令查找进程ID对应的线程ID。其中，-H 选项表示显示线程信息，-p 选项后跟进程ID。
-
-Linux怎么样如何通过线程id找到调用栈信息、
-打开终端，输入gdb <可执行文件路径>命令，启动gdb调试器。
-输入attach <进程ID>命令，将gdb调试器附加到进程中。
-输入info threads命令，查看进程中所有线程的ID。
-输入thread <线程ID>命令，切换到指定线程。
-输入bt命令，查看当前线程的调用栈信息。
-
-学习一点shell基础：
-
-echo： 是Shell的一个内部指令，用于在屏幕上打印出指定的字符串。
-```
-echo arg 
-echo -e arg #执行arg里的转义字符。echo加了-e默认会换行
-echo arg > myfile #显示结果重定向至文件，会生成myfile文件
-
-#注意，echo后单引号和双引号作用是不同的。单引号不能转义里面的字符。双引号可有可无，单引号主要用在原样输出中。
-```
-
-read： 命令行从输入设备读入内容
-
-定义变量时，变量名不加美元符号（$）
-注意，变量名和等号之间不能有空格，这可能和你熟悉的所有编程语言都不一样。有空格会出错。
-```
-首个字符必须为字母（a-z，A-Z）。
-中间不能有空格，可以使用下划线（_）。
-不能使用标点符号。
-不能使用bash里的关键字（可用help命令查看保留关键字）。
-
-注意：变量中间不能有空格，如果手误写错(例如 var = test)，刚好要使用rm -rf $var/删除这个目录，实际删除的是/！
-```
-使用一个定义过的变量，只要在变量名前面加美元符号（$）即可，
-推荐给所有变量加上花括号，这是个好的编程习惯。
-
-在变量前面加readonly 命令可以将变量定义为只读变量，只读变量的值不能被改变
-使用 unset 命令可以删除变量
-变量被删除后不能再次使用；unset 命令不能删除只读变量。
-
-运行shell时，会同时存在三种变量： 局部变量 局部变量在脚本或命令中定义，仅在当前shell实例中有效，其他shell启动的程序不能访问局部变量。
-
- 环境变量 所有的程序，包括shell启动的程序，都能访问环境变量，有些程序需要环境变量来保证其正常运行。必要的时候shell脚本也可以定义环境变量。
-
- shell变量 shell变量是由shell程序设置的特殊变量。shell变量中有一部分是环境变量，有一部分是局部变量，这些变量保证了shell的正常运行。
-
-特殊变量
-前面已经讲到，变量名只能包含数字、字母和下划线，因为某些包含其他字符的变量有特殊含义，这样的变量被称为特殊变量。
-
-变量	含义
-$0	当前脚本的文件名
-$n	传递给脚本或函数的参数。n 是一个数字，表示第几个参数。例如，第一个参数是$1，第二个参数是$2。
-$#	传递给脚本或函数的参数个数。
-$*	传递给脚本或函数的所有参数。
-$@	传递给脚本或函数的所有参数。被双引号(" ")包含时，与 $* 稍有不同
-$?	上个命令的退出状态，或函数的返回值。
-$$	当前Shell进程ID。对于 Shell 脚本，就是这些脚本所在的进程ID。
-
-
-* GDB:
-编译的时候加上 -g 打开gdb打印
-b +具体文件行数： break 在具体位置打上断点
-l:会简单显示部分行
-n:next,继续的意思 
-p：printf 打印变量啥的  info local 打印当前局部变量
-s:step 跳进函数里面去
-bt:back,回溯，如果报错了可以看部分出错堆栈信息里面有函数信息
-ref:reflash 刷新，有时候要信息多按几下回车
-b if x == 1 :条件断点，当x=1时继续并中断
-set var pt = &value:将pt的值改为value的地址
-
-
-
-
-
-
-
-
-
-
 # 日常记录
 *  深入学习计算机系统
 
@@ -244,6 +147,121 @@ ffmpeg -i video-60.mp4 -i audio-30.mp3 -c:v copy -c:a aac -strict experimental -
 //60s长包含音频的video-60.mp4，和30s长的音频audio-30.mp3 合并。合并后的out.mp4包含两路音频。
 ffmpeg -i video-60.mp4 -i audio-30.mp3 -filter_complex "amix=inputs=2:duration=first:dropout_transition=0" -c:v "libx264" -c:a "aac" -y out.mp4
 
+* 采样定理：
+采样和量化
+奈奎斯特定理：采样率是最高频率的2倍
+内存大小：采样波特率*bit长*（1M兆/8）*时间（s）
+信噪比：最大信号强度和量化误差的比值 SQNR 约等于 6.02 * Q(位长)
+
+首先从模拟声音开始，进行模数转换，然后进行分帧。接下来，需要将信号从时域转换到频域，通常使用傅里叶变换。然而，直接应用傅里叶变换会遇到一个主要问题，即频谱泄漏。频谱泄漏发生在处理的信号不是整数个周期时，这会导致信号端点的不连续性，从而在频谱中产生虚假的高频分量。为了解决这个问题，可以使用“窗函数”进行“加窗”，在将帧输入傅里叶变换之前，对每一帧应用窗函数，以消除端点的样本。常用的窗函数是汉宁窗（Hann window）。加窗后，信号变得平滑，但会丢失端点信息。为了弥补这一点，需要使用“重叠帧”，即相邻帧之间存在重叠部分。定义了两个重要概念：帧大小（每个帧的样本数）和步长（相邻帧之间移动的样本数）。加窗和重叠帧后，就可以应用傅里叶变换，得到频谱。最后，与时域特征提取类似，计算每一帧的频域特征，然后通过统计方法将这些结果聚合起来，得到整个音频信号的频域特征向量或矩阵。
+
+
+
+
+
+
+# 日常知识
+* 声音的物理特征
+由振动产生，三个基本衡量特征:频率 frequency,响度 amplitude，音色 timer(类似前两者共同作用的效果)
+关于音频的一些处理
+资源列表+链接：
+书籍：Fundamenals of Music Processing - https://link.springer.com/book/10.1007/978-3-030-69808-9
+
+python库：
+librosa - https://librosa.org/doc/latest/index.html
+mir_eval - https://github.com/mir-evaluation/mir_eval
+mirdata - https://mirdata.readthedocs.io/en/stable/source/quick_reference.html
+
+数据集：
+gtzan genre（最有名，使用广泛）， mirdata支持 - https://www.kaggle.com/datasets/andradaolteanu/gtzan-dataset-music-genre-classification
+Medley DB（总轨，分轨，单乐器Solo），mirdata支持 - https://medleydb.weebly.com/
+MUSDB18 (总轨，分轨)，单独的loader - https://sigsep.github.io/datasets/musdb.html#musdb18-compressed-stems
+
+视频课程：
+Georgia Tech - Survey of Music Technology(删档，b站/ytb均有补档) BV1mm4y1z7bH
+MTG & Stanford - Audio Signal Processing - https://www.coursera.org/learn/audio-signal-processing
+Sound of AI - Pytorch for Audio, DSP, Generative Music… - https://www.youtube.com/@ValerioVelardoTheSoundofAI/playlists
+
+音乐生成模型：Stable Audio 1.0（Stable AI）- https://huggingface.co/stabilityai/stable-audio-open-1.0, Music Gen（facebook) - https://musicgen.com/
+
+会议：ISMIR - International Society of Music Information Retrieval - https://ismir2024.ismir.net/ - https://ismir.net/about/
+
+
+* linux系统负载：
+uptime 系统平均负载
+nproc 输出有多少颗核心可以用（逻辑核心）
+
+怎么通过进程id找到线程id
+使用 ps -Lp <进程ID> 命令查找进程ID对应的线程ID。其中，-L 选项表示显示线程ID，-p 选项后跟进程ID。
+使用 top -H -p <进程ID> 命令查找进程ID对应的线程ID。其中，-H 选项表示显示线程信息，-p 选项后跟进程ID。
+
+Linux怎么样如何通过线程id找到调用栈信息、
+打开终端，输入gdb <可执行文件路径>命令，启动gdb调试器。
+输入attach <进程ID>命令，将gdb调试器附加到进程中。
+输入info threads命令，查看进程中所有线程的ID。
+输入thread <线程ID>命令，切换到指定线程。
+输入bt命令，查看当前线程的调用栈信息。
+
+学习一点shell基础：
+
+echo： 是Shell的一个内部指令，用于在屏幕上打印出指定的字符串。
+```
+echo arg 
+echo -e arg #执行arg里的转义字符。echo加了-e默认会换行
+echo arg > myfile #显示结果重定向至文件，会生成myfile文件
+
+#注意，echo后单引号和双引号作用是不同的。单引号不能转义里面的字符。双引号可有可无，单引号主要用在原样输出中。
+```
+
+read： 命令行从输入设备读入内容
+
+定义变量时，变量名不加美元符号（$）
+注意，变量名和等号之间不能有空格，这可能和你熟悉的所有编程语言都不一样。有空格会出错。
+```
+首个字符必须为字母（a-z，A-Z）。
+中间不能有空格，可以使用下划线（_）。
+不能使用标点符号。
+不能使用bash里的关键字（可用help命令查看保留关键字）。
+
+注意：变量中间不能有空格，如果手误写错(例如 var = test)，刚好要使用rm -rf $var/删除这个目录，实际删除的是/！
+```
+使用一个定义过的变量，只要在变量名前面加美元符号（$）即可，
+推荐给所有变量加上花括号，这是个好的编程习惯。
+
+在变量前面加readonly 命令可以将变量定义为只读变量，只读变量的值不能被改变
+使用 unset 命令可以删除变量
+变量被删除后不能再次使用；unset 命令不能删除只读变量。
+
+运行shell时，会同时存在三种变量： 局部变量 局部变量在脚本或命令中定义，仅在当前shell实例中有效，其他shell启动的程序不能访问局部变量。
+
+ 环境变量 所有的程序，包括shell启动的程序，都能访问环境变量，有些程序需要环境变量来保证其正常运行。必要的时候shell脚本也可以定义环境变量。
+
+ shell变量 shell变量是由shell程序设置的特殊变量。shell变量中有一部分是环境变量，有一部分是局部变量，这些变量保证了shell的正常运行。
+
+特殊变量
+前面已经讲到，变量名只能包含数字、字母和下划线，因为某些包含其他字符的变量有特殊含义，这样的变量被称为特殊变量。
+
+变量	含义
+$0	当前脚本的文件名
+$n	传递给脚本或函数的参数。n 是一个数字，表示第几个参数。例如，第一个参数是$1，第二个参数是$2。
+$#	传递给脚本或函数的参数个数。
+$*	传递给脚本或函数的所有参数。
+$@	传递给脚本或函数的所有参数。被双引号(" ")包含时，与 $* 稍有不同
+$?	上个命令的退出状态，或函数的返回值。
+$$	当前Shell进程ID。对于 Shell 脚本，就是这些脚本所在的进程ID。
+
+
+* GDB:
+编译的时候加上 -g 打开gdb打印
+b +具体文件行数： break 在具体位置打上断点
+l:会简单显示部分行
+n:next,继续的意思 
+p：printf 打印变量啥的  info local 打印当前局部变量
+s:step 跳进函数里面去
+bt:back,回溯，如果报错了可以看部分出错堆栈信息里面有函数信息
+ref:reflash 刷新，有时候要信息多按几下回车
+b if x == 1 :条件断点，当x=1时继续并中断
+set var pt = &value:将pt的值改为value的地址
 
 
 
@@ -251,6 +269,677 @@ ffmpeg -i video-60.mp4 -i audio-30.mp3 -filter_complex "amix=inputs=2:duration=f
 
 
 
+
+
+
+
+
+
+
+
+
+
+# 代码逻辑
+1. 多线程里面怎么确保先后顺序，比如在a线程执行a操作，在b线程执行b，在c线程执行a,b
+在多线程编程中，如果你希望在多个线程中控制操作的执行顺序，可以使用一些同步机制来确保线程按照特定的顺序执行。常见的方式有使用 锁 (Lock)、信号量 (Semaphore)、条件变量 (Condition) 和 事件 (Event) 等同步原语。
+ 
+在 Qt 中实现多线程和线程之间的执行顺序，通常可以通过 **信号和槽机制**、**`QMutex`**、**`QWaitCondition`**、**`QThread`** 等工具来实现。Qt 的多线程机制非常强大，它提供了很多方便的 API 来进行线程间的同步和通信。
+
+假设你的场景是线程 A 执行操作 `a`，线程 B 执行操作 `b`，线程 C 执行操作 `a` 和 `b`，并且你希望确保线程 C 在线程 A 和线程 B 的操作完成后再执行。
+
+下面我将通过几个具体的 Qt 示例展示如何实现这种顺序控制。
+
+### 方法 1：使用 `QMutex` 和 `QWaitCondition`
+
+`QMutex` 用来控制线程对共享资源的独占访问，`QWaitCondition` 用来在多个线程之间进行同步，确保线程按顺序执行。
+
+#### 示例代码：
+
+```cpp
+#include <QCoreApplication>
+#include <QThread>
+#include <QMutex>
+#include <QWaitCondition>
+#include <QDebug>
+
+QMutex mutex;
+QWaitCondition conditionA, conditionB;
+bool aDone = false, bDone = false;
+
+class WorkerA : public QThread {
+    void run() override {
+        qDebug() << "线程 A 执行操作 a";
+        QThread::sleep(1);  // 模拟操作
+        mutex.lock();
+        aDone = true;
+        conditionA.wakeAll();  // 唤醒等待的线程
+        mutex.unlock();
+    }
+};
+
+class WorkerB : public QThread {
+    void run() override {
+        qDebug() << "线程 B 执行操作 b";
+        QThread::sleep(1);  // 模拟操作
+        mutex.lock();
+        bDone = true;
+        conditionB.wakeAll();  // 唤醒等待的线程
+        mutex.unlock();
+    }
+};
+
+class WorkerC : public QThread {
+    void run() override {
+        // 等待线程 A 完成操作 a
+        mutex.lock();
+        while (!aDone) {
+            conditionA.wait(&mutex);  // 等待 A 完成
+        }
+        qDebug() << "线程 C 执行操作 a";
+        mutex.unlock();
+
+        // 等待线程 B 完成操作 b
+        mutex.lock();
+        while (!bDone) {
+            conditionB.wait(&mutex);  // 等待 B 完成
+        }
+        qDebug() << "线程 C 执行操作 b";
+        mutex.unlock();
+    }
+};
+
+int main(int argc, char *argv[]) {
+    QCoreApplication a(argc, argv);
+
+    WorkerA workerA;
+    WorkerB workerB;
+    WorkerC workerC;
+
+    workerA.start();
+    workerB.start();
+    workerC.start();
+
+    workerA.wait();
+    workerB.wait();
+    workerC.wait();
+
+    return a.exec();
+}
+```
+
+#### 解释：
+- `QMutex` 确保线程对共享变量 `aDone` 和 `bDone` 的独占访问。
+- `QWaitCondition` 用于在主线程中等待线程 A 和线程 B 的操作完成，线程 C 会通过 `conditionA.wait()` 和 `conditionB.wait()` 等待。
+- 当线程 A 和线程 B 完成操作时，它们会通过 `conditionA.wakeAll()` 和 `conditionB.wakeAll()` 来唤醒线程 C。
+
+### 方法 2：使用信号与槽机制
+
+Qt 的信号和槽机制也可以用来同步线程执行顺序。通过信号来通知线程的状态改变，利用槽来处理线程之间的通信。
+
+#### 示例代码：
+
+```cpp
+#include <QCoreApplication>
+#include <QThread>
+#include <QMutex>
+#include <QDebug>
+
+class WorkerA : public QThread {
+    Q_OBJECT
+public:
+    void run() override {
+        qDebug() << "线程 A 执行操作 a";
+        QThread::sleep(1);  // 模拟操作
+        emit finishedA();  // 发出信号通知 A 完成
+    }
+signals:
+    void finishedA();
+};
+
+class WorkerB : public QThread {
+    Q_OBJECT
+public:
+    void run() override {
+        qDebug() << "线程 B 执行操作 b";
+        QThread::sleep(1);  // 模拟操作
+        emit finishedB();  // 发出信号通知 B 完成
+    }
+signals:
+    void finishedB();
+};
+
+class WorkerC : public QObject {
+    Q_OBJECT
+public slots:
+    void onFinishedA() {
+        qDebug() << "线程 C 执行操作 a";
+        emit readyToB();  // A 完成后通知 C 可以开始执行 B
+    }
+
+    void onFinishedB() {
+        qDebug() << "线程 C 执行操作 b";
+    }
+
+signals:
+    void readyToB();
+};
+
+int main(int argc, char *argv[]) {
+    QCoreApplication a(argc, argv);
+
+    WorkerA workerA;
+    WorkerB workerB;
+    WorkerC workerC;
+
+    // 将信号与槽连接
+    QObject::connect(&workerA, &WorkerA::finishedA, &workerC, &WorkerC::onFinishedA);
+    QObject::connect(&workerB, &WorkerB::finishedB, &workerC, &WorkerC::onFinishedB);
+    QObject::connect(&workerC, &WorkerC::readyToB, &workerB, &WorkerB::start);
+
+    workerA.start();
+    workerC.start();
+    workerB.start();
+
+    workerA.wait();
+    workerB.wait();
+    workerC.wait();
+
+    return a.exec();
+}
+```
+
+#### 解释：
+- **线程 A** 执行完操作后，通过 `finishedA()` 信号通知线程 C。
+- **线程 C** 在收到 `finishedA()` 信号后，执行操作 `a`，然后通过 `readyToB()` 信号通知线程 B 开始执行操作 `b`。
+- **线程 B** 执行完操作后，通过 `finishedB()` 信号通知线程 C 完成。
+
+### 方法 3：使用 `QtConcurrent`（高级并行计算）
+
+`QtConcurrent` 是 Qt 提供的高级并行计算工具，适用于处理并发任务。它会自动管理线程池和任务调度，但在需要精确控制线程顺序时，可以与信号和槽机制结合使用。
+
+#### 示例代码：
+
+```cpp
+#include <QCoreApplication>
+#include <QtConcurrent/QtConcurrent>
+#include <QDebug>
+
+void taskA() {
+    qDebug() << "线程 A 执行操作 a";
+    QThread::sleep(1);  // 模拟操作
+}
+
+void taskB() {
+    qDebug() << "线程 B 执行操作 b";
+    QThread::sleep(1);  // 模拟操作
+}
+
+void taskC() {
+    qDebug() << "线程 C 执行操作 a";
+    QThread::sleep(1);  // 模拟操作
+    qDebug() << "线程 C 执行操作 b";
+}
+
+int main(int argc, char *argv[]) {
+    QCoreApplication a(argc, argv);
+
+    QtConcurrent::run(taskA);  // 运行任务 A
+    QtConcurrent::run(taskB);  // 运行任务 B
+    QtConcurrent::run(taskC);  // 运行任务 C
+
+    return a.exec();
+}
+```
+
+#### 解释：
+- `QtConcurrent::run()` 可以同时运行多个任务，但它并不直接提供执行顺序控制，所以通常需要结合信号和槽来同步任务的执行顺序。
+
+### 总结
+
+- **`QMutex` 和 `QWaitCondition`** 是 Qt 中用于线程同步的基本工具，可以帮助实现线程间的顺序执行。
+- **信号与槽机制** 是 Qt 的核心特性，能够让不同的线程通过信号来通知彼此，从而控制执行顺序。
+- **`QtConcurrent`** 提供了一种更高层次的方式来管理并行任务，但通常与其他同步机制结合使用来确保顺序。
+
+在你的场景中，如果需要精确控制线程的执行顺序，建议使用 **`QMutex` 和 `QWaitCondition`** 或 **信号与槽机制** 来实现线程之间的同步和顺序执行。
+
+2. 信号与槽机制 怎么保证一对多，而且有时序呢
+
+ 
+在 Qt 中，信号与槽机制本身已经提供了非常强大的功能来支持一对多的通信。而且你可以通过一些技巧来控制时序，确保线程按特定的顺序执行。
+
+### 1. **信号与槽机制的基本工作原理：**
+
+Qt 的信号与槽机制允许一个对象发出信号，而其他对象可以响应这个信号。多个对象可以连接到同一个信号，这就是所谓的“一对多”通信。在 Qt 中，多个槽可以响应一个信号，这种机制本身就是一对多的。
+
+### 2. **一对多的信号与槽**
+
+首先，Qt 自带的信号与槽机制天然就支持“一对多”模式。假设你有一个信号发出，多个对象可以连接这个信号并执行对应的槽函数。
+
+```cpp
+class Sender : public QObject {
+    Q_OBJECT
+public:
+    void sendSignal() {
+        emit mySignal();  // 发出信号
+    }
+
+signals:
+    void mySignal();  // 信号声明
+};
+
+class Receiver : public QObject {
+    Q_OBJECT
+public slots:
+    void onSignalReceived() {
+        qDebug() << "信号接收到";
+    }
+};
+```
+
+```cpp
+Sender sender;
+Receiver receiver1, receiver2, receiver3;
+
+// 连接信号和槽
+QObject::connect(&sender, &Sender::mySignal, &receiver1, &Receiver::onSignalReceived);
+QObject::connect(&sender, &Sender::mySignal, &receiver2, &Receiver::onSignalReceived);
+QObject::connect(&sender, &Sender::mySignal, &receiver3, &Receiver::onSignalReceived);
+
+// 发出信号，3个接收器都会执行 onSignalReceived()
+sender.sendSignal();
+```
+
+在这个例子中，`Sender` 类发出了一个信号 `mySignal`，多个 `Receiver` 对象（`receiver1`、`receiver2` 和 `receiver3`）都连接了这个信号。信号发出时，它会触发所有连接到它的槽函数，即会依次调用 `onSignalReceived` 方法。
+
+### 3. **控制信号与槽的时序**
+
+如果你希望在多个槽函数中控制时序，比如要求槽函数的执行顺序，可以通过以下几种方式来实现：
+
+#### 方式 1：**使用事件队列和自定义的信号与槽**
+
+Qt 的事件队列会按顺序处理事件。如果信号发出后有多个槽函数响应，它们会按连接顺序执行。因此，你可以控制连接顺序，从而影响槽的执行顺序。
+
+```cpp
+QObject::connect(&sender, &Sender::mySignal, &receiver1, &Receiver::onSignalReceived);
+QObject::connect(&sender, &Sender::mySignal, &receiver2, &Receiver::onSignalReceived);
+QObject::connect(&sender, &Sender::mySignal, &receiver3, &Receiver::onSignalReceived);
+
+// 信号发出，槽函数会按顺序执行，先是 receiver1，再是 receiver2，最后是 receiver3。
+```
+
+#### 方式 2：**使用事件循环和 `QEventLoop`**
+
+如果你需要更加精确的控制，或者需要在一个槽函数执行完后才执行下一个槽函数，可以使用 `QEventLoop` 来处理事件，确保槽函数按照特定的时序执行。
+
+```cpp
+void Sender::sendSignal() {
+    emit mySignal();
+    
+    // 在信号发出后进入事件循环，直到所有槽函数处理完毕
+    QEventLoop loop;
+    connect(this, &Sender::mySignal, &loop, &QEventLoop::quit);
+    loop.exec();  // 会等到信号的所有槽函数都执行完毕
+}
+```
+
+#### 方式 3：**使用 `QTimer` 控制槽的延时执行**
+
+通过定时器 (`QTimer`)，你可以延时执行槽函数，确保某些操作的顺序。
+
+```cpp
+class Receiver : public QObject {
+    Q_OBJECT
+public slots:
+    void onSignalReceived() {
+        qDebug() << "信号接收到，开始执行操作";
+    }
+
+    void delayedAction() {
+        qDebug() << "延时操作执行";
+    }
+};
+
+Sender sender;
+Receiver receiver;
+
+// 连接信号与槽
+QObject::connect(&sender, &Sender::mySignal, &receiver, &Receiver::onSignalReceived);
+QObject::connect(&sender, &Sender::mySignal, [&](){
+    QTimer::singleShot(1000, &receiver, &Receiver::delayedAction);  // 1秒后执行延时操作
+});
+
+// 发出信号，receiver 会延时执行 delayedAction
+sender.sendSignal();
+```
+
+在这个例子中，`QTimer::singleShot` 创建了一个延迟任务，在信号发出后延迟一段时间执行另一个槽函数 `delayedAction`。
+
+#### 方式 4：**使用 `Qt::QueuedConnection` 来强制槽函数的顺序**
+
+默认情况下，Qt 的信号与槽机制使用 **自动连接**，即直接在信号发出时调用槽函数。如果你想确保槽函数在不同线程中以特定顺序执行，可以使用 `Qt::QueuedConnection` 使槽函数在目标线程的事件队列中排队执行，从而确保时序。
+
+```cpp
+QObject::connect(&sender, &Sender::mySignal, &receiver1, &Receiver::onSignalReceived, Qt::QueuedConnection);
+QObject::connect(&sender, &Sender::mySignal, &receiver2, &Receiver::onSignalReceived, Qt::QueuedConnection);
+QObject::connect(&sender, &Sender::mySignal, &receiver3, &Receiver::onSignalReceived, Qt::QueuedConnection);
+```
+
+### 4. **使用 `QMutex` 和 `QWaitCondition` 来控制线程间的时序**
+
+如果你需要在多线程环境下控制槽的执行顺序，可以使用 `QMutex` 和 `QWaitCondition` 来实现线程间的同步。
+
+例如，假设你有两个线程，它们分别处理操作 `a` 和操作 `b`，然后线程 C 必须等待这两个操作完成后再进行自己的工作，你可以使用条件变量来控制这一点：
+
+```cpp
+QMutex mutex;
+QWaitCondition conditionA;
+QWaitCondition conditionB;
+
+bool a_done = false;
+bool b_done = false;
+
+class WorkerA : public QThread {
+    void run() override {
+        qDebug() << "线程 A 执行操作 a";
+        QThread::sleep(1);  // 模拟操作
+        mutex.lock();
+        a_done = true;
+        conditionA.wakeAll();  // 唤醒等待的线程
+        mutex.unlock();
+    }
+};
+
+class WorkerB : public QThread {
+    void run() override {
+        qDebug() << "线程 B 执行操作 b";
+        QThread::sleep(1);  // 模拟操作
+        mutex.lock();
+        b_done = true;
+        conditionB.wakeAll();  // 唤醒等待的线程
+        mutex.unlock();
+    }
+};
+
+class WorkerC : public QObject {
+    Q_OBJECT
+public slots:
+    void onWorkerADone() {
+        mutex.lock();
+        while (!a_done) {
+            conditionA.wait(&mutex);  // 等待 A 完成
+        }
+        qDebug() << "线程 C 执行操作 a";
+        mutex.unlock();
+    }
+
+    void onWorkerBDone() {
+        mutex.lock();
+        while (!b_done) {
+            conditionB.wait(&mutex);  // 等待 B 完成
+        }
+        qDebug() << "线程 C 执行操作 b";
+        mutex.unlock();
+    }
+};
+
+int main(int argc, char *argv[]) {
+    QCoreApplication a(argc, argv);
+
+    WorkerA workerA;
+    WorkerB workerB;
+    WorkerC workerC;
+
+    QObject::connect(&workerA, &WorkerA::finished, &workerC, &WorkerC::onWorkerADone);
+    QObject::connect(&workerB, &WorkerB::finished, &workerC, &WorkerC::onWorkerBDone);
+
+    workerA.start();
+    workerB.start();
+    workerC.start();
+
+    workerA.wait();
+    workerB.wait();
+    workerC.wait();
+
+    return a.exec();
+}
+```
+
+### 总结
+
+- **信号与槽机制支持一对多通信**，通过连接多个槽到同一个信号，可以实现一对多的效果。
+- **时序控制** 可以通过：
+  - 控制信号连接的顺序
+  - 使用 `QEventLoop` 来实现精确的顺序控制
+  - 使用 `QTimer` 来延迟执行某些槽
+  - 使用 `Qt::QueuedConnection` 来确保槽在正确的线程顺序中执行
+  - 使用 `QMutex` 和 `QWaitCondition` 在多线程环境下同步线程的顺序
+
+通过这些方法，你可以灵活地控制 Qt 中一对多信号与槽的执行顺序。
+
+3. 信号和槽底层是怎么实现的呢
+ 
+Qt 的信号与槽机制是一种非常强大的对象间通信机制，它允许对象之间通过信号和槽进行消息传递，而不需要显式地进行方法调用。底层实现上，Qt 通过一些复杂的机制来管理信号与槽的连接、发射、调度和执行。我们来深入探讨 Qt 信号与槽机制的底层实现。
+
+### 1. **信号与槽机制的基本概念**
+
+在 Qt 中，信号和槽是对象间通信的主要方式。一个对象可以发出信号，其他对象可以连接到这个信号并响应信号的发射。
+
+- **信号** 是类中的特殊成员函数，但它并不会直接执行任何操作，而是用来通知其他对象某些事件的发生。
+- **槽** 是用于接收信号的普通成员函数。一个信号可以连接多个槽，多个信号也可以连接到同一个槽。
+
+### 2. **信号与槽的底层实现**
+
+信号与槽机制底层的实现是基于 Qt 的 **元对象系统 (Meta-Object System)**。这个系统通过利用反射和一些特殊的机制实现了信号与槽的连接、发射和调用。具体来说，底层的实现包含以下几个方面：
+
+#### 2.1 **元对象系统 (Meta-Object System)**
+
+Qt 的元对象系统通过 **`QMetaObject`** 类实现。每个QObject 派生类（即 Qt 中的对象类）都能够访问一个与之关联的 **`QMetaObject`**，它存储了该类的所有元数据，比如类的名称、槽函数、信号等。
+
+- 每个 QObject 类都包含一个 `QMetaObject` 对象，该对象记录了所有该类的信号、槽、以及其他一些元数据。
+- `QMetaObject` 会为每个类生成一个静态成员函数表，记录了信号和槽的名称和参数信息。
+- Qt 会使用这个表来查找和调用信号和槽，保证信号和槽连接的正确性。
+
+#### 2.2 **信号的声明与发射**
+
+在 Qt 中，信号通常通过 `emit` 关键字来发射。信号发射的过程大致分为以下几个步骤：
+
+- **信号声明**：信号是类中的成员函数，使用 `signals:` 关键字声明，但它不包含函数体。这些函数实际上是由 Qt 的元对象系统管理的。
+- **信号发射**：信号通过 `emit` 关键字进行发射。发射信号时，Qt 的元对象系统会查询该信号是否有与之连接的槽函数。如果有，Qt 会将信号与槽连接并执行。
+
+```cpp
+// 信号声明
+signals:
+    void mySignal();
+
+// 信号发射
+emit mySignal();
+```
+
+#### 2.3 **槽的连接和调用**
+
+当你调用 `QObject::connect()` 函数时，Qt 会根据连接的信号和槽的类型和参数检查它们是否兼容。具体过程如下：
+
+- **连接槽和信号**：通过 `QObject::connect()` 将一个信号连接到一个槽。Qt 会检查信号和槽的参数类型，确保它们兼容。如果兼容，Qt 会将槽函数存储在连接表中。
+- **发射信号**：当信号发射时，Qt 会根据元对象系统的指示，查找与该信号匹配的槽函数。如果找到对应的槽，Qt 会调用它。
+  
+```cpp
+QObject::connect(sender, &Sender::mySignal, receiver, &Receiver::mySlot);
+```
+
+#### 2.4 **信号与槽的执行机制**
+
+信号与槽的执行有不同的方式，具体取决于信号与槽连接时使用的连接类型（例如 **`Qt::DirectConnection`** 或 **`Qt::QueuedConnection`**）。
+
+- **直接连接 (`Qt::DirectConnection`)**：默认情况下，信号发射时，槽函数会在发射信号的线程中立即执行。这种方式用于同步调用，即发射信号和执行槽是同步的。
+- **队列连接 (`Qt::QueuedConnection`)**：这种方式会将槽函数的调用请求排入事件队列，等待事件循环处理。这种方式常用于多线程环境，其中信号的发射和槽函数的执行发生在不同的线程中。
+- **自动连接 (`Qt::AutoConnection`)**：如果信号和槽在同一线程，使用 **直接连接**；如果在不同线程，使用 **队列连接**。
+
+#### 2.5 **信号与槽的连接表**
+
+每次使用 `QObject::connect()` 连接信号和槽时，Qt 会维护一个 **连接表**。这个连接表存储了信号和槽的关联信息（如信号和槽的对象指针、槽函数的指针、参数类型等）。这个表是由 `QMetaObject` 类管理的，确保信号能够正确地找到对应的槽。
+
+连接表的内部机制如下：
+- 每个信号都与一个唯一的标识符（ID）相关联。
+- 每个槽函数也是由一个唯一的标识符和参数列表表示的。
+- 当信号发射时，Qt 会通过信号的标识符查找连接表，找到所有已连接的槽，并依次调用它们。
+
+#### 2.6 **自动的内存管理**
+
+Qt 的信号与槽机制还提供了一些自动内存管理的功能：
+- **自动断开连接**：当一个对象被销毁时，与该对象相关的所有连接会被自动断开，避免了内存泄漏和悬空指针。
+- **自动删除槽函数**：如果槽对象是通过 `QObject::connect()` 动态连接的，Qt 会在信号发送时自动管理内存，避免手动删除。
+
+#### 2.7 **信号与槽的调用方式（重载与参数匹配）**
+
+Qt 支持信号和槽的重载。如果信号有多个重载版本，Qt 会通过参数的类型来决定调用哪个槽。连接时，Qt 会根据槽的参数类型自动选择最合适的重载版本。具体来说，Qt 会：
+- 通过 **`QMetaObject::normalizedSignature()`** 函数标准化信号和槽的签名。
+- 使用参数类型检查机制，确保信号和槽之间的参数能够匹配。
+
+### 3. **底层实现的关键代码**
+
+Qt 的信号与槽机制的底层实现涉及到大量的 C++ 特性，如模板、虚函数、反射等。为了简化，Qt 使用了 **C++ 虚函数** 和 **函数指针** 来调用槽函数，并且通过 **`QMetaObject`** 类来管理元数据和信号与槽的连接。
+
+以下是一个简化的信号与槽连接过程的伪代码：
+
+```cpp
+// 定义信号
+signals:
+    void mySignal();
+
+// 定义槽
+public slots:
+    void mySlot() {}
+
+// connect()
+bool QObject::connect(const QObject *sender, const char *signal, QObject *receiver, const char *slot) {
+    QMetaObject::connect(sender, signal, receiver, slot);
+}
+
+// 信号发射
+void Sender::emitSignal() {
+    // 查找并执行所有连接的槽
+    for (auto &slot : connectedSlots) {
+        slot();
+    }
+}
+```
+
+### 总结
+
+Qt 的信号与槽机制底层实现依赖于 Qt 的元对象系统和事件驱动模型。通过使用 `QMetaObject`，Qt 能够动态管理对象的信号和槽、自动进行函数匹配，并处理线程间的消息传递。它通过连接表来维护信号和槽的关联，并通过事件队列确保消息的顺序和执行。这使得 Qt 的信号与槽机制非常灵活，能够实现一对多、异步调用、跨线程通信等复杂的功能。
+
+4. 静态多态和动态多态
+
+ 
+静态多态和动态多态是面向对象编程中多态的两种不同类型，它们的区别主要在于多态的解析时机和实现方式。下面是这两种多态的详细解释：
+
+### 1. **静态多态 (Static Polymorphism)**
+
+静态多态，也称为 **编译时多态**，是在编译阶段就能够确定的多态类型。它的核心特点是通过 **函数重载** 或 **运算符重载** 来实现的。静态多态的多态性通常发生在编译时，编译器通过分析类型信息来决定具体调用哪个方法。
+
+#### **特点**：
+- **编译时解析**：静态多态的解析是在编译阶段完成的。编译器根据函数的参数类型和数量来决定调用哪个函数。
+- **函数重载**：同一个函数名可以根据参数的不同进行重载。编译器通过函数参数的类型和数量来选择合适的版本。
+- **运算符重载**：你可以重新定义运算符的行为，使其适应自定义的类型。
+
+#### **示例**：
+
+```cpp
+#include <iostream>
+using namespace std;
+
+class Printer {
+public:
+    // 重载函数，根据不同类型的参数执行不同的操作
+    void print(int i) {
+        cout << "打印整数: " << i << endl;
+    }
+
+    void print(double d) {
+        cout << "打印浮点数: " << d << endl;
+    }
+
+    void print(string s) {
+        cout << "打印字符串: " << s << endl;
+    }
+};
+
+int main() {
+    Printer p;
+    p.print(5);         // 调用 print(int)
+    p.print(3.14);      // 调用 print(double)
+    p.print("Hello");   // 调用 print(string)
+    return 0;
+}
+```
+
+在这个例子中，`print` 函数被重载了三次，可以接收不同类型的参数（`int`、`double` 和 `string`）。在编译时，编译器根据参数类型确定调用哪个版本的 `print` 函数。
+
+### 2. **动态多态 (Dynamic Polymorphism)**
+
+动态多态，也称为 **运行时多态**，是在程序运行时根据对象的实际类型来决定调用哪个函数。动态多态的实现依赖于 **继承** 和 **虚函数**。其主要特点是：在父类中声明虚函数，子类重写该虚函数，并通过父类指针或引用调用虚函数时，根据实际指向的对象类型来决定调用哪个子类的实现。
+
+#### **特点**：
+- **运行时解析**：动态多态的解析是在运行时通过虚函数表（vtable）来实现的，编译器无法在编译时确定具体调用哪个函数，直到程序运行时才能决定。
+- **继承和重写**：子类可以重写父类的虚函数，从而实现不同的行为。
+- **虚函数**：父类中的函数需要声明为虚函数（`virtual`），这样才能实现运行时的多态性。
+
+#### **示例**：
+
+```cpp
+#include <iostream>
+using namespace std;
+
+class Animal {
+public:
+    virtual void sound() {
+        cout << "动物的声音" << endl;
+    }
+};
+
+class Dog : public Animal {
+public:
+    void sound() override {  // 重写虚函数
+        cout << "汪汪" << endl;
+    }
+};
+
+class Cat : public Animal {
+public:
+    void sound() override {  // 重写虚函数
+        cout << "喵喵" << endl;
+    }
+};
+
+int main() {
+    Animal* animal1 = new Dog();  // 动态绑定
+    Animal* animal2 = new Cat();  // 动态绑定
+    
+    animal1->sound();  // 输出: 汪汪
+    animal2->sound();  // 输出: 喵喵
+    
+    delete animal1;
+    delete animal2;
+    return 0;
+}
+```
+
+在这个例子中，`Animal` 类有一个虚函数 `sound`，`Dog` 和 `Cat` 类分别重写了该函数。在 `main` 函数中，使用父类指针指向不同类型的对象，调用 `sound` 函数时，实际调用的是 `Dog` 和 `Cat` 类中的实现，而不是 `Animal` 类中的版本。这个过程发生在运行时，因此这就是 **动态多态**。
+
+### 静态多态与动态多态的对比
+
+| 特性              | 静态多态 (编译时多态)               | 动态多态 (运行时多态)               |
+|------------------|-------------------------------------|-------------------------------------|
+| 解析时机          | 编译时                             | 运行时                             |
+| 主要机制          | 函数重载、运算符重载                 | 虚函数、继承、重写                   |
+| 示例              | 函数重载、运算符重载                 | 基类指针/引用调用子类的虚函数      |
+| 性能              | 更高，因为编译时解析               | 相对较低，因为需要运行时的虚函数查找 |
+| 扩展性            | 较低，因为必须通过函数名或参数变化来实现 | 较高，可以通过继承和重写扩展行为  |
+
+### 总结
+
+- **静态多态**：通过编译时的重载机制实现，通常在函数重载和运算符重载中看到。它的多态性在编译时就决定了。
+- **动态多态**：通过继承和虚函数实现，允许程序在运行时根据对象的实际类型动态决定调用哪个方法。它是面向对象编程中的核心特性之一，能够实现更为灵活和可扩展的设计。
 
 
 # 复制粘贴
