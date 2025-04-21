@@ -6097,15 +6097,25 @@ cp media/flash/nvm/goc/btsnoop_hci.log /mnt/$(ls /media/ | grep sd) &&sync
 20250417:
  搜索 ：grep -rni "saturation"  ./  忽略大小写
 
+20250418：
+倒车音量：
+2025-04-18T08:56:22.076 - D/[QT]    (  938):  == BASE_REVERSE_ENABLE ==
+2025-04-18T08:56:22.082 - D/[QT]    (  938): [Audiocontrol] get APIVol SrcName =  "media" nUserVol =  7//int AudioControlPrivate::ReduceCurrentVolTo(int nPercent, int maxVal)
+2025-04-18T08:56:23.065 - D/[QT]    (  938): [Audiocontrol] get APIVol SrcName =  "media" nUserVol =  7
+2025-04-18T08:56:24.662 - D/[QT]    (  938): [Audiocontrol] getCurTrackVolumeInfo 1186 streamType =  media 15
+2025-04-18T08:56:24.665 - D/[QT]    (  938): [Audiocontrol] get APIVol SrcName =  "media" nUserVol =  4
+2025-04-18T08:56:24.674 - D/[QT]    (  938): [Audiocontrol] set id: main to mute state: true //void AudioControlPrivate::muteAudio(const char *tag, bool enable) 影响最恶劣
+直接导致2025-04-18T08:56:24.675 - V/dsp     (  857): DSP_SendCmd: cmd:0x06030001, param:0x00000000
+2025-04-18T08:56:24.679 - E/[QT]    (  938): [Audiocontrol] line: 799 set back earphone error -3000
+2025-04-18T08:56:24.682 - D/[QT]    (  938): [Platformcontrol] setHardMute mute
+2025-04-18T08:56:24.691 - D/[QT]    (  938): [Audiocontrol] get APIVol SrcName =  "media" nUserVol =  15
 
+2025-04-18T08:56:24.684 - D/[QT]    (  938): [Audiocontrol] set master volume Gain 0//MapVolumeByGain
+2025-04-18T08:56:24.685 - D/[QT]    (  938): [Audiocontrol] changeCurTrackVolume begin
+              refreshMainTrackStepVolume  
+怀疑：keyDispatch->changeMainTrackStepVolume->changeCurTrackVolume
 
-
-
-
-
-
-
-
+2025-04-18T08:56:24.706 - D/[QT]    (  938): [SetupModule] keyDispatch 241  mute:  false  curMute:  true
 
 
 
