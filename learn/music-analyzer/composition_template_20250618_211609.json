@@ -1,0 +1,57 @@
+{
+  "composition_info": {
+    "style_name": "MyStyle",
+    "generated_at": "2025-06-18T21:16:09.994274",
+    "based_on_songs": 4
+  },
+  "tempo_guidelines": {
+    "bpm": 116,
+    "bpm_range": [
+      100,
+      132
+    ],
+    "tempo_style": "Moderate",
+    "mood": "upbeat, comfortable, accessible"
+  },
+  "rhythm_guidelines": {
+    "style": "Strong rhythmic emphasis",
+    "recommended_instruments": [
+      "drums",
+      "percussion",
+      "bass"
+    ],
+    "onset_strength": 0.89621916
+  },
+  "harmonic_guidelines": {
+    "mel_spectrum_intensity": 4.3416595,
+    "spectral_complexity": "high",
+    "timbre_coefficients": [
+      -224.3624925,
+      123.30142375,
+      7.01317845,
+      24.3972595,
+      13.757117675,
+      11.388432700000001,
+      1.4674653000000002,
+      0.748170385
+    ]
+  },
+  "structure_suggestions": {
+    "intro": "4-8 bars",
+    "verse": "16 bars",
+    "pre_chorus": "4-8 bars",
+    "chorus": "16 bars",
+    "bridge": "8-16 bars",
+    "outro": "4-8 bars"
+  },
+  "chord_progressions": [
+    "I - V - vi - IV (C - G - Am - F)",
+    "I - vi - IV - V (C - Am - F - G)",
+    "vi - IV - I - V (Am - F - C - G)"
+  ],
+  "production_tips": [
+    "使用侧链压缩强调节拍",
+    "低频部分保持清晰和有力",
+    "考虑添加打击乐层次"
+  ]
+}
