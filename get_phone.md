@@ -4,3 +4,5 @@
 * 节点
 [  https://114.132.219.239:9888/tgyunsub?token=f54a12c9eee3ef95afbea56074845565](https://114.132.219.239:9888/tgyunsub?token=f54a12c9eee3ef95afbea56074845565)
 https://114.132.219.239:9888/tgyunsub?token=f54a12c9eee3ef95afbea56074845565
+糖果云：
+https://candytally.xyz/web/#/ticket
